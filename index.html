@@ -58,27 +58,16 @@
         @media (max-width: 767px) {
             #right-panel {
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                /* Gaveta: Fica por cima, desce para mostrar player, sobe para ocupar tudo */
                 position: absolute;
                 bottom: 0;
                 left: 0;
                 right: 0;
-                height: calc(100dvh - 80px); /* 80px deixa mostrar a barra de volume e parte do player */
-                transform: translateY(calc(100% - 150px)); /* Mostra apenas o topo da playlist (150px) + volume */
+                height: calc(100dvh - 80px);
+                transform: translateY(calc(100% - 150px));
                 z-index: 50;
             }
-            #right-panel.expanded {
-                transform: translateY(0);
-            }
-            /* O puller (barrinha) indica que se pode puxar */
-            .drawer-puller {
-                width: 40px;
-                height: 4px;
-                background-color: #4b5563;
-                border-radius: 2px;
-                margin: 6px auto;
-                display: block;
-            }
+            #right-panel.expanded { transform: translateY(0); }
+            .drawer-puller { width: 40px; height: 4px; background-color: #4b5563; border-radius: 2px; margin: 6px auto; display: block; }
         }
         @media (min-width: 768px) {
             .drawer-puller { display: none; }
@@ -209,7 +198,7 @@
                     <input type="text" id="search-input" placeholder="Buscar..." class="w-full bg-gray-800/50 text-xs sm:text-sm text-gray-200 rounded-lg pl-9 pr-3 py-2 outline-none border border-gray-700 focus:border-emerald-500 focus:bg-gray-800 transition">
                 </div>
 
-                <!-- Sintonizador de Rádio Analógico (NOVO) -->
+                <!-- Sintonizador de Rádio Analógico -->
                 <div id="radio-tuner-container" class="hidden w-full flex-col gap-2 mt-2 bg-gray-950/60 p-3 md:p-4 rounded-xl border border-gray-800 shadow-inner" onclick="event.stopPropagation()">
                     <div class="flex justify-between items-end px-1 md:px-2 select-none">
                         <span class="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-[0.3em]">FM MHz</span>
@@ -301,7 +290,7 @@
 
     <div id="toast-container" class="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[100] flex flex-col gap-2 pointer-events-none"></div>
 
-    <audio id="audio-player" crossorigin="anonymous"></audio>
+    <audio id="audio-player"></audio>
     <audio id="radio-audio"></audio>
 
     <script>
@@ -327,10 +316,10 @@
 
         // --- ESTAÇÕES COM FREQUÊNCIA ---
         const radioStations = [
-            { freq: "89.1", title: "Rádio Rock 89FM", artist: "Rock Alternativo", src: "https://89fm.crossradio.com.br/stream/1;", cover: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=500&h=500&fit=crop" },
-            { freq: "94.7", title: "Antena 1", artist: "Pop / Clássicos", src: "https://antena1.newradio.it/stream", cover: "https://images.unsplash.com/photo-1516280440502-3c469f64c295?w=500&h=500&fit=crop" },
-            { freq: "101.7", title: "Alpha FM", artist: "Flashback", src: "https://icecast.uol.com.br/alphafm", cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&h=500&fit=crop" },
-            { freq: "104.3", title: "Nova Brasil FM", artist: "MPB", src: "https://icecast.uol.com.br/novabrasil", cover: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=500&h=500&fit=crop" },
+            { freq: "89.1", title: "Rádio USP", artist: "Música / Brasil", src: "https://flow.emm.usp.br:8443/radiousp-72.mp3", cover: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=500&h=500&fit=crop" },
+            { freq: "94.7", title: "SomaFM Groove", artist: "Chillout / Ambient", src: "https://ice1.somafm.com/groovesalad-128-mp3", cover: "https://images.unsplash.com/photo-1516280440502-3c469f64c295?w=500&h=500&fit=crop" },
+            { freq: "100.9", title: "Dance Wave", artist: "Eletrônica / Dance", src: "https://dancewave.online/dance.mp3", cover: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=500&h=500&fit=crop" },
+            { freq: "104.3", title: "Classic Rock FL", artist: "Rock Clássico", src: "https://icecast.walmradio.com:8443/classic", cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&h=500&fit=crop" },
             { freq: "107.9", title: "Lofi Girl (Zeno)", artist: "Chill / Beats", src: "https://stream.zeno.fm/f3wvbbqmdg8uv", cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&h=500&fit=crop" }
         ];
 
@@ -340,7 +329,7 @@
         let isShuffle = JSON.parse(localStorage.getItem('webPlayerShuffle')) || false; let isRepeat = JSON.parse(localStorage.getItem('webPlayerRepeat')) || false;
         
         const savedEq = JSON.parse(localStorage.getItem('webPlayerEq')) || [0,0,0,0,0];
-        let savedPreamp = parseFloat(localStorage.getItem('webPlayerPreamp')) || 1.0;
+        let savedPreamp = parseFloat(localStorage.getItem('webPlayerPreamp')); if (isNaN(savedPreamp)) savedPreamp = 1.0;
         
         let audioCtx, sourceNode, preampNode, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
         let visualizerMode = 0; let sleepTimerId = null; let isTuned = false; 
@@ -384,19 +373,26 @@
         }
 
         let audioUnlocked = false;
-        function unlockAudio() { if(audioUnlocked) return; initWebAudio(); if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); audioLocal.load(); audioUnlocked = true; document.body.removeEventListener('touchstart', unlockAudio); document.body.removeEventListener('click', unlockAudio); }
-        document.body.addEventListener('touchstart', unlockAudio, { once: true }); document.body.addEventListener('click', unlockAudio, { once: true });
+        function unlockAudio() { 
+            if(audioUnlocked) return; 
+            initWebAudio(); 
+            if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); 
+            // audioLocal.load() REMOVIDO DAQUI para não quebrar a música caso o utilizador já tenha clicado em Play!
+            audioUnlocked = true; 
+            document.body.removeEventListener('touchstart', unlockAudio); 
+            document.body.removeEventListener('click', unlockAudio); 
+        }
+        document.body.addEventListener('touchstart', unlockAudio, { once: true }); 
+        document.body.addEventListener('click', unlockAudio, { once: true });
         
         // --- MOBILE DRAG & DROP POLYFILL ---
-        // Adiciona um tempo de atraso (hold to drag) para não conflitar com o scroll no telemóvel
         if(window.MobileDragDrop) {
             MobileDragDrop.polyfill({
                 dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
-                holdToDrag: 500, // Requer segurar por meio segundo para iniciar o drag
+                holdToDrag: 500, // Requer segurar por meio segundo
                 iterationInterval: 50
             });
             window.addEventListener('touchmove', function(e) { 
-                // Impede o scroll APENAS se estivermos a arrastar ativamente um item
                 if (document.body.classList.contains('dnd-poly-drag-active')) { e.preventDefault(); }
             }, {passive:false});
         }
@@ -474,8 +470,7 @@
         // --- GAVETA EXPANSÍVEL (MOBILE) ---
         let isDrawerExpanded = false;
         function toggleDrawer(e) {
-            if (window.innerWidth >= 768) return; // Só funciona no telemóvel
-            // Não expandir se clicou num botão, input ou label dentro do cabeçalho
+            if (window.innerWidth >= 768) return; 
             if(e && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'SELECT')) return;
             
             isDrawerExpanded = !isDrawerExpanded;
@@ -560,7 +555,10 @@
                 if(playlist.length===0) return;
                 if(index < 0) index = playlist.length-1; if(index >= playlist.length) index = 0;
                 currentTrackIndex = index; t = playlist[currentTrackIndex]; DOM.cover.classList.remove('static-noise'); isTuned = true;
-                if(t.isLocal) audioLocal.removeAttribute('crossorigin'); else audioLocal.setAttribute('crossorigin', 'anonymous'); audioLocal.src = t.src; 
+                
+                // Sem CORS para ficheiros Locais (Evita mutar a Web Audio API no Chrome)
+                if(t.isLocal) audioLocal.removeAttribute('crossorigin'); else audioLocal.setAttribute('crossorigin', 'anonymous'); 
+                audioLocal.src = t.src; 
             }
 
             DOM.title.textContent = t.title; DOM.artist.textContent = t.artist || t.genre;
@@ -586,11 +584,12 @@
             } else { 
                 if (playingMode === 'radio' && !isTuned) { DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); isPlaying=true; return; }
                 const p = act.play(); 
-                if(p!==undefined) p.then(()=>{ 
-                    DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); isPlaying=true; 
-                    if(playingMode==='local'){ const t=playlist[currentTrackIndex]; t.playCount=(t.playCount||0)+1; if(t.isLocal)saveTrackToDB(t); } renderList(); 
-                }).catch((err)=>{ console.warn(err); showToast(playingMode === 'radio' ? "Estação offline ou bloqueada (requer HTTPS)." : "Toque na tela antes do áudio ou formato incompatível."); isPlaying=false; }); 
-                else { isPlaying=true; DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); renderList(); }
+                if(p!==undefined) {
+                    p.then(()=>{ 
+                        DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); isPlaying=true; 
+                        if(playingMode==='local'){ const t=playlist[currentTrackIndex]; t.playCount=(t.playCount||0)+1; if(t.isLocal)saveTrackToDB(t); } renderList(); 
+                    }).catch((err)=>{ console.warn(err); showToast(playingMode === 'radio' ? "Estação offline ou bloqueada." : "Formato não suportado ou bloqueado pelo browser."); isPlaying=false; }); 
+                } else { isPlaying=true; DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); renderList(); }
             }
         }
 
@@ -651,7 +650,6 @@
                     if(!isSearching) {
                         item.addEventListener('dragstart', e => { 
                             draggedItemIndex=index; e.dataTransfer.effectAllowed='move'; 
-                            // Feedback Haptico e visual ao agarrar
                             if(navigator.vibrate) navigator.vibrate(50);
                             setTimeout(()=>item.classList.add('opacity-50'),0); 
                         });
@@ -717,7 +715,7 @@
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
         DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
 
-        // --- BOTÕES, TECLADO E ARRANQUE ---
+        // --- BOTÕES E EVENTOS ---
         DOM.playPause.addEventListener('click', () => { togglePlay(); DOM.playPause.blur(); });
         DOM.next.addEventListener('click', () => { nextTrack(); DOM.next.blur(); });
         DOM.prev.addEventListener('click', () => { prevTrack(); DOM.prev.blur(); });
@@ -737,7 +735,7 @@
         updateCtrlBtns();
         initDB().then(async () => {
             await loadTracksFromDB(); sortPlaylistArray(); renderList();
-            if(playlist.length>0) loadAudioEntity('local', 0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas'; }
+            if(playlist.length>0) loadAudioEntity('local', 0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; }
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ audioLocal.volume=initVol; audioRadio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audioLocal.muted=(initVol===0); audioRadio.muted=(initVol===0); } else { audioLocal.volume=1; audioRadio.volume=1; }
