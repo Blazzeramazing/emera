@@ -8,6 +8,11 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'><path d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'/></svg>">
     <!-- Importando jsmediatags para extrair metadados (ID3) de MP3 locais -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    
+    <!-- Polyfill para Drag and Drop funcionar no Mobile (Touchscreens) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
+    <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
+
     <!-- Importando Tailwind CSS para estilização rápida e moderna -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -237,8 +242,8 @@
                     Sua Playlist
                 </h3>
                 
-                <!-- Input de arquivo invisível com accept mais amigável ao Android -->
-                <input type="file" id="file-upload" accept="audio/*,.mp3,.wav,.ogg" multiple class="hidden">
+                <!-- Input ajustado com sr-only e mime-types robustos para Android/iOS -->
+                <input type="file" id="file-upload" accept="audio/*,audio/mp3,audio/wav,audio/mpeg,audio/ogg,.mp3,.wav,.ogg" multiple class="sr-only">
                 <!-- Botão de Upload Customizado usando <label> nativa -->
                 <label for="file-upload" class="cursor-pointer text-[10px] md:text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 py-1.5 px-2 md:px-3 rounded-lg border border-gray-700 transition flex items-center gap-1 shadow-sm">
                     <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -449,8 +454,32 @@
                 
                 drawVisualizer(); 
             } catch (e) {
-                console.warn("CORS bloqueou API de áudio para fontes externas. Tente enviar ficheiros locais.", e);
+                console.warn("CORS ou Safari bloqueou a API de áudio para esta fonte externa.", e);
             }
+        }
+
+        // --- DESBLOQUEIO DE ÁUDIO PARA MOBILE (IOS) E POLYFILL DRAG&DROP ---
+        let audioUnlocked = false;
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            initWebAudio();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            audio.load(); // Desperta a tag de áudio no Safari
+            audioUnlocked = true;
+            document.body.removeEventListener('touchstart', unlockAudio);
+            document.body.removeEventListener('click', unlockAudio);
+        }
+        document.body.addEventListener('touchstart', unlockAudio, { once: true });
+        document.body.addEventListener('click', unlockAudio, { once: true });
+
+        // Inicializa o Polyfill de Drag and Drop para telas Touch
+        window.addEventListener('touchmove', function() {}, {passive: false}); // Evita erros no iOS
+        if (window.MobileDragDrop) {
+            MobileDragDrop.polyfill({
+                dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
+            });
         }
 
         // Função do Visualizador animado
@@ -606,6 +635,13 @@
             currentTrackIndex = index;
             const track = playlist[currentTrackIndex];
             
+            // CORREÇÃO CORS MOBILE: Safari recusa ObjectURL se crossorigin estiver ativo
+            if (track.isLocal) {
+                audio.removeAttribute('crossorigin');
+            } else {
+                audio.setAttribute('crossorigin', 'anonymous');
+            }
+
             audio.src = track.src;
             trackTitle.textContent = track.title;
             trackArtist.textContent = track.artist;
@@ -619,7 +655,16 @@
             renderPlaylist();
 
             if (isPlaying) {
-                audio.play().catch(e => console.log("Aguardando interação para tocar."));
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
+                        console.warn("Auto-play bloqueado pelas políticas do dispositivo.", e);
+                        isPlaying = false;
+                        playIcon.classList.remove('hidden');
+                        pauseIcon.classList.add('hidden');
+                        coverArt.classList.add('spin-paused');
+                    });
+                }
             }
         }
 
@@ -636,14 +681,30 @@
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
                 coverArt.classList.add('spin-paused');
+                isPlaying = false;
             } else {
-                audio.play().catch(e => alert("Erro ao reproduzir áudio. Verifique CORS ou formato."));
-                playIcon.classList.add('hidden');
-                pauseIcon.classList.remove('hidden');
-                coverArt.classList.remove('spin-paused');
+                const playPromise = audio.play();
+                // Lidar com a promessa evita travamentos da interface caso o mobile negue a reprodução
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        playIcon.classList.add('hidden');
+                        pauseIcon.classList.remove('hidden');
+                        coverArt.classList.remove('spin-paused');
+                        isPlaying = true;
+                        renderPlaylist(); 
+                    }).catch(e => {
+                        alert("Reprodução bloqueada pelo sistema. Tente carregar novamente ou enviar uma música.");
+                        console.error(e);
+                    });
+                } else {
+                    // Fallback para navegadores muito antigos
+                    playIcon.classList.add('hidden');
+                    pauseIcon.classList.remove('hidden');
+                    coverArt.classList.remove('spin-paused');
+                    isPlaying = true;
+                    renderPlaylist();
+                }
             }
-            isPlaying = !isPlaying;
-            renderPlaylist(); 
         }
 
         function nextTrack() {
