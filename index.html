@@ -603,11 +603,24 @@
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
         DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
 
-        // --- TECLADO E ARRANQUE ---
+        // --- BOTÕES, TECLADO E ARRANQUE ---
+        DOM.playPause.addEventListener('click', () => { togglePlay(); DOM.playPause.blur(); });
+        DOM.next.addEventListener('click', () => { nextTrack(); DOM.next.blur(); });
+        DOM.prev.addEventListener('click', () => { prevTrack(); DOM.prev.blur(); });
+
         audio.addEventListener('ended', () => { if(isRepeat){audio.currentTime=0; audio.play();}else nextTrack(); });
+        
         document.addEventListener('keydown', e => {
-            if(['INPUT','BUTTON'].includes(e.target.tagName)) return;
-            switch(e.code) { case 'Space':e.preventDefault();togglePlay();break; case 'ArrowRight':e.preventDefault();nextTrack();break; case 'ArrowLeft':e.preventDefault();prevTrack();break; case 'ArrowUp':e.preventDefault();DOM.volBar.value=Math.min(1,parseFloat(DOM.volBar.value)+0.1);DOM.volBar.dispatchEvent(new Event('input'));break; case 'ArrowDown':e.preventDefault();DOM.volBar.value=Math.max(0,parseFloat(DOM.volBar.value)-0.1);DOM.volBar.dispatchEvent(new Event('input'));break; }
+            if(e.target.tagName === 'INPUT') return; // Ignora apenas se estiver digitando na busca
+            if(e.target.tagName === 'BUTTON' && e.code === 'Space') e.preventDefault(); // Evita ativar o botão 2 vezes
+            
+            switch(e.code) { 
+                case 'Space': e.preventDefault(); togglePlay(); break; 
+                case 'ArrowRight': e.preventDefault(); nextTrack(); break; 
+                case 'ArrowLeft': e.preventDefault(); prevTrack(); break; 
+                case 'ArrowUp': e.preventDefault(); DOM.volBar.value=Math.min(1,parseFloat(DOM.volBar.value)+0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
+                case 'ArrowDown': e.preventDefault(); DOM.volBar.value=Math.max(0,parseFloat(DOM.volBar.value)-0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
+            }
         });
         
         updateCtrlBtns();
