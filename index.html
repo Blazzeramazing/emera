@@ -287,11 +287,11 @@
 
         // --- ESTAÇÕES COM FREQUÊNCIA ---
         const radioStations = [
-            { freq: "89.1", title: "Rádio Rock 89FM", artist: "Rock Alternativo", src: "https://89fm.crossradio.com.br/stream/1;", cover: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=500&h=500&fit=crop" },
-            { freq: "94.7", title: "Antena 1", artist: "Pop / Clássicos", src: "https://antena1.newradio.it/stream", cover: "https://images.unsplash.com/photo-1516280440502-3c469f64c295?w=500&h=500&fit=crop" },
-            { freq: "101.7", title: "Alpha FM", artist: "Flashback", src: "https://icecast.uol.com.br/alphafm", cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&h=500&fit=crop" },
-            { freq: "104.3", title: "Nova Brasil FM", artist: "MPB", src: "https://icecast.uol.com.br/novabrasil", cover: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=500&h=500&fit=crop" },
-            { freq: "107.9", title: "Lofi Girl (Zeno)", artist: "Chill / Beats", src: "http://stream.zeno.fm/f3wvbbqmdg8uv", cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&h=500&fit=crop" }
+            { freq: "89.1", title: "Rádio USP", artist: "Música / Brasil", src: "https://flow.emm.usp.br:8443/radiousp-72.mp3", cover: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=500&h=500&fit=crop" },
+            { freq: "94.7", title: "SomaFM Groove", artist: "Chillout / Ambient", src: "https://ice1.somafm.com/groovesalad-128-mp3", cover: "https://images.unsplash.com/photo-1516280440502-3c469f64c295?w=500&h=500&fit=crop" },
+            { freq: "100.9", title: "Dance Wave", artist: "Eletrônica / Dance", src: "https://dancewave.online/dance.mp3", cover: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=500&h=500&fit=crop" },
+            { freq: "104.3", title: "Classic Rock FL", artist: "Rock Clássico", src: "https://icecast.walmradio.com:8443/classic", cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&h=500&fit=crop" },
+            { freq: "107.9", title: "Lofi Girl (Zeno)", artist: "Chill / Beats", src: "https://stream.zeno.fm/f3wvbbqmdg8uv", cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&h=500&fit=crop" }
         ];
 
         // --- ESTADO ---
@@ -500,7 +500,11 @@
             
             if (isPlaying) { 
                 const act = getActiveAudio(); const p = act.play(); 
-                if(p!==undefined) p.then(()=>{ if(mode==='local'){ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); } }).catch(()=>{ isPlaying=false; DOM.playIcon.classList.remove('hidden'); DOM.pauseIcon.classList.add('hidden'); DOM.cover.classList.add('spin-paused'); }); 
+                if(p!==undefined) p.then(()=>{ if(mode==='local'){ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); } }).catch((err)=>{ 
+                    console.warn(err);
+                    isPlaying=false; DOM.playIcon.classList.remove('hidden'); DOM.pauseIcon.classList.add('hidden'); DOM.cover.classList.add('spin-paused');
+                    showToast(mode === 'radio' ? "Estação offline ou bloqueada." : "Erro ao reproduzir arquivo.");
+                }); 
             }
         }
 
@@ -519,7 +523,11 @@
                 if(p!==undefined) p.then(()=>{ 
                     DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); isPlaying=true; 
                     if(playingMode==='local'){ const t=playlist[currentTrackIndex]; t.playCount=(t.playCount||0)+1; if(t.isLocal)saveTrackToDB(t); } renderList(); 
-                }).catch(()=>{ alert("Toque na tela antes do áudio."); isPlaying=false; }); 
+                }).catch((err)=>{ 
+                    console.warn(err);
+                    showToast(playingMode === 'radio' ? "Estação offline ou bloqueada (requer HTTPS)." : "Toque na tela antes do áudio ou formato incompatível."); 
+                    isPlaying=false; 
+                }); 
                 else { isPlaying=true; DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); renderList(); }
             }
         }
