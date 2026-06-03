@@ -171,8 +171,8 @@
                 <button id="main-favorite-btn" class="absolute right-0 top-1 text-gray-500 hover:text-red-500 transition hidden">
                     <svg class="w-6 h-6 md:w-7 md:h-7" id="main-fav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                 </button>
-                <h2 id="track-title" class="text-lg sm:text-xl md:text-3xl font-bold text-white truncate px-8 md:px-10">Selecione uma Música</h2>
-                <p id="track-artist" class="text-gray-400 mt-1 md:mt-2 text-xs sm:text-sm md:text-base">Artista</p>
+                <h2 id="track-title" class="text-lg sm:text-xl md:text-3xl font-bold text-white truncate px-8 md:px-10">Playlist Vazia</h2>
+                <p id="track-artist" class="text-gray-400 mt-1 md:mt-2 text-xs sm:text-sm md:text-base">Adicione músicas para começar</p>
             </div>
 
             <!-- Controles de Progresso -->
@@ -369,25 +369,8 @@
         // Drag and Drop
         let draggedItemIndex = null;
         
-        // Playlist padrão da Web (que não vão para o IndexedDB, apenas seus status de favoritos)
-        let playlist = [
-            {
-                title: "Energy (Royalty Free)",
-                artist: "Bensound",
-                src: "https://www.bensound.com/bensound-music/bensound-energy.mp3",
-                cover: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f9af?w=500&h=500&fit=crop",
-                favorite: savedFavs.includes("https://www.bensound.com/bensound-music/bensound-energy.mp3"),
-                isLocal: false
-            },
-            {
-                title: "Acoustic Breeze",
-                artist: "Bensound",
-                src: "https://www.bensound.com/bensound-music/bensound-acousticbreeze.mp3",
-                cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&h=500&fit=crop",
-                favorite: savedFavs.includes("https://www.bensound.com/bensound-music/bensound-acousticbreeze.mp3"),
-                isLocal: false
-            }
-        ];
+        // Playlist (Inicia vazia)
+        let playlist = [];
 
         // --- ELEMENTOS DO DOM ---
         const playPauseBtn = document.getElementById('play-pause-btn');
@@ -1078,7 +1061,12 @@
         initDB().then(async () => {
             await loadTracksFromDB();
             renderPlaylist();
-            if(playlist.length > 0) loadTrack(currentTrackIndex);
+            if(playlist.length > 0) {
+                loadTrack(currentTrackIndex);
+            } else {
+                trackTitle.textContent = 'Playlist Vazia';
+                trackArtist.textContent = 'Adicione músicas para começar';
+            }
         });
         
         // Carrega volume guardado (LocalStorage)
