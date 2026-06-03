@@ -223,6 +223,7 @@
         </div>
     </div>
 
+    <!-- Modal Definições (Com Pré-amplificador) -->
     <div id="settings-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-gray-900 p-6 sm:p-8 rounded-[1.5rem] border border-gray-800 w-full sm:w-[90%] max-w-sm shadow-2xl">
             <div class="flex justify-between items-center mb-6">
@@ -232,7 +233,17 @@
                 </h3>
                 <button id="close-settings-btn" class="text-gray-400 hover:text-white transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
-            <div class="flex flex-col gap-5">
+            
+            <div class="flex flex-col gap-5 overflow-y-auto max-h-[60vh] custom-scrollbar pr-2">
+                <div>
+                    <label class="text-xs text-gray-400 font-semibold uppercase mb-1 flex justify-between">
+                        <span>Reforço de Volume (Apenas MP3)</span>
+                        <span id="preamp-value-display" class="text-emerald-500">100%</span>
+                    </label>
+                    <input type="range" id="preamp-slider" min="1" max="3" step="0.1" value="1" class="standard-slider mt-2">
+                    <p class="text-[9px] text-gray-500 mt-2 leading-tight">Aumenta o ganho base de arquivos locais além de 100%. Usar valores altos pode causar distorção (clipping) no áudio.</p>
+                </div>
+                <hr class="border-gray-800 my-1">
                 <div>
                     <label class="text-xs text-gray-400 font-semibold uppercase mb-1 block">Temporizador (Dormir)</label>
                     <div class="flex gap-2">
@@ -298,9 +309,12 @@
         const audioLocal = document.getElementById('audio-player'); const audioRadio = document.getElementById('radio-audio');
         let currentView = 'local'; let playingMode = 'local'; let isPlaying = false, currentTrackIndex = 0, currentRadioIndex = 0, currentSortMode = 'recent', playlist = [], draggedItemIndex = null;
         let isShuffle = JSON.parse(localStorage.getItem('webPlayerShuffle')) || false; let isRepeat = JSON.parse(localStorage.getItem('webPlayerRepeat')) || false;
+        
         const savedEq = JSON.parse(localStorage.getItem('webPlayerEq')) || [0,0,0,0,0];
-        let audioCtx, sourceNode, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
-        let visualizerMode = 0; let sleepTimerId = null; let isTuned = false; // Estado do sintonizador
+        let savedPreamp = parseFloat(localStorage.getItem('webPlayerPreamp')) || 1.0;
+        
+        let audioCtx, sourceNode, preampNode, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
+        let visualizerMode = 0; let sleepTimerId = null; let isTuned = false; 
 
         const DOM = {
             playPause: document.getElementById('play-pause-btn'), playIcon: document.getElementById('play-icon'), pauseIcon: document.getElementById('pause-icon'),
@@ -313,7 +327,8 @@
             sortSel: document.getElementById('sort-select'), localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
             radioTunerWrap: document.getElementById('radio-tuner-container'), tunerSlider: document.getElementById('tuner-slider'), tunerDisp: document.getElementById('tuner-display'), tunerStatus: document.getElementById('tuner-status'),
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
-            tabLocal: document.getElementById('tab-local'), tabRadio: document.getElementById('tab-radio'), localActions: document.getElementById('local-actions'), listTitle: document.getElementById('list-title')
+            tabLocal: document.getElementById('tab-local'), tabRadio: document.getElementById('tab-radio'), localActions: document.getElementById('local-actions'), listTitle: document.getElementById('list-title'),
+            preampSlider: document.getElementById('preamp-slider'), preampDisp: document.getElementById('preamp-value-display')
         };
         const canvasCtx = DOM.canvas.getContext('2d');
         function getActiveAudio() { return playingMode === 'radio' ? audioRadio : audioLocal; }
@@ -322,8 +337,18 @@
         function initWebAudio() {
             if(audioCtx) return;
             try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)(); sourceNode = audioCtx.createMediaElementSource(audioLocal); analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
+                sourceNode = audioCtx.createMediaElementSource(audioLocal); 
+                analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
+                
+                // Nó de Pré-amplificação (Volume Boost)
+                preampNode = audioCtx.createGain();
+                preampNode.gain.value = savedPreamp;
+
                 let prev = sourceNode;
+                prev.connect(preampNode);
+                prev = preampNode;
+
                 eqFrequencies.forEach((freq, i) => {
                     let f = audioCtx.createBiquadFilter(); f.type = i===0?'lowshelf':(i===4?'highshelf':'peaking'); f.frequency.value = freq; f.gain.value = savedEq[i]; if(f.type==='peaking') f.Q.value = 1;
                     eqFilters.push(f); prev.connect(f); prev = f;
@@ -354,7 +379,6 @@
                     const t = Date.now() / 150;
                     for(let i=0; i<bufferL; i++) { dataFreq[i] = 50 + Math.sin(t + i*0.2) * 40 + Math.random()*20; dataTime[i] = 128 + Math.sin(t*0.5 + i*0.1) * 30 + (Math.random()-0.5)*15; }
                 } else {
-                    // Estática Visual Completa
                     for(let i=0; i<bufferL; i++) { dataFreq[i] = Math.random() * 255; dataTime[i] = Math.random() * 255; }
                 }
             } else if (analyser) {
@@ -379,7 +403,7 @@
             }
         }
 
-        // --- EQ DOM ---
+        // --- EQ E PRÉ-AMP DOM ---
         eqFrequencies.forEach((freq, i) => {
             const col = document.createElement('div'); col.className = 'flex flex-col items-center h-full';
             const s = document.createElement('input'); s.type = 'range'; s.setAttribute('orient', 'vertical'); s.min = -12; s.max = 12; s.step = 0.5; s.value = savedEq[i]; s.className = 'flex-1 accent-emerald-500 cursor-pointer w-full max-w-[20px]';
@@ -390,6 +414,17 @@
             const p = e.target.dataset.preset.split(',').map(Number); document.getElementById('eq-bands-container').querySelectorAll('input[type=range]').forEach((s,i) => { s.value = p[i]; if(eqFilters[i]) eqFilters[i].gain.value = p[i]; savedEq[i]=p[i]; });
             localStorage.setItem('webPlayerEq', JSON.stringify(savedEq)); showToast(`Preset: ${e.target.textContent}`);
         }));
+
+        // Controlo do Pre-amp
+        DOM.preampSlider.value = savedPreamp;
+        DOM.preampDisp.textContent = Math.round(savedPreamp * 100) + '%';
+        DOM.preampSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            savedPreamp = val;
+            if (preampNode) preampNode.gain.value = val;
+            DOM.preampDisp.textContent = Math.round(val * 100) + '%';
+            localStorage.setItem('webPlayerPreamp', val);
+        });
 
         const tModal = (m, s) => { if(s){m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10);} else{m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'),300);} };
         document.getElementById('eq-btn').addEventListener('click', () => { if(playingMode==='radio') showToast("Equalizador apenas para MP3"); tModal(document.getElementById('eq-modal'), true); });
