@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Emera Player & Radio</title>
     <!-- Favicon SVG -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'><path d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'/></svg>">
@@ -21,7 +21,7 @@
         .standard-slider::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #374151; border-radius: 2px; }
         .standard-slider:focus { outline: none; }
         
-        /* Tuner de Rádio Analógico (NOVO) */
+        /* Tuner de Rádio Analógico */
         .tuner-dial { -webkit-appearance: none; width: 100%; height: 24px; background: repeating-linear-gradient(90deg, #4b5563, #4b5563 2px, transparent 2px, transparent 5%); border-radius: 4px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8); cursor: crosshair; }
         .tuner-dial::-webkit-slider-thumb { -webkit-appearance: none; width: 4px; height: 34px; background: #ef4444; cursor: grab; border-radius: 2px; box-shadow: 0 0 10px rgba(239,68,68,0.9); }
         .tuner-dial::-webkit-slider-thumb:active { cursor: grabbing; }
@@ -51,17 +51,36 @@
         .radio-mode-progress input[type=range]::-webkit-slider-thumb { display: none; }
         .radio-mode-progress input[type=range] { pointer-events: none; }
         
-        /* Ruído Visual (Estática na Capa) */
         .static-noise { filter: grayscale(100%) contrast(300%) opacity(0.2); animation: staticShake 0.2s infinite; }
         @keyframes staticShake { 0% { transform: translate(1px, 1px) scale(1.05); } 50% { transform: translate(-1px, -2px) scale(1.05); } 100% { transform: translate(-2px, 1px) scale(1.05); } }
+
+        /* Expansão da Playlist no Mobile */
+        @media (max-width: 767px) {
+            #right-panel {
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: calc(100dvh - 80px);
+                transform: translateY(calc(100% - 150px));
+                z-index: 50;
+            }
+            #right-panel.expanded { transform: translateY(0); }
+            .drawer-puller { width: 40px; height: 4px; background-color: #4b5563; border-radius: 2px; margin: 6px auto; display: block; }
+        }
+        @media (min-width: 768px) {
+            .drawer-puller { display: none; }
+            #right-panel { position: relative; height: auto; transform: none !important; }
+        }
     </style>
 </head>
-<body class="bg-gray-950 min-h-[100dvh] md:min-h-screen text-gray-100 font-sans selection:bg-emerald-500 selection:text-white flex items-center justify-center md:p-4 lg:p-8 overflow-hidden md:overflow-auto">
+<body class="bg-gray-950 min-h-[100dvh] md:min-h-screen text-gray-100 font-sans selection:bg-emerald-500 selection:text-white flex items-center justify-center md:p-4 lg:p-8 overflow-hidden md:overflow-auto relative">
 
-    <div class="w-full max-w-5xl bg-gray-900 md:rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden border-0 md:border border-gray-800 h-[100dvh] md:h-[85vh] md:min-h-[600px] md:max-h-[800px]">
+    <div class="w-full max-w-5xl bg-gray-900 md:rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden border-0 md:border border-gray-800 h-[100dvh] md:h-[85vh] md:min-h-[600px] md:max-h-[800px] relative">
         
         <!-- Lado Esquerdo: Player Principal -->
-        <div class="w-full md:w-3/5 p-4 sm:p-6 md:p-8 flex flex-col relative h-[55%] sm:h-[60%] md:h-full overflow-y-auto custom-scrollbar flex-shrink-0 md:flex-shrink" id="player-bg" style="background: linear-gradient(to bottom, #1f2937 0%, #111827 100%);">
+        <div class="w-full md:w-3/5 p-4 sm:p-6 md:p-8 flex flex-col relative h-[100dvh] md:h-full overflow-y-auto custom-scrollbar flex-shrink-0 md:flex-shrink pb-40 md:pb-8" id="player-bg" style="background: linear-gradient(to bottom, #1f2937 0%, #111827 100%);">
             
             <div class="flex justify-between items-center mb-3 sm:mb-6 md:mb-8 flex-shrink-0 relative z-10">
                 <div class="flex items-center gap-2 select-none">
@@ -83,12 +102,11 @@
 
             <!-- Capa do Álbum / Disco -->
             <div class="flex-1 min-h-0 flex items-center justify-center mb-4 sm:mb-6 md:mb-8 relative z-10">
-                <div class="relative w-auto h-full aspect-square max-h-32 sm:max-h-48 md:max-h-72 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)] md:shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden border-4 border-gray-800 flex items-center justify-center group">
+                <div class="relative w-auto h-full aspect-square max-h-[30vh] sm:max-h-48 md:max-h-72 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)] md:shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden border-4 border-gray-800 flex items-center justify-center group">
                     <img id="cover-art" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop" alt="Capa da Música" class="w-full h-full object-cover spin-slow spin-paused transition-all duration-500 relative z-10 bg-gray-800">
                     <canvas id="visualizer" class="absolute inset-0 w-full h-full z-20 opacity-60 pointer-events-none mix-blend-screen"></canvas>
                     <div class="absolute inset-0 m-auto w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gray-900 rounded-full border-2 border-gray-700 shadow-inner z-30"></div>
                     
-                    <!-- Botão Alternar Visualizador -->
                     <button id="toggle-vis-btn" class="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-40 bg-black/60 hover:bg-emerald-600 text-white p-1.5 sm:p-2 rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg" title="Mudar Visualizador">
                         <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     </button>
@@ -128,11 +146,14 @@
             </div>
         </div>
 
-        <!-- Lado Direito: Listas, Sintonizador e Volume -->
-        <div class="w-full md:w-2/5 bg-gray-900 border-t md:border-t-0 md:border-l border-gray-800 flex flex-col flex-1 min-h-[35%] md:min-h-0 overflow-hidden">
+        <!-- Lado Direito: Listas, Sintonizador e Volume (GAVETA NO MOBILE) -->
+        <div id="right-panel" class="w-full md:w-2/5 bg-gray-900 md:border-t-0 md:border-l border-gray-800 flex flex-col flex-1 min-h-[35%] md:min-h-0 overflow-hidden shadow-[0_-10px_20px_rgba(0,0,0,0.5)] md:shadow-none rounded-t-[2rem] md:rounded-none">
             
+            <!-- Puxador (Apenas Mobile) -->
+            <div class="drawer-puller cursor-pointer" id="drawer-handle"></div>
+
             <!-- Controle de Volume -->
-            <div class="p-4 md:p-6 border-b border-gray-800 flex items-center gap-3 md:gap-4 flex-shrink-0">
+            <div class="p-4 md:p-6 border-b border-gray-800 flex items-center gap-3 md:gap-4 flex-shrink-0" id="volume-section">
                 <button id="mute-btn" class="text-gray-400 hover:text-white transition"><svg id="vol-icon" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
                 <div class="progress-bar-container flex-1">
                     <div class="progress-fill bg-emerald-500" id="vol-fill" style="width: 100%;"></div>
@@ -141,14 +162,14 @@
             </div>
 
             <!-- Cabeçalho Dinâmico da Lista -->
-            <div class="p-4 md:p-6 pb-2 md:pb-2 flex flex-col gap-3 flex-shrink-0 border-b border-gray-800/50">
+            <div class="p-4 md:p-6 pb-2 md:pb-2 flex flex-col gap-3 flex-shrink-0 border-b border-gray-800/50 cursor-pointer md:cursor-default" id="list-header">
                 <div class="flex justify-between items-end gap-2">
                     <div class="flex flex-col gap-1">
-                        <h3 id="list-title" class="text-base md:text-lg font-semibold text-white flex items-center gap-2">
+                        <h3 id="list-title" class="text-base md:text-lg font-semibold text-white flex items-center gap-2 pointer-events-none">
                             <svg class="w-4 h-4 md:w-5 md:h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
                             Sua Playlist
                         </h3>
-                        <select id="sort-select" class="bg-transparent text-[10px] md:text-xs text-gray-400 outline-none hover:text-emerald-400 transition cursor-pointer p-0 border-0">
+                        <select id="sort-select" class="bg-transparent text-[10px] md:text-xs text-gray-400 outline-none hover:text-emerald-400 transition cursor-pointer p-0 border-0" onclick="event.stopPropagation()">
                             <option value="recent" class="bg-gray-800 text-white">Adicionadas Recentemente</option>
                             <option value="most_played" class="bg-gray-800 text-white">Mais Tocadas</option>
                         </select>
@@ -156,13 +177,13 @@
                     
                     <div id="local-actions" class="flex items-center gap-1.5 sm:gap-2">
                         <input type="file" id="folder-upload" webkitdirectory directory multiple class="sr-only">
-                        <label for="folder-upload" class="cursor-pointer text-[10px] md:text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 py-1.5 px-2 md:px-3 rounded-lg border border-gray-700 transition flex items-center gap-1 shadow-sm" title="Importar Pasta Inteira">
+                        <label for="folder-upload" class="cursor-pointer text-[10px] md:text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 py-1.5 px-2 md:px-3 rounded-lg border border-gray-700 transition flex items-center gap-1 shadow-sm" title="Importar Pasta Inteira" onclick="event.stopPropagation()">
                             <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
                             <span class="hidden sm:inline">Pasta</span>
                         </label>
 
                         <input type="file" id="file-upload" accept="audio/*,audio/mp3,audio/wav,audio/mpeg,audio/ogg,.mp3,.wav,.ogg" multiple class="sr-only">
-                        <label for="file-upload" class="cursor-pointer text-[10px] md:text-xs bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 py-1.5 px-2 md:px-3 rounded-lg border border-emerald-600/30 transition flex items-center gap-1 shadow-sm">
+                        <label for="file-upload" class="cursor-pointer text-[10px] md:text-xs bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 py-1.5 px-2 md:px-3 rounded-lg border border-emerald-600/30 transition flex items-center gap-1 shadow-sm" onclick="event.stopPropagation()">
                             <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             <span class="hidden sm:inline">Arquivos</span>
                         </label>
@@ -170,15 +191,15 @@
                 </div>
                 
                 <!-- Pesquisa Local -->
-                <div id="local-search-container" class="relative w-full">
+                <div id="local-search-container" class="relative w-full" onclick="event.stopPropagation()">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <svg class="w-3 h-3 md:w-4 md:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
                     <input type="text" id="search-input" placeholder="Buscar..." class="w-full bg-gray-800/50 text-xs sm:text-sm text-gray-200 rounded-lg pl-9 pr-3 py-2 outline-none border border-gray-700 focus:border-emerald-500 focus:bg-gray-800 transition">
                 </div>
 
-                <!-- Sintonizador de Rádio Analógico (NOVO) -->
-                <div id="radio-tuner-container" class="hidden w-full flex-col gap-2 mt-2 bg-gray-950/60 p-3 md:p-4 rounded-xl border border-gray-800 shadow-inner">
+                <!-- Sintonizador de Rádio Analógico -->
+                <div id="radio-tuner-container" class="hidden w-full flex-col gap-2 mt-2 bg-gray-950/60 p-3 md:p-4 rounded-xl border border-gray-800 shadow-inner" onclick="event.stopPropagation()">
                     <div class="flex justify-between items-end px-1 md:px-2 select-none">
                         <span class="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-[0.3em]">FM MHz</span>
                         <div class="flex items-center gap-3">
@@ -187,7 +208,6 @@
                         </div>
                     </div>
                     <div class="pt-2 pb-1 relative">
-                        <!-- Régua de Fundo -->
                         <input type="range" id="tuner-slider" min="87.5" max="108.0" step="0.1" value="87.5" class="tuner-dial">
                     </div>
                 </div>
@@ -195,7 +215,7 @@
             </div>
 
             <!-- Lista Renderizada -->
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4" id="list-container"></div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 pb-12" id="list-container"></div>
         </div>
     </div>
 
@@ -232,7 +252,16 @@
                 </h3>
                 <button id="close-settings-btn" class="text-gray-400 hover:text-white transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
-            <div class="flex flex-col gap-5">
+            <div class="flex flex-col gap-5 overflow-y-auto max-h-[60vh] custom-scrollbar pr-2">
+                <div>
+                    <label class="text-xs text-gray-400 font-semibold uppercase mb-1 flex justify-between">
+                        <span>Reforço de Volume (Apenas MP3)</span>
+                        <span id="preamp-value-display" class="text-emerald-500">100%</span>
+                    </label>
+                    <input type="range" id="preamp-slider" min="1" max="3" step="0.1" value="1" class="standard-slider mt-2">
+                    <p class="text-[9px] text-gray-500 mt-2 leading-tight">Aumenta o ganho base de arquivos locais além de 100%. Usar valores altos pode causar distorção.</p>
+                </div>
+                <hr class="border-gray-800 my-1">
                 <div>
                     <label class="text-xs text-gray-400 font-semibold uppercase mb-1 block">Temporizador (Dormir)</label>
                     <div class="flex gap-2">
@@ -261,7 +290,7 @@
 
     <div id="toast-container" class="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[100] flex flex-col gap-2 pointer-events-none"></div>
 
-    <audio id="audio-player" crossorigin="anonymous"></audio>
+    <audio id="audio-player"></audio>
     <audio id="radio-audio"></audio>
 
     <script>
@@ -298,9 +327,12 @@
         const audioLocal = document.getElementById('audio-player'); const audioRadio = document.getElementById('radio-audio');
         let currentView = 'local'; let playingMode = 'local'; let isPlaying = false, currentTrackIndex = 0, currentRadioIndex = 0, currentSortMode = 'recent', playlist = [], draggedItemIndex = null;
         let isShuffle = JSON.parse(localStorage.getItem('webPlayerShuffle')) || false; let isRepeat = JSON.parse(localStorage.getItem('webPlayerRepeat')) || false;
+        
         const savedEq = JSON.parse(localStorage.getItem('webPlayerEq')) || [0,0,0,0,0];
-        let audioCtx, sourceNode, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
-        let visualizerMode = 0; let sleepTimerId = null; let isTuned = false; // Estado do sintonizador
+        let savedPreamp = parseFloat(localStorage.getItem('webPlayerPreamp')); if (isNaN(savedPreamp)) savedPreamp = 1.0;
+        
+        let audioCtx, sourceNode, preampNode, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
+        let visualizerMode = 0; let sleepTimerId = null; let isTuned = false; 
 
         const DOM = {
             playPause: document.getElementById('play-pause-btn'), playIcon: document.getElementById('play-icon'), pauseIcon: document.getElementById('pause-icon'),
@@ -313,7 +345,9 @@
             sortSel: document.getElementById('sort-select'), localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
             radioTunerWrap: document.getElementById('radio-tuner-container'), tunerSlider: document.getElementById('tuner-slider'), tunerDisp: document.getElementById('tuner-display'), tunerStatus: document.getElementById('tuner-status'),
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
-            tabLocal: document.getElementById('tab-local'), tabRadio: document.getElementById('tab-radio'), localActions: document.getElementById('local-actions'), listTitle: document.getElementById('list-title')
+            tabLocal: document.getElementById('tab-local'), tabRadio: document.getElementById('tab-radio'), localActions: document.getElementById('local-actions'), listTitle: document.getElementById('list-title'),
+            preampSlider: document.getElementById('preamp-slider'), preampDisp: document.getElementById('preamp-value-display'),
+            rightPanel: document.getElementById('right-panel'), listHeader: document.getElementById('list-header'), drawerHandle: document.getElementById('drawer-handle')
         };
         const canvasCtx = DOM.canvas.getContext('2d');
         function getActiveAudio() { return playingMode === 'radio' ? audioRadio : audioLocal; }
@@ -322,8 +356,14 @@
         function initWebAudio() {
             if(audioCtx) return;
             try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)(); sourceNode = audioCtx.createMediaElementSource(audioLocal); analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
-                let prev = sourceNode;
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
+                sourceNode = audioCtx.createMediaElementSource(audioLocal); 
+                analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
+                
+                // Nó de Pré-amplificação
+                preampNode = audioCtx.createGain(); preampNode.gain.value = savedPreamp;
+                let prev = sourceNode; prev.connect(preampNode); prev = preampNode;
+
                 eqFrequencies.forEach((freq, i) => {
                     let f = audioCtx.createBiquadFilter(); f.type = i===0?'lowshelf':(i===4?'highshelf':'peaking'); f.frequency.value = freq; f.gain.value = savedEq[i]; if(f.type==='peaking') f.Q.value = 1;
                     eqFilters.push(f); prev.connect(f); prev = f;
@@ -333,9 +373,29 @@
         }
 
         let audioUnlocked = false;
-        function unlockAudio() { if(audioUnlocked) return; initWebAudio(); if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); audioLocal.load(); audioUnlocked = true; document.body.removeEventListener('touchstart', unlockAudio); document.body.removeEventListener('click', unlockAudio); }
-        document.body.addEventListener('touchstart', unlockAudio, { once: true }); document.body.addEventListener('click', unlockAudio, { once: true });
-        if(window.MobileDragDrop) { window.addEventListener('touchmove', function(){}, {passive:false}); MobileDragDrop.polyfill({ dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride }); }
+        function unlockAudio() { 
+            if(audioUnlocked) return; 
+            initWebAudio(); 
+            if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); 
+            // audioLocal.load() REMOVIDO DAQUI para não quebrar a música caso o utilizador já tenha clicado em Play!
+            audioUnlocked = true; 
+            document.body.removeEventListener('touchstart', unlockAudio); 
+            document.body.removeEventListener('click', unlockAudio); 
+        }
+        document.body.addEventListener('touchstart', unlockAudio, { once: true }); 
+        document.body.addEventListener('click', unlockAudio, { once: true });
+        
+        // --- MOBILE DRAG & DROP POLYFILL ---
+        if(window.MobileDragDrop) {
+            MobileDragDrop.polyfill({
+                dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
+                holdToDrag: 500, // Requer segurar por meio segundo
+                iterationInterval: 50
+            });
+            window.addEventListener('touchmove', function(e) { 
+                if (document.body.classList.contains('dnd-poly-drag-active')) { e.preventDefault(); }
+            }, {passive:false});
+        }
 
         DOM.toggleVis.addEventListener('click', () => { visualizerMode = (visualizerMode + 1) % 3; showToast(`Visualizador: ${["Radial", "Barras", "Ondas"][visualizerMode]}`); });
 
@@ -354,7 +414,6 @@
                     const t = Date.now() / 150;
                     for(let i=0; i<bufferL; i++) { dataFreq[i] = 50 + Math.sin(t + i*0.2) * 40 + Math.random()*20; dataTime[i] = 128 + Math.sin(t*0.5 + i*0.1) * 30 + (Math.random()-0.5)*15; }
                 } else {
-                    // Estática Visual Completa
                     for(let i=0; i<bufferL; i++) { dataFreq[i] = Math.random() * 255; dataTime[i] = Math.random() * 255; }
                 }
             } else if (analyser) {
@@ -379,7 +438,7 @@
             }
         }
 
-        // --- EQ DOM ---
+        // --- EQ E PRÉ-AMP DOM ---
         eqFrequencies.forEach((freq, i) => {
             const col = document.createElement('div'); col.className = 'flex flex-col items-center h-full';
             const s = document.createElement('input'); s.type = 'range'; s.setAttribute('orient', 'vertical'); s.min = -12; s.max = 12; s.step = 0.5; s.value = savedEq[i]; s.className = 'flex-1 accent-emerald-500 cursor-pointer w-full max-w-[20px]';
@@ -390,6 +449,9 @@
             const p = e.target.dataset.preset.split(',').map(Number); document.getElementById('eq-bands-container').querySelectorAll('input[type=range]').forEach((s,i) => { s.value = p[i]; if(eqFilters[i]) eqFilters[i].gain.value = p[i]; savedEq[i]=p[i]; });
             localStorage.setItem('webPlayerEq', JSON.stringify(savedEq)); showToast(`Preset: ${e.target.textContent}`);
         }));
+
+        DOM.preampSlider.value = savedPreamp; DOM.preampDisp.textContent = Math.round(savedPreamp * 100) + '%';
+        DOM.preampSlider.addEventListener('input', (e) => { const val = parseFloat(e.target.value); savedPreamp = val; if (preampNode) preampNode.gain.value = val; DOM.preampDisp.textContent = Math.round(val * 100) + '%'; localStorage.setItem('webPlayerPreamp', val); });
 
         const tModal = (m, s) => { if(s){m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10);} else{m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'),300);} };
         document.getElementById('eq-btn').addEventListener('click', () => { if(playingMode==='radio') showToast("Equalizador apenas para MP3"); tModal(document.getElementById('eq-modal'), true); });
@@ -405,29 +467,34 @@
         });
         document.getElementById('speed-select').addEventListener('change', (e) => { audioLocal.playbackRate = parseFloat(e.target.value); audioRadio.playbackRate = parseFloat(e.target.value); showToast(`Velocidade: ${e.target.value}x`); });
 
+        // --- GAVETA EXPANSÍVEL (MOBILE) ---
+        let isDrawerExpanded = false;
+        function toggleDrawer(e) {
+            if (window.innerWidth >= 768) return; 
+            if(e && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'SELECT')) return;
+            
+            isDrawerExpanded = !isDrawerExpanded;
+            if (isDrawerExpanded) DOM.rightPanel.classList.add('expanded');
+            else DOM.rightPanel.classList.remove('expanded');
+        }
+        DOM.listHeader.addEventListener('click', toggleDrawer);
+        DOM.drawerHandle.addEventListener('click', toggleDrawer);
+
         // --- SINTONIZADOR DE RÁDIO LÓGICA ---
         let tuneTimeout;
         DOM.tunerSlider.addEventListener('input', (e) => {
             if (playingMode !== 'radio') return;
             const val = parseFloat(e.target.value).toFixed(1);
             DOM.tunerDisp.textContent = val;
-            
             const stationIndex = radioStations.findIndex(s => s.freq === val);
             if (tuneTimeout) clearTimeout(tuneTimeout);
-            
             if (stationIndex !== -1) {
-                isTuned = true;
-                DOM.tunerStatus.innerHTML = '<span class="text-emerald-500 animate-pulse">● Sintonizado</span>';
-                DOM.cover.classList.remove('static-noise');
+                isTuned = true; DOM.tunerStatus.innerHTML = '<span class="text-emerald-500 animate-pulse">● Sintonizado</span>'; DOM.cover.classList.remove('static-noise');
                 tuneTimeout = setTimeout(() => { loadAudioEntity('radio', stationIndex, false); if(isPlaying) getActiveAudio().play(); }, 400);
             } else {
-                isTuned = false;
-                DOM.tunerStatus.innerHTML = '<span class="text-red-500">○ Ruído</span>';
-                audioRadio.pause(); 
-                DOM.title.textContent = "Fora do Ar"; DOM.artist.textContent = "Ajuste a frequência...";
-                DOM.cover.classList.add('static-noise');
-                DOM.playerBg.style.background = `linear-gradient(to bottom, #1f2937 0%, #111827 100%)`;
-                renderList(); // Atualiza lista visualmente
+                isTuned = false; DOM.tunerStatus.innerHTML = '<span class="text-red-500">○ Ruído</span>'; audioRadio.pause(); 
+                DOM.title.textContent = "Fora do Ar"; DOM.artist.textContent = "Ajuste a frequência..."; DOM.cover.classList.add('static-noise');
+                DOM.playerBg.style.background = `linear-gradient(to bottom, #1f2937 0%, #111827 100%)`; renderList(); 
             }
         });
 
@@ -456,7 +523,7 @@
                 DOM.tabLocal.classList.replace('text-white', 'text-gray-400'); DOM.tabLocal.classList.replace('bg-emerald-600', 'bg-transparent'); DOM.tabLocal.classList.remove('shadow-sm');
                 DOM.localActions.classList.add('hidden'); DOM.sortSel.classList.add('hidden'); DOM.localSearchWrap.classList.add('hidden'); DOM.radioTunerWrap.classList.remove('hidden'); DOM.radioTunerWrap.classList.add('flex');
                 DOM.listTitle.innerHTML = `<svg class="w-4 h-4 md:w-5 md:h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg> Estações Registadas`;
-                if(playingMode !== 'radio') { loadAudioEntity('radio', 0); } // Carrega a rádio inicial se entrar na tab sem tocar
+                if(playingMode !== 'radio') { loadAudioEntity('radio', 0); } 
             }
             renderList();
         }
@@ -467,9 +534,7 @@
         function updateMainUIForMode() {
             if (playingMode === 'radio') {
                 DOM.mainFav.classList.add('hidden'); DOM.progWrap.classList.add('radio-mode-progress'); DOM.progBar.value = 100; DOM.progFill.style.width = '100%'; DOM.curTime.textContent = 'AO VIVO'; DOM.totTime.textContent = 'STREAM';
-            } else {
-                DOM.progWrap.classList.remove('radio-mode-progress'); updateMainFavoriteIcon();
-            }
+            } else { DOM.progWrap.classList.remove('radio-mode-progress'); updateMainFavoriteIcon(); }
         }
 
         function updateMainFavoriteIcon() {
@@ -490,20 +555,21 @@
                 if(playlist.length===0) return;
                 if(index < 0) index = playlist.length-1; if(index >= playlist.length) index = 0;
                 currentTrackIndex = index; t = playlist[currentTrackIndex]; DOM.cover.classList.remove('static-noise'); isTuned = true;
-                if(t.isLocal) audioLocal.removeAttribute('crossorigin'); else audioLocal.setAttribute('crossorigin', 'anonymous'); audioLocal.src = t.src; 
+                
+                // Sem CORS para ficheiros Locais (Evita mutar a Web Audio API no Chrome)
+                if(t.isLocal) audioLocal.removeAttribute('crossorigin'); else audioLocal.setAttribute('crossorigin', 'anonymous'); 
+                audioLocal.src = t.src; 
             }
 
             DOM.title.textContent = t.title; DOM.artist.textContent = t.artist || t.genre;
-            DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=500&h=500&fit=crop';
+            DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
             updateMainUIForMode(); renderList();
             if ('mediaSession' in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: t.artist, artwork: [{ src: DOM.cover.src, sizes: '500x500', type: 'image/jpeg' }]});
             
             if (isPlaying) { 
                 const act = getActiveAudio(); const p = act.play(); 
                 if(p!==undefined) p.then(()=>{ if(mode==='local'){ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); } }).catch((err)=>{ 
-                    console.warn(err);
-                    isPlaying=false; DOM.playIcon.classList.remove('hidden'); DOM.pauseIcon.classList.add('hidden'); DOM.cover.classList.add('spin-paused');
-                    showToast(mode === 'radio' ? "Estação offline ou bloqueada." : "Erro ao reproduzir arquivo.");
+                    console.warn(err); isPlaying=false; DOM.playIcon.classList.remove('hidden'); DOM.pauseIcon.classList.add('hidden'); DOM.cover.classList.add('spin-paused'); showToast(mode === 'radio' ? "Estação offline ou bloqueada." : "Erro ao reproduzir arquivo.");
                 }); 
             }
         }
@@ -516,19 +582,14 @@
             if(isPlaying) {
                 act.pause(); DOM.playIcon.classList.remove('hidden'); DOM.pauseIcon.classList.add('hidden'); DOM.cover.classList.add('spin-paused'); isPlaying=false;
             } else { 
-                // Se rádio não está sintonizada, "finge" tocar para mostrar a estática visual
                 if (playingMode === 'radio' && !isTuned) { DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); isPlaying=true; return; }
-                
                 const p = act.play(); 
-                if(p!==undefined) p.then(()=>{ 
-                    DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); isPlaying=true; 
-                    if(playingMode==='local'){ const t=playlist[currentTrackIndex]; t.playCount=(t.playCount||0)+1; if(t.isLocal)saveTrackToDB(t); } renderList(); 
-                }).catch((err)=>{ 
-                    console.warn(err);
-                    showToast(playingMode === 'radio' ? "Estação offline ou bloqueada (requer HTTPS)." : "Toque na tela antes do áudio ou formato incompatível."); 
-                    isPlaying=false; 
-                }); 
-                else { isPlaying=true; DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); renderList(); }
+                if(p!==undefined) {
+                    p.then(()=>{ 
+                        DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); isPlaying=true; 
+                        if(playingMode==='local'){ const t=playlist[currentTrackIndex]; t.playCount=(t.playCount||0)+1; if(t.isLocal)saveTrackToDB(t); } renderList(); 
+                    }).catch((err)=>{ console.warn(err); showToast(playingMode === 'radio' ? "Estação offline ou bloqueada." : "Formato não suportado ou bloqueado pelo browser."); isPlaying=false; }); 
+                } else { isPlaying=true; DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); DOM.cover.classList.remove('spin-paused'); renderList(); }
             }
         }
 
@@ -587,7 +648,11 @@
                     const item = document.createElement('div'); item.draggable = !isSearching; item.className = `playlist-item flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl cursor-pointer transition mb-2 border ${isActive ? 'bg-emerald-500/10 border-emerald-500/30' : 'border-transparent hover:bg-gray-800'}`;
                     
                     if(!isSearching) {
-                        item.addEventListener('dragstart', e => { draggedItemIndex=index; e.dataTransfer.effectAllowed='move'; setTimeout(()=>item.classList.add('opacity-50'),0); });
+                        item.addEventListener('dragstart', e => { 
+                            draggedItemIndex=index; e.dataTransfer.effectAllowed='move'; 
+                            if(navigator.vibrate) navigator.vibrate(50);
+                            setTimeout(()=>item.classList.add('opacity-50'),0); 
+                        });
                         item.addEventListener('dragend', () => { draggedItemIndex=null; item.classList.remove('opacity-50'); document.querySelectorAll('.playlist-item').forEach(el=>el.classList.remove('drag-over')); });
                         item.addEventListener('dragover', e => { e.preventDefault(); if(draggedItemIndex!==index) item.classList.add('drag-over'); });
                         item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
@@ -604,8 +669,8 @@
                     const playsText = currentSortMode==='most_played'?`<span class="text-[9px] text-emerald-600 bg-emerald-500/10 px-1 rounded ml-1">${track.playCount||0} plays</span>`:'';
 
                     item.innerHTML = `
-                        <div class="cursor-grab active:cursor-grabbing p-1 text-gray-500 hover:text-white transition flex-shrink-0 hidden sm:block"><svg class="w-4 h-4 pointer-events-none ${isSearching?'opacity-20':''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
-                        <img src="${track.cover || 'https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=100&h=100&fit=crop'}" crossorigin="anonymous" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover shadow-md pointer-events-none flex-shrink-0 bg-gray-800">
+                        <div class="cursor-grab active:cursor-grabbing p-1 text-gray-500 hover:text-white transition flex-shrink-0 sm:block touch-action-none"><svg class="w-4 h-4 pointer-events-none ${isSearching?'opacity-20':''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
+                        <img src="${track.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'}" crossorigin="anonymous" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover shadow-md pointer-events-none flex-shrink-0 bg-gray-800">
                         <div class="flex-1 overflow-hidden pointer-events-none"><h4 class="text-xs sm:text-sm font-semibold truncate ${isActive?'text-emerald-400':'text-gray-200'}">${track.title}</h4><p class="text-[10px] sm:text-xs text-gray-500 truncate flex items-center">${track.artist} ${playsText}</p></div>
                         ${playingBars}
                         <div class="actions flex items-center gap-0 sm:gap-1 flex-shrink-0">
@@ -650,7 +715,7 @@
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
         DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
 
-        // --- BOTÕES, TECLADO E ARRANQUE ---
+        // --- BOTÕES E EVENTOS ---
         DOM.playPause.addEventListener('click', () => { togglePlay(); DOM.playPause.blur(); });
         DOM.next.addEventListener('click', () => { nextTrack(); DOM.next.blur(); });
         DOM.prev.addEventListener('click', () => { prevTrack(); DOM.prev.blur(); });
@@ -670,7 +735,7 @@
         updateCtrlBtns();
         initDB().then(async () => {
             await loadTracksFromDB(); sortPlaylistArray(); renderList();
-            if(playlist.length>0) loadAudioEntity('local', 0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas'; }
+            if(playlist.length>0) loadAudioEntity('local', 0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; }
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ audioLocal.volume=initVol; audioRadio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audioLocal.muted=(initVol===0); audioRadio.muted=(initVol===0); } else { audioLocal.volume=1; audioRadio.volume=1; }
