@@ -206,7 +206,7 @@
                     </div>
 
                     <!-- Overlay Game Over -->
-                    <div id="game-over-overlay" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-30 backdrop-blur-md p-6 text-center hidden transition-opacity duration-300">
+                    <div id="game-over-overlay" class="absolute inset-0 bg-black/90 flex-col items-center justify-center z-30 backdrop-blur-md p-6 text-center hidden opacity-0 transition-opacity duration-300">
                         <h2 class="text-4xl md:text-5xl font-black text-red-500 mb-2 tracking-widest drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">GAME OVER</h2>
                         <p class="text-gray-300 mb-6 text-xs md:text-sm">Falhaste a batida...</p>
                         <div class="text-5xl md:text-6xl font-black text-white mb-8" id="final-score-display">0</div>
@@ -815,7 +815,8 @@
             if(isNaN(audio.duration)) { showToast("Aguarde a música carregar..."); return; }
             
             gameOverlay.classList.add('hidden');
-            gameOverOverlay.classList.add('hidden');
+            gameOverOverlay.classList.add('hidden', 'opacity-0');
+            gameOverOverlay.classList.remove('flex');
             score = 0;
             combo = 0;
             visualTime = audio.currentTime;
@@ -834,14 +835,16 @@
 
         // Eventos dos Botões do Game Over
         document.getElementById('restart-game-btn').addEventListener('click', () => {
-            gameOverOverlay.classList.add('hidden');
+            gameOverOverlay.classList.add('hidden', 'opacity-0');
+            gameOverOverlay.classList.remove('flex');
             audio.currentTime = 0;
             visualTime = 0;
             document.getElementById('start-game-btn').click();
         });
 
         document.getElementById('exit-game-btn').addEventListener('click', () => {
-            gameOverOverlay.classList.add('hidden');
+            gameOverOverlay.classList.add('hidden', 'opacity-0');
+            gameOverOverlay.classList.remove('flex');
             document.getElementById('close-game-btn').click();
         });
 
@@ -850,7 +853,8 @@
             isGameOver = false;
             cancelAnimationFrame(gameAnimFrame);
             gameOverlay.classList.remove('hidden');
-            gameOverOverlay.classList.add('hidden');
+            gameOverOverlay.classList.add('hidden', 'opacity-0');
+            gameOverOverlay.classList.remove('flex');
             const track = playlist[currentTrackIndex];
             document.getElementById('game-track-title').textContent = track ? track.title : "Emera Tiles";
             gCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
@@ -867,8 +871,22 @@
             if(isPlaying) togglePlay(); 
             
             document.getElementById('final-score-display').textContent = score;
+            
+            // Prevenção de "Ghost Clicks": Desativa os botões temporariamente
+            const btnRestart = document.getElementById('restart-game-btn');
+            const btnExit = document.getElementById('exit-game-btn');
+            btnRestart.style.pointerEvents = 'none';
+            btnExit.style.pointerEvents = 'none';
+            
             gameOverOverlay.classList.remove('hidden');
             gameOverOverlay.classList.add('flex');
+            
+            // Fade-in suave e reativação dos botões
+            setTimeout(() => gameOverOverlay.classList.remove('opacity-0'), 10);
+            setTimeout(() => {
+                btnRestart.style.pointerEvents = 'auto';
+                btnExit.style.pointerEvents = 'auto';
+            }, 600); // Aguarda 600ms antes de permitir cliques
             
             gameCanvas.classList.remove('game-miss-flash');
             void gameCanvas.offsetWidth;
