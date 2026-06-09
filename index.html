@@ -766,9 +766,11 @@
         let score = 0;
         let combo = 0;
         let columns = 4;
-        let baseSpeed = 400; // Pixels por segundo
+        let baseSpeed = 350; // Começa ligeiramente mais lento (era 400) para ter margem de aumento
         let particles = [];
         let columnHighlights = [0, 0, 0, 0]; // Flash visual ao clicar na coluna
+        let visualTime = 0; // Para fluidez do FPS
+        let lastFrameTime = 0; // Para cálculo do Delta Time
 
         document.getElementById('open-game-btn').addEventListener('click', () => {
             // CORRIGIDO: Certifica-se de que a class 'flex' é aplicada quando aberto para suportar o flexbox flex-1.
@@ -797,6 +799,8 @@
             gameOverlay.classList.add('hidden');
             score = 0;
             combo = 0;
+            visualTime = audio.currentTime;
+            lastFrameTime = performance.now();
             updateGameUI();
             
             if(!isPlaying) togglePlay(); // Inicia a música
@@ -860,9 +864,24 @@
             gameComboEl.style.color = combo > 10 ? 'var(--accent)' : '#9ca3af';
         }
 
-        function gameLoop() {
+        function gameLoop(timestamp) {
             if(!isGamePlaying) return;
             
+            // Cálculo de Tempo Suave (Resolve FPS baixo/stuttering)
+            const now = timestamp || performance.now();
+            const dt = (now - lastFrameTime) / 1000;
+            lastFrameTime = now;
+            
+            if (isPlaying) {
+                visualTime += dt * audio.playbackRate;
+                const drift = audio.currentTime - visualTime;
+                // Soft sync para manter suave, Hard sync se desviar muito
+                if (Math.abs(drift) > 0.1) visualTime = audio.currentTime;
+                else visualTime += drift * 0.2;
+            } else {
+                visualTime = audio.currentTime;
+            }
+
             const W = gameCanvas.clientWidth;
             const H = gameCanvas.clientHeight;
             if(gameCanvas.width !== W) gameCanvas.width = W;
@@ -873,7 +892,10 @@
             const colW = W / columns;
             const hitZoneY = H - 120;
             const hitZoneHeight = 80;
-            const currentAudioTime = audio.currentTime;
+            const currentAudioTime = visualTime;
+            
+            // Aumento Gradual de Velocidade (+2px por cada segundo de música)
+            const currentSpeed = baseSpeed + (currentAudioTime * 2);
             
             // Fundo e Colunas
             gCtx.strokeStyle = 'rgba(255,255,255,0.1)';
@@ -914,8 +936,8 @@
                 if(note.hit) return;
                 
                 // Posição baseada no tempo atual da música
-                // Quando note.time == currentAudioTime, o fundo da nota toca no hitCenter
-                const noteBottomY = hitCenter - ((note.time - currentAudioTime) * baseSpeed);
+                // Usa currentSpeed (que aumenta ao longo do tempo) para calcular a posição
+                const noteBottomY = hitCenter - ((note.time - currentAudioTime) * currentSpeed);
                 const tileH = 120; // Altura do tile
                 const noteTopY = noteBottomY - tileH;
                 
@@ -980,7 +1002,10 @@
             if(!isGamePlaying) return;
             const W = gameCanvas.clientWidth;
             const colW = W / columns;
-            const clickedCol = Math.floor(x / colW);
+            
+            // Garante que o clique seja mapeado para uma das colunas, mesmo se clicado fora das laterais do canvas
+            const xClamped = Math.max(0, Math.min(x, W - 1));
+            const clickedCol = Math.floor(xClamped / colW);
             
             if(clickedCol >= 0 && clickedCol < columns) {
                 columnHighlights[clickedCol] = 1.0; // Ativar flash visual
@@ -990,24 +1015,31 @@
             const hitZoneY = H - 120;
             const hitZoneHeight = 80;
             const hitCenter = hitZoneY + hitZoneHeight/2;
-            const currentAudioTime = audio.currentTime;
+            const currentAudioTime = visualTime; // Usar tempo visual suave
+            const currentSpeed = baseSpeed + (currentAudioTime * 2); // Mesma fórmula do loop
             
             let hit = false;
             
-            // Encontrar a nota não atingida mais baixa nesta coluna
+            // Encontrar a nota que o jogador tocou
             for(let i=0; i<gameNotes.length; i++) {
                 let note = gameNotes[i];
                 if(note.col === clickedCol && !note.hit && !note.missed) {
-                    const noteBottomY = hitCenter - ((note.time - currentAudioTime) * baseSpeed);
+                    const noteBottomY = hitCenter - ((note.time - currentAudioTime) * currentSpeed);
+                    const tileH = 120; // Altura do tile
+                    const noteTopY = noteBottomY - tileH;
                     
-                    // Margem de erro (Tolerância)
-                    const tolerance = 90; 
-                    if(noteBottomY > hitCenter - tolerance && noteBottomY < hitCenter + tolerance + 120) {
+                    // 1. Tocou diretamente na tecla (qualquer altura da tela - estilo Piano Tiles)
+                    const isTappingTile = (y >= noteTopY - 100 && y <= noteBottomY + 100);
+                    // 2. Tecla está na zona inferior e apenas clicou na coluna (estilo Guitar Hero)
+                    const isTileInHitZone = (noteBottomY > hitCenter - 90 && noteBottomY < hitCenter + 120);
+                    
+                    if(isTappingTile || isTileInHitZone) {
                         note.hit = true;
                         score += 10 + (Math.min(combo, 20) * 2);
                         combo++;
                         updateGameUI();
-                        createHitParticles(clickedCol * colW + colW/2, hitCenter);
+                        // Criar partículas onde clicou (ou no centro da linha se for pelo teclado)
+                        createHitParticles(clickedCol * colW + colW/2, isTappingTile ? y : hitCenter);
                         hit = true;
                         
                         gameCanvas.classList.remove('game-hit-flash');
@@ -1026,12 +1058,16 @@
             }
         }
 
-        gameCanvas.addEventListener('mousedown', (e) => {
+        const gameWrapper = document.getElementById('game-canvas-wrapper');
+
+        gameWrapper.addEventListener('mousedown', (e) => {
+            if(!isGamePlaying) return;
             const rect = gameCanvas.getBoundingClientRect();
             handleGameInput(e.clientX - rect.left, e.clientY - rect.top);
         });
 
-        gameCanvas.addEventListener('touchstart', (e) => {
+        gameWrapper.addEventListener('touchstart', (e) => {
+            if(!isGamePlaying) return;
             e.preventDefault();
             const rect = gameCanvas.getBoundingClientRect();
             for(let i=0; i<e.changedTouches.length; i++) {
