@@ -167,7 +167,6 @@
             </div>
 
             <!-- --- SECÇÃO DO JOGO EMERA TILES --- -->
-            <!-- CORRIGIDO: Adicionado "flex" na lista de classes abaixo do id="game-panel" -->
             <div id="game-panel" class="absolute inset-0 bg-gray-950 z-[60] hidden flex flex-col overflow-hidden transition-opacity duration-300 opacity-0">
                 <!-- Game Header -->
                 <div class="w-full p-4 md:p-6 flex justify-between items-center bg-gray-900 border-b border-gray-800 z-10 shadow-lg flex-shrink-0">
@@ -187,13 +186,12 @@
                 </div>
                 
                 <!-- Game Canvas Container -->
-                <!-- CORRIGIDO: Adicionado "min-h-0" para forçar o flexbox a calcular o height corretamente -->
                 <div class="flex-1 w-full flex justify-center relative bg-black overflow-hidden min-h-0" id="game-canvas-wrapper">
                     <!-- Canvas (onde as notas caem) -->
                     <canvas id="game-canvas" class="w-full max-w-md h-full touch-none bg-gray-900 border-x border-gray-800 block"></canvas>
                     
                     <!-- Overlay de Início/Pausa -->
-                    <div id="game-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20 backdrop-blur-sm p-6 text-center">
+                    <div id="game-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20 backdrop-blur-sm p-6 text-center transition-opacity duration-300">
                         <div class="w-16 h-16 md:w-20 md:h-20 bg-accent rounded-2xl flex items-center justify-center mb-4 md:mb-6 shadow-[0_0_30px_var(--accent-light)] transform rotate-12">
                             <svg class="w-8 h-8 md:w-10 md:h-10 text-white transform -rotate-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
                         </div>
@@ -204,6 +202,24 @@
                             <button id="start-game-btn" class="w-full bg-accent text-white py-3 rounded-xl font-bold hover:scale-105 transition shadow-lg flex items-center justify-center gap-2">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
                                 JOGAR AGORA
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Overlay Game Over -->
+                    <div id="game-over-overlay" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-30 backdrop-blur-md p-6 text-center hidden transition-opacity duration-300">
+                        <h2 class="text-4xl md:text-5xl font-black text-red-500 mb-2 tracking-widest drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">GAME OVER</h2>
+                        <p class="text-gray-300 mb-6 text-xs md:text-sm">Falhaste a batida...</p>
+                        <div class="text-5xl md:text-6xl font-black text-white mb-8" id="final-score-display">0</div>
+                        
+                        <div class="flex flex-col gap-3 w-full max-w-xs">
+                            <button id="restart-game-btn" class="w-full bg-accent text-white py-3 rounded-xl font-bold hover:scale-105 transition shadow-lg flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                RECOMEÇAR
+                            </button>
+                            <button id="exit-game-btn" class="w-full bg-gray-800 text-gray-300 hover:text-white py-3 rounded-xl font-bold hover:bg-gray-700 transition flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                SAIR DO JOGO
                             </button>
                         </div>
                     </div>
@@ -754,6 +770,7 @@
         // --- LÓGICA DO JOGO (EMERA TILES) ---
         const gamePanel = document.getElementById('game-panel');
         const gameOverlay = document.getElementById('game-overlay');
+        const gameOverOverlay = document.getElementById('game-over-overlay');
         const gameCanvas = document.getElementById('game-canvas');
         const gCtx = gameCanvas.getContext('2d');
         const gameScoreEl = document.getElementById('game-score');
@@ -761,6 +778,7 @@
         
         let isGameActive = false;
         let isGamePlaying = false;
+        let isGameOver = false; // FLAG DO GAME OVER
         let gameAnimFrame;
         let gameNotes = [];
         let score = 0;
@@ -773,7 +791,6 @@
         let lastFrameTime = 0; // Para cálculo do Delta Time
 
         document.getElementById('open-game-btn').addEventListener('click', () => {
-            // CORRIGIDO: Certifica-se de que a class 'flex' é aplicada quando aberto para suportar o flexbox flex-1.
             gamePanel.classList.remove('hidden');
             gamePanel.classList.add('flex');
             setTimeout(() => gamePanel.classList.remove('opacity-0'), 10);
@@ -789,6 +806,7 @@
             }, 300);
             isGameActive = false;
             isGamePlaying = false;
+            isGameOver = false;
             cancelAnimationFrame(gameAnimFrame);
         });
 
@@ -797,6 +815,7 @@
             if(isNaN(audio.duration)) { showToast("Aguarde a música carregar..."); return; }
             
             gameOverlay.classList.add('hidden');
+            gameOverOverlay.classList.add('hidden');
             score = 0;
             combo = 0;
             visualTime = audio.currentTime;
@@ -808,16 +827,51 @@
             // Garantir que as notas cobrem toda a duração
             generateNotes(audio.duration);
             isGamePlaying = true;
+            isGameOver = false;
             gameAnimFrame = requestAnimationFrame(gameLoop);
+        });
+
+        // Eventos dos Botões do Game Over
+        document.getElementById('restart-game-btn').addEventListener('click', () => {
+            gameOverOverlay.classList.add('hidden');
+            audio.currentTime = 0;
+            visualTime = 0;
+            document.getElementById('start-game-btn').click();
+        });
+
+        document.getElementById('exit-game-btn').addEventListener('click', () => {
+            gameOverOverlay.classList.add('hidden');
+            document.getElementById('close-game-btn').click();
         });
 
         function resetGameForNewTrack() {
             isGamePlaying = false;
+            isGameOver = false;
             cancelAnimationFrame(gameAnimFrame);
             gameOverlay.classList.remove('hidden');
+            gameOverOverlay.classList.add('hidden');
             const track = playlist[currentTrackIndex];
             document.getElementById('game-track-title').textContent = track ? track.title : "Emera Tiles";
             gCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+        }
+
+        // Função que é ativada quando o jogador erra ou deixa passar nota
+        function triggerGameOver() {
+            if(isGameOver) return;
+            isGamePlaying = false;
+            isGameOver = true;
+            cancelAnimationFrame(gameAnimFrame);
+            
+            // Pausa a música ao morrer para efeito dramático
+            if(isPlaying) togglePlay(); 
+            
+            document.getElementById('final-score-display').textContent = score;
+            gameOverOverlay.classList.remove('hidden');
+            gameOverOverlay.classList.add('flex');
+            
+            gameCanvas.classList.remove('game-miss-flash');
+            void gameCanvas.offsetWidth;
+            gameCanvas.classList.add('game-miss-flash');
         }
 
         // Gera as notas (tiles) com base na duração da música
@@ -932,8 +986,11 @@
             // Desenhar Notas (Tiles)
             const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#10b981';
             
-            gameNotes.forEach(note => {
-                if(note.hit) return;
+            for(let i=0; i<gameNotes.length; i++) {
+                if(isGameOver) break;
+                
+                let note = gameNotes[i];
+                if(note.hit) continue;
                 
                 // Posição baseada no tempo atual da música
                 // Usa currentSpeed (que aumenta ao longo do tempo) para calcular a posição
@@ -946,10 +1003,8 @@
                     // Verificar se falhou (passou da hit zone inteira)
                     if(noteTopY > hitZoneY + hitZoneHeight + 20 && !note.missed) {
                         note.missed = true;
-                        combo = 0;
-                        updateGameUI();
-                        gameCanvas.classList.add('game-miss-flash');
-                        setTimeout(() => gameCanvas.classList.remove('game-miss-flash'), 300);
+                        triggerGameOver();
+                        break; // Sai do loop para não verificar mais notas
                     }
                     
                     if(!note.missed) {
@@ -967,39 +1022,41 @@
                         gCtx.fill();
                     }
                 }
-            });
+            }
 
             // Atualizar e desenhar Partículas
-            for(let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx; p.y += p.vy;
-                p.vy += 0.2; // gravidade
-                p.life -= 0.03;
+            if(!isGameOver) {
+                for(let i = particles.length - 1; i >= 0; i--) {
+                    let p = particles[i];
+                    p.x += p.vx; p.y += p.vy;
+                    p.vy += 0.2; // gravidade
+                    p.life -= 0.03;
+                    
+                    if(p.life <= 0) { particles.splice(i, 1); continue; }
+                    
+                    gCtx.globalAlpha = p.life;
+                    gCtx.fillStyle = p.color;
+                    gCtx.beginPath();
+                    gCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                    gCtx.fill();
+                }
+                gCtx.globalAlpha = 1.0;
                 
-                if(p.life <= 0) { particles.splice(i, 1); continue; }
-                
-                gCtx.globalAlpha = p.life;
-                gCtx.fillStyle = p.color;
-                gCtx.beginPath();
-                gCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-                gCtx.fill();
-            }
-            gCtx.globalAlpha = 1.0;
-            
-            // Fim do Jogo
-            if(currentAudioTime >= audio.duration - 1 && audio.duration > 0) {
-                isGamePlaying = false;
-                gameOverlay.classList.remove('hidden');
-                document.querySelector('#game-overlay p').textContent = `Música concluída! Pontuação Final: ${score}`;
-                document.querySelector('#start-game-btn').innerHTML = 'JOGAR NOVAMENTE';
-            } else {
-                gameAnimFrame = requestAnimationFrame(gameLoop);
+                // Fim do Jogo (Vitória)
+                if(currentAudioTime >= audio.duration - 1 && audio.duration > 0) {
+                    isGamePlaying = false;
+                    gameOverlay.classList.remove('hidden');
+                    document.querySelector('#game-overlay p').textContent = `Música concluída! Pontuação Final: ${score}`;
+                    document.querySelector('#start-game-btn').innerHTML = 'JOGAR NOVAMENTE';
+                } else {
+                    gameAnimFrame = requestAnimationFrame(gameLoop);
+                }
             }
         }
 
         // Interação com o Jogo
         function handleGameInput(x, y) {
-            if(!isGamePlaying) return;
+            if(!isGamePlaying || isGameOver) return;
             const W = gameCanvas.clientWidth;
             const colW = W / columns;
             
@@ -1050,24 +1107,22 @@
                 }
             }
             
+            // Se ativou e falhou completamente todas as notas, desencadeia Game Over
             if(!hit) {
-                combo = 0;
-                updateGameUI();
-                gameCanvas.classList.add('game-miss-flash');
-                setTimeout(() => gameCanvas.classList.remove('game-miss-flash'), 300);
+                triggerGameOver();
             }
         }
 
         const gameWrapper = document.getElementById('game-canvas-wrapper');
 
         gameWrapper.addEventListener('mousedown', (e) => {
-            if(!isGamePlaying) return;
+            if(!isGamePlaying || isGameOver) return;
             const rect = gameCanvas.getBoundingClientRect();
             handleGameInput(e.clientX - rect.left, e.clientY - rect.top);
         });
 
         gameWrapper.addEventListener('touchstart', (e) => {
-            if(!isGamePlaying) return;
+            if(!isGamePlaying || isGameOver) return;
             e.preventDefault();
             const rect = gameCanvas.getBoundingClientRect();
             for(let i=0; i<e.changedTouches.length; i++) {
@@ -1091,10 +1146,10 @@
                 case 'ArrowDown': e.preventDefault(); DOM.volBar.value=Math.max(0,parseFloat(DOM.volBar.value)-0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
                 
                 // Suporte de teclado para o Jogo
-                case 'KeyD': if(isGamePlaying) handleGameInput((gameCanvas.clientWidth/columns)*0.5, gameCanvas.clientHeight-100); break;
-                case 'KeyF': if(isGamePlaying) handleGameInput((gameCanvas.clientWidth/columns)*1.5, gameCanvas.clientHeight-100); break;
-                case 'KeyJ': if(isGamePlaying) handleGameInput((gameCanvas.clientWidth/columns)*2.5, gameCanvas.clientHeight-100); break;
-                case 'KeyK': if(isGamePlaying) handleGameInput((gameCanvas.clientWidth/columns)*3.5, gameCanvas.clientHeight-100); break;
+                case 'KeyD': if(isGamePlaying && !isGameOver) handleGameInput((gameCanvas.clientWidth/columns)*0.5, gameCanvas.clientHeight-100); break;
+                case 'KeyF': if(isGamePlaying && !isGameOver) handleGameInput((gameCanvas.clientWidth/columns)*1.5, gameCanvas.clientHeight-100); break;
+                case 'KeyJ': if(isGamePlaying && !isGameOver) handleGameInput((gameCanvas.clientWidth/columns)*2.5, gameCanvas.clientHeight-100); break;
+                case 'KeyK': if(isGamePlaying && !isGameOver) handleGameInput((gameCanvas.clientWidth/columns)*3.5, gameCanvas.clientHeight-100); break;
             }
         });
 
