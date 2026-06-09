@@ -1065,10 +1065,14 @@
 
                 // 2. Calcular o "Fluxo" (Aumentos repentinos de energia = Ataques/Batidas)
                 const fluxArray = [0];
+                let totalFlux = 0;
                 for (let i = 1; i < energyArray.length; i++) {
                     let diff = energyArray[i] - energyArray[i-1];
-                    fluxArray.push(Math.max(0, diff));
+                    let flux = Math.max(0, diff);
+                    fluxArray.push(flux);
+                    totalFlux += flux;
                 }
+                const globalFluxAvg = totalFlux / fluxArray.length;
 
                 // 3. Deteção de Picos com Limiar Dinâmico (Moving Average)
                 let peaks = [];
@@ -1083,8 +1087,8 @@
                     let localAvg = localSum / (windowSize * 2 + 1);
 
                     // O valor atual deve ser X vezes maior que a média local e ser um pico local
-                    // Usamos 1.6 como multiplicador.
-                    const threshold = localAvg * 1.6;
+                    // Aumentámos para 1.9 para reduzir o excesso de teclas e adicionámos o limite globalFluxAvg
+                    const threshold = Math.max(localAvg * 1.9, globalFluxAvg * 1.5);
 
                     if (fluxArray[i] > threshold &&
                         fluxArray[i] > fluxArray[i-1] &&
@@ -1092,8 +1096,8 @@
 
                         let time = i * step / sampleRate;
                         
-                        // Margem mínima de 0.18s entre notas para captar ritmos mais complexos e rápidos sem spammar
-                        if (time - lastPeakTime > 0.18) {
+                        // Margem mínima de 0.25s (aumentada de 0.18s) entre notas
+                        if (time - lastPeakTime > 0.25) {
                             peaks.push(time);
                             lastPeakTime = time;
                         }
@@ -1160,7 +1164,7 @@
             let colActiveUntil = [0, 0, 0, 0];
             
             while(currentTime < duration - 2) {
-                let step = Math.random() > 0.7 ? 0.25 : 0.5;
+                let step = Math.random() > 0.7 ? 0.35 : 0.6; // Mais espaçado
                 let col = Math.floor(Math.random() * columns);
                 
                 if (currentTime < colActiveUntil[col]) {
