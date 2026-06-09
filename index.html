@@ -72,6 +72,12 @@
             .drawer-puller { display: none; }
             #right-panel { position: relative; height: auto; transform: none !important; }
         }
+
+        /* Efeitos para o Jogo */
+        .game-hit-flash { animation: hitFlash 0.3s ease-out forwards; }
+        @keyframes hitFlash { 0% { background-color: var(--accent-light); } 100% { background-color: transparent; } }
+        .game-miss-flash { animation: missFlash 0.3s ease-out forwards; }
+        @keyframes missFlash { 0% { background-color: rgba(239, 68, 68, 0.3); } 100% { background-color: transparent; } }
     </style>
 </head>
 <body class="bg-gray-950 min-h-[100dvh] md:min-h-screen text-gray-100 font-sans selection:bg-accent selection:text-white flex items-center justify-center md:p-4 lg:p-8 overflow-hidden md:overflow-auto relative transition-colors duration-500">
@@ -189,12 +195,12 @@
                             <svg class="w-8 h-8 md:w-10 md:h-10 text-white transform -rotate-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
                         </div>
                         <h2 class="text-2xl md:text-3xl font-bold text-white mb-2" id="game-track-title">Emera Tiles</h2>
-                        <p class="text-gray-400 mb-8 max-w-[280px] text-xs md:text-sm">As notas cairão sincronizadas com a batida da música. Toque na coluna correta quando a nota atingir a área inferior!</p>
+                        <p class="text-gray-400 mb-8 max-w-[280px] text-xs md:text-sm">As notas cairão sincronizadas com as batidas reais da música. Toque na coluna correta quando a nota atingir a área inferior!</p>
                         
                         <div class="flex flex-col gap-3 w-full max-w-xs">
                             <button id="start-game-btn" class="w-full bg-accent text-white py-3 rounded-xl font-bold hover:scale-105 transition shadow-lg flex items-center justify-center gap-2">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
-                                JOGAR AGORA
+                                <span>JOGAR AGORA</span>
                             </button>
                         </div>
                     </div>
@@ -810,10 +816,23 @@
             cancelAnimationFrame(gameAnimFrame);
         });
 
-        document.getElementById('start-game-btn').addEventListener('click', () => {
+        document.getElementById('start-game-btn').addEventListener('click', async () => {
             if(playlist.length === 0) { showToast("Adicione músicas na playlist primeiro!"); return; }
-            if(isNaN(audio.duration)) { showToast("Aguarde a música carregar..."); return; }
+            if(isNaN(audio.duration) || !audio.src) { showToast("Aguarde a música carregar..."); return; }
             
+            const startBtn = document.getElementById('start-game-btn');
+            const originalContent = startBtn.innerHTML;
+            
+            // UI Loading State
+            startBtn.innerHTML = `<svg class="animate-spin w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>A ANALISAR RITMO...</span>`;
+            startBtn.style.pointerEvents = 'none';
+
+            // Gerar Notas com base no áudio real!
+            await generateNotesFromAudio(audio.src, audio.duration);
+
+            startBtn.innerHTML = originalContent;
+            startBtn.style.pointerEvents = 'auto';
+
             gameOverlay.classList.add('hidden');
             gameOverOverlay.classList.add('hidden', 'opacity-0');
             gameOverOverlay.classList.remove('flex');
@@ -821,15 +840,14 @@
             combo = 0;
             lastRenderedScore = -1; // Força re-render
             lastRenderedCombo = -1;
+            
+            if(!isPlaying) togglePlay(); // Inicia a música
+            
             visualTime = audio.currentTime;
             lastFrameTime = performance.now();
             columnsHeld = [false, false, false, false]; // Resetar hold
             updateGameUI();
             
-            if(!isPlaying) togglePlay(); // Inicia a música
-            
-            // Garantir que as notas cobrem toda a duração
-            generateNotes(audio.duration);
             isGamePlaying = true;
             isGameOver = false;
             gameAnimFrame = requestAnimationFrame(gameLoop);
@@ -898,44 +916,140 @@
             gCtx.fillRect(0, 0, W, H);
         }
 
-        // Gera as notas (tiles) com base na duração da música (Agora com Notas Longas)
-        function generateNotes(duration) {
+        // --- ALGORITMO DE DETEÇÃO DE BATIDAS (REAL BEAT DETECTION) ---
+        async function generateNotesFromAudio(url, duration) {
+            try {
+                if (!audioCtx) initWebAudio();
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+                // Obtém os dados brutos da música
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                const channelData = audioBuffer.getChannelData(0); // Apenas canal esquerdo p/ performance
+                const sampleRate = audioBuffer.sampleRate;
+
+                // Analisar RMS (Energia) em pedaços de 20ms
+                const step = Math.floor(sampleRate * 0.02); 
+                const rmsArray = [];
+                let totalRms = 0;
+
+                for (let i = 0; i < channelData.length; i += step) {
+                    let sum = 0;
+                    let chunkLength = Math.min(step, channelData.length - i);
+                    for(let j = 0; j < chunkLength; j++) {
+                        sum += channelData[i+j] * channelData[i+j];
+                    }
+                    const rms = Math.sqrt(sum / chunkLength);
+                    rmsArray.push({ time: i / sampleRate, rms: rms });
+                    totalRms += rms;
+                }
+
+                const avgRms = totalRms / rmsArray.length;
+                
+                // Determina o limite para o que consideramos ser um "Pico/Batida"
+                // Músicas eletrónicas têm um perfil de picos diferente de acústicas.
+                // Ao capturar o percentil 85, a deteção é autoajustável ao volume da música.
+                const sortedRms = [...rmsArray].sort((a, b) => a.rms - b.rms);
+                const thresholdRms = sortedRms[Math.floor(sortedRms.length * 0.85)].rms;
+                const threshold = Math.max(avgRms * 1.2, thresholdRms);
+
+                let peaks = [];
+                let lastPeakTime = 0;
+
+                // Encontrar os picos locais
+                for (let i = 1; i < rmsArray.length - 1; i++) {
+                    if (rmsArray[i].rms > threshold &&
+                        rmsArray[i].rms > rmsArray[i-1].rms &&
+                        rmsArray[i].rms > rmsArray[i+1].rms) {
+
+                        // Margem mínima de 0.25s entre notas (Impede spam de notas a mais de 240 BPM)
+                        if (rmsArray[i].time - lastPeakTime > 0.25) {
+                            peaks.push(rmsArray[i].time);
+                            lastPeakTime = rmsArray[i].time;
+                        }
+                    }
+                }
+
+                // Converter picos encontrados em gameNotes (Mapeamento Rítmico)
+                gameNotes = [];
+                let lastCol = -1;
+                let colActiveUntil = [0, 0, 0, 0];
+
+                peaks.forEach((time, index) => {
+                    if(time < 1.0 || time > duration - 2.0) return; // Dá folga ao início e fim
+
+                    let col = Math.floor(Math.random() * columns);
+                    if (time < colActiveUntil[col]) {
+                        let found = false;
+                        for(let i=1; i<columns; i++) {
+                            let tryCol = (col + i) % columns;
+                            if(time >= colActiveUntil[tryCol]) { col = tryCol; found = true; break; }
+                        }
+                        if(!found) return; // Colunas esgotadas neste exato frame
+                    }
+
+                    if (col === lastCol && Math.random() > 0.5) col = (col + 1) % columns;
+
+                    let nextTime = peaks[index+1] || duration;
+                    let timeDiff = nextTime - time;
+                    let noteDuration = 0;
+
+                    // Se a próxima nota demora, chance de transformar esta num "Hold"
+                    if (timeDiff > 0.6 && Math.random() > 0.3) {
+                        noteDuration = timeDiff - 0.2; // Deixa 0.2s de pausa na cauda
+                        if (noteDuration > 1.5) noteDuration = 1.5; // Limite máximo para uma nota longa
+                    }
+
+                    gameNotes.push({
+                        time: time,
+                        col: col,
+                        duration: noteDuration,
+                        hit: false,
+                        holding: false,
+                        missed: false
+                    });
+
+                    colActiveUntil[col] = time + noteDuration + 0.15;
+                    lastCol = col;
+                });
+
+                if(gameNotes.length < 10) throw new Error("Poucas batidas detetadas, a ativar fallback.");
+                console.log(`Deteção Concluída: ${gameNotes.length} notas mapeadas a partir do áudio.`);
+
+            } catch(e) {
+                console.warn("A Deteção Rítmica Real falhou ou retornou poucas notas. Fallback pseudo-aleatório ativado.", e);
+                generateNotesFallback(duration);
+            }
+        }
+
+        // Gera as notas (tiles) com base num pseudo-ritmo (usado apenas em caso de falha da deteção avançada)
+        function generateNotesFallback(duration) {
             gameNotes = [];
-            let currentTime = 1.0; // Começa após 1 segundo
+            let currentTime = 1.0; 
             let lastCol = -1;
             let colActiveUntil = [0, 0, 0, 0];
             
             while(currentTime < duration - 2) {
-                // Intervalo de batida base (aprox 120BPM)
                 let step = Math.random() > 0.7 ? 0.25 : 0.5;
                 let col = Math.floor(Math.random() * columns);
                 
-                // Procurar coluna vazia se esta estiver ocupada por uma nota longa
                 if (currentTime < colActiveUntil[col]) {
                     let found = false;
                     for(let i=1; i<columns; i++) {
                         let tryCol = (col + i) % columns;
                         if(currentTime >= colActiveUntil[tryCol]) { col = tryCol; found = true; break; }
                     }
-                    if(!found) { currentTime += step; continue; } // Nenhuma coluna livre agora
+                    if(!found) { currentTime += step; continue; } 
                 }
 
                 if (col === lastCol && Math.random() > 0.5) col = (col + 1) % columns;
                 
-                // 25% de probabilidade de ser uma "Barra Longa" (Hold Note)
                 let isHoldNote = Math.random() > 0.75;
-                let noteDuration = isHoldNote ? (Math.random() * 0.5 + 0.3) : 0; // Duração entre 0.3s e 0.8s
+                let noteDuration = isHoldNote ? (Math.random() * 0.5 + 0.3) : 0;
                 
-                gameNotes.push({ 
-                    time: currentTime, 
-                    col: col, 
-                    duration: noteDuration, 
-                    hit: false, 
-                    holding: false, 
-                    missed: false 
-                });
+                gameNotes.push({ time: currentTime, col: col, duration: noteDuration, hit: false, holding: false, missed: false });
                 
-                // Bloqueia a coluna pelo tempo que a nota longa durar + pequena margem
                 colActiveUntil[col] = currentTime + noteDuration + 0.2;
                 lastCol = col;
                 currentTime += step;
