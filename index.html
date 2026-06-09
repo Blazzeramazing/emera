@@ -1043,8 +1043,8 @@
                 // Só desenha se estiver visível no ecrã
                 if(renderBottomY > 0 && noteTopY < H) {
                     
-                    // Falhar (Miss) - Deixou passar o Início sem clicar
-                    if(!note.holding && renderBottomY > hitCenter + 120 && !note.missed) {
+                    // Falhar (Miss) - Deixou passar o Início sem clicar (Margem generosa de 140px abaixo do HitCenter)
+                    if(!note.holding && renderBottomY > hitCenter + 140 && !note.missed) {
                         note.missed = true;
                         triggerGameOver();
                         break; 
@@ -1116,7 +1116,6 @@
             }
         }
 
-        // NOVO: Separamos Input Down (Pressionar) e Input Up (Largar) para lidar com teclas longas
         function getColFromX(x) {
             const W = gameCanvas.clientWidth;
             const colW = W / columns;
@@ -1147,8 +1146,9 @@
                     
                     const yTarget = yOverride !== undefined ? yOverride : hitCenter;
                     
-                    const isTappingTile = (yTarget >= noteTopY - 100 && yTarget <= noteBottomY + 100);
-                    const isTileInHitZone = (noteBottomY > hitCenter - 90 && noteBottomY < hitCenter + 120);
+                    // Áreas de Tolerância Expandidas para não falhar "Ghost Misses"
+                    const isTappingTile = (yTarget >= noteTopY - 120 && yTarget <= noteBottomY + 120);
+                    const isTileInHitZone = (noteBottomY > hitCenter - 110 && noteBottomY < hitCenter + 140);
                     
                     if(isTappingTile || isTileInHitZone) {
                         // Bater numa nota (seja tap normal ou longa)
@@ -1157,8 +1157,6 @@
                             score += 10 + (Math.min(combo, 20) * 2);
                         } else {
                             note.holding = true; // Inicia a segurar a nota longa
-                            // Garante que o ponto de ancoragem não faz a nota "saltar"
-                            // Fixa no ponto clicado, mas se o utilizador clicou muito abaixo, fixa na base real da nota
                             note.holdY = Math.min(yTarget, noteBottomY); 
                             note.holdStartTime = visualTime;
                         }
@@ -1203,8 +1201,8 @@
                     
                     const holdY = note.holdY !== undefined ? note.holdY : hitCenter;
                     
-                    // Margem de erro de 180px para largar (para não punir tanto se largar cedo)
-                    if (noteTopY > holdY - 180) { 
+                    // Margem de erro muito generosa (200px) ao largar, para perdoar pequenos deslizes do ecrã
+                    if (noteTopY > holdY - 200) { 
                         note.hit = true;
                         note.holding = false;
                         score += 30; // Pontos bónus de conclusão
@@ -1220,63 +1218,40 @@
             }
         }
 
-        // Touch Input Dinâmico 
-        const gameWrapper = document.getElementById('game-canvas-wrapper');
-        let touchActiveCols = {}; // Mapeia Touch ID -> Coluna
+        // Input Unificado com Pointer Events (Resolve Ghost Touches, sobreposição de eventos e garante precisão absoluta)
+        let activePointers = {}; 
 
-        gameWrapper.addEventListener('touchstart', (e) => {
+        gameCanvas.addEventListener('pointerdown', (e) => {
             if(!isGamePlaying || isGameOver) return;
             e.preventDefault();
-            const rect = gameCanvas.getBoundingClientRect();
-            for(let i=0; i<e.changedTouches.length; i++) {
-                const t = e.changedTouches[i];
-                const col = getColFromX(t.clientX - rect.left);
-                touchActiveCols[t.identifier] = col;
-                handleGameInputDown(col, t.clientY - rect.top);
-            }
-        }, {passive: false});
-
-        gameWrapper.addEventListener('touchend', (e) => {
-            if(!isGamePlaying || isGameOver) return;
-            e.preventDefault();
-            for(let i=0; i<e.changedTouches.length; i++) {
-                const t = e.changedTouches[i];
-                if(touchActiveCols[t.identifier] !== undefined) {
-                    handleGameInputUp(touchActiveCols[t.identifier]);
-                    delete touchActiveCols[t.identifier];
-                }
-            }
-        }, {passive: false});
-        
-        gameWrapper.addEventListener('touchcancel', (e) => {
-            if(!isGamePlaying || isGameOver) return;
-            for(let i=0; i<e.changedTouches.length; i++) {
-                if(touchActiveCols[e.changedTouches[i].identifier] !== undefined) {
-                    handleGameInputUp(touchActiveCols[e.changedTouches[i].identifier]);
-                    delete touchActiveCols[e.changedTouches[i].identifier];
-                }
-            }
-        });
-
-        // Mouse Input Dinâmico
-        gameWrapper.addEventListener('mousedown', (e) => {
-            if(!isGamePlaying || isGameOver) return;
+            gameCanvas.setPointerCapture(e.pointerId);
+            
             const rect = gameCanvas.getBoundingClientRect();
             const col = getColFromX(e.clientX - rect.left);
-            gameWrapper.dataset.mouseCol = col;
+            activePointers[e.pointerId] = col;
             handleGameInputDown(col, e.clientY - rect.top);
         });
-        gameWrapper.addEventListener('mouseup', () => {
-            if(gameWrapper.dataset.mouseCol !== undefined) {
-                handleGameInputUp(parseInt(gameWrapper.dataset.mouseCol));
-                delete gameWrapper.dataset.mouseCol;
+
+        gameCanvas.addEventListener('pointerup', (e) => {
+            if(!isGamePlaying || isGameOver) return;
+            e.preventDefault();
+            
+            if(activePointers[e.pointerId] !== undefined) {
+                handleGameInputUp(activePointers[e.pointerId]);
+                delete activePointers[e.pointerId];
             }
+            try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){}
         });
-        gameWrapper.addEventListener('mouseleave', () => {
-            if(gameWrapper.dataset.mouseCol !== undefined) {
-                handleGameInputUp(parseInt(gameWrapper.dataset.mouseCol));
-                delete gameWrapper.dataset.mouseCol;
+
+        gameCanvas.addEventListener('pointercancel', (e) => {
+            if(!isGamePlaying || isGameOver) return;
+            e.preventDefault();
+            
+            if(activePointers[e.pointerId] !== undefined) {
+                handleGameInputUp(activePointers[e.pointerId]);
+                delete activePointers[e.pointerId];
             }
+            try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){}
         });
 
         // Eventos base do Player
