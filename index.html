@@ -789,6 +789,7 @@
         let columnHighlights = [0, 0, 0, 0]; // Flash visual ao clicar na coluna
         let visualTime = 0; // Para fluidez do FPS
         let lastFrameTime = 0; // Para cálculo do Delta Time
+        let columnsHeld = [false, false, false, false]; // Rastreio contínuo do HOLD
 
         document.getElementById('open-game-btn').addEventListener('click', () => {
             gamePanel.classList.remove('hidden');
@@ -820,6 +821,7 @@
             combo = 0;
             visualTime = audio.currentTime;
             lastFrameTime = performance.now();
+            columnsHeld = [false, false, false, false]; // Resetar hold
             updateGameUI();
             
             if(!isPlaying) togglePlay(); // Inicia a música
@@ -874,28 +876,46 @@
             gameCanvas.classList.add('game-miss-flash');
         }
 
-        // Gera as notas (tiles) com base na duração da música
+        // Gera as notas (tiles) com base na duração da música (Agora com Notas Longas)
         function generateNotes(duration) {
             gameNotes = [];
             let currentTime = 1.0; // Começa após 1 segundo
             let lastCol = -1;
+            let colActiveUntil = [0, 0, 0, 0];
             
             while(currentTime < duration - 2) {
                 // Intervalo de batida base (aprox 120BPM)
                 let step = Math.random() > 0.7 ? 0.25 : 0.5;
-                
-                // Escolhe coluna diferente da anterior para ser mais jogável
                 let col = Math.floor(Math.random() * columns);
+                
+                // Procurar coluna vazia se esta estiver ocupada por uma nota longa
+                if (currentTime < colActiveUntil[col]) {
+                    let found = false;
+                    for(let i=1; i<columns; i++) {
+                        let tryCol = (col + i) % columns;
+                        if(currentTime >= colActiveUntil[tryCol]) { col = tryCol; found = true; break; }
+                    }
+                    if(!found) { currentTime += step; continue; } // Nenhuma coluna livre agora
+                }
+
                 if (col === lastCol && Math.random() > 0.5) col = (col + 1) % columns;
                 
-                gameNotes.push({ time: currentTime, col: col, hit: false, missed: false });
-                lastCol = col;
+                // 25% de probabilidade de ser uma "Barra Longa" (Hold Note)
+                let isHoldNote = Math.random() > 0.75;
+                let noteDuration = isHoldNote ? (Math.random() * 0.8 + 0.4) : 0; // Duração entre 0.4s e 1.2s
                 
-                // Chance de nota dupla ocasional
-                if(Math.random() > 0.85) {
-                    let col2 = Math.floor(Math.random() * columns);
-                    if(col2 !== col) gameNotes.push({ time: currentTime, col: col2, hit: false, missed: false });
-                }
+                gameNotes.push({ 
+                    time: currentTime, 
+                    col: col, 
+                    duration: noteDuration, 
+                    hit: false, 
+                    holding: false, 
+                    missed: false 
+                });
+                
+                // Bloqueia a coluna pelo tempo que a nota longa durar + pequena margem
+                colActiveUntil[col] = currentTime + noteDuration + 0.2;
+                lastCol = col;
                 currentTime += step;
             }
         }
@@ -946,6 +966,7 @@
             const colW = W / columns;
             const hitZoneY = H - 120;
             const hitZoneHeight = 80;
+            const hitCenter = hitZoneY + hitZoneHeight/2;
             const currentAudioTime = visualTime;
             
             // Aumento Gradual de Velocidade (+2px por cada segundo de música)
@@ -958,12 +979,12 @@
                 gCtx.beginPath(); gCtx.moveTo(i * colW, 0); gCtx.lineTo(i * colW, H); gCtx.stroke();
             }
 
-            // Highlights de Coluna (quando o utilizador clica)
+            // Highlights de Coluna (quando o utilizador clica/segura)
             for(let i=0; i<columns; i++) {
-                if(columnHighlights[i] > 0) {
-                    gCtx.fillStyle = `rgba(255,255,255,${columnHighlights[i] * 0.15})`;
+                if(columnHighlights[i] > 0 || columnsHeld[i]) {
+                    gCtx.fillStyle = `rgba(255,255,255,${columnsHeld[i] ? 0.2 : (columnHighlights[i] * 0.15)})`;
                     gCtx.fillRect(i * colW, 0, colW, H);
-                    columnHighlights[i] -= 0.05;
+                    if(!columnsHeld[i]) columnHighlights[i] -= 0.05;
                 }
             }
             
@@ -979,11 +1000,10 @@
             gCtx.strokeStyle = 'var(--accent)';
             gCtx.lineWidth = 2;
             gCtx.beginPath();
-            const hitCenter = hitZoneY + hitZoneHeight/2;
             gCtx.moveTo(0, hitCenter); gCtx.lineTo(W, hitCenter);
             gCtx.stroke();
             
-            // Desenhar Notas (Tiles)
+            // Desenhar Notas (Tiles) e Notas Longas
             const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#10b981';
             
             for(let i=0; i<gameNotes.length; i++) {
@@ -992,39 +1012,75 @@
                 let note = gameNotes[i];
                 if(note.hit) continue;
                 
-                // Posição baseada no tempo atual da música
-                // Usa currentSpeed (que aumenta ao longo do tempo) para calcular a posição
+                // Para uma nota longa, a duração aumenta o tamanho do tile
+                const tileH = note.duration > 0 ? (note.duration * currentSpeed) : 120;
+                
+                // O Y do Fundo (Início da nota)
                 const noteBottomY = hitCenter - ((note.time - currentAudioTime) * currentSpeed);
-                const tileH = 120; // Altura do tile
-                const noteTopY = noteBottomY - tileH;
+                // O Y do Topo (Fim da nota longa)
+                let noteTopY = noteBottomY - tileH;
+                
+                // Onde renderizar o fundo. Se estiver a segurar, trava no centro (efeito que a nota está a ser engolida)
+                let renderBottomY = noteBottomY;
+                if (note.holding) {
+                    renderBottomY = hitCenter;
+                    // Se o topo da nota também passar da linha enquanto segura, a nota foi concluída com sucesso!
+                    if (noteTopY > hitCenter) {
+                        note.hit = true;
+                        note.holding = false;
+                        score += 50; // Bónus extra por completar a barra inteira
+                        updateGameUI();
+                        continue;
+                    }
+                }
                 
                 // Só desenha se estiver visível no ecrã
-                if(noteBottomY > 0 && noteTopY < H) {
-                    // Verificar se falhou (passou da hit zone inteira)
-                    if(noteTopY > hitZoneY + hitZoneHeight + 20 && !note.missed) {
+                if(renderBottomY > 0 && noteTopY < H) {
+                    
+                    // Falhar (Miss) - Deixou passar o Início sem clicar, ou soltou antes da barra acabar
+                    if(!note.holding && renderBottomY > hitCenter + 120 && !note.missed) {
                         note.missed = true;
                         triggerGameOver();
-                        break; // Sai do loop para não verificar mais notas
+                        break; 
                     }
                     
                     if(!note.missed) {
-                        // Desenhar Rectângulo arredondado
+                        // Renderiza o retângulo base
                         const padding = 6;
                         gCtx.fillStyle = accentColor;
                         gCtx.beginPath();
-                        gCtx.roundRect(note.col * colW + padding, noteTopY, colW - padding*2, tileH, 8);
+                        
+                        let currentTileH = renderBottomY - noteTopY;
+                        if(currentTileH < 20) currentTileH = 20; // Prevenção visual para que não desapareça
+                        
+                        gCtx.roundRect(note.col * colW + padding, noteTopY, colW - padding*2, currentTileH, 8);
                         gCtx.fill();
                         
-                        // Brilho interior
+                        // Design especial interior para identificar barras longas visualmente
+                        if (note.duration > 0) {
+                            gCtx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+                            gCtx.beginPath();
+                            gCtx.roundRect(note.col * colW + padding + 15, noteTopY + 10, colW - padding*2 - 30, currentTileH - 20, 4);
+                            gCtx.fill();
+                        }
+                        
+                        // Brilho interior comum a todas
                         gCtx.fillStyle = 'rgba(255,255,255,0.2)';
                         gCtx.beginPath();
-                        gCtx.roundRect(note.col * colW + padding, noteTopY, colW/3, tileH, 8);
+                        gCtx.roundRect(note.col * colW + padding, noteTopY, colW/3, currentTileH, 8);
                         gCtx.fill();
+                        
+                        // Pontos Constantes & Efeitos de Partículas enquanto Segura
+                        if (note.holding) {
+                            score += 1; 
+                            if(score % 5 === 0) updateGameUI(); // Atualiza a UI espaçadamente para não pesar no ecrã
+                            if(Math.random() > 0.6) createHitParticles(note.col * colW + colW/2, hitCenter);
+                        }
                     }
                 }
             }
 
-            // Atualizar e desenhar Partículas
+            // Atualizar e desenhar Partículas globais
             if(!isGameOver) {
                 for(let i = particles.length - 1; i >= 0; i--) {
                     let p = particles[i];
@@ -1054,81 +1110,156 @@
             }
         }
 
-        // Interação com o Jogo
-        function handleGameInput(x, y) {
-            if(!isGamePlaying || isGameOver) return;
+        // NOVO: Separamos Input Down (Pressionar) e Input Up (Largar) para lidar com teclas longas
+        function getColFromX(x) {
             const W = gameCanvas.clientWidth;
             const colW = W / columns;
+            return Math.floor(Math.max(0, Math.min(x, W - 1)) / colW);
+        }
+
+        // Pressionar tecla (Início da Nota Normal ou Longa)
+        function handleGameInputDown(col, yOverride) {
+            if(!isGamePlaying || isGameOver) return;
+            if(columnsHeld[col]) return; // Evita duplos triggers
             
-            // Garante que o clique seja mapeado para uma das colunas, mesmo se clicado fora das laterais do canvas
-            const xClamped = Math.max(0, Math.min(x, W - 1));
-            const clickedCol = Math.floor(xClamped / colW);
-            
-            if(clickedCol >= 0 && clickedCol < columns) {
-                columnHighlights[clickedCol] = 1.0; // Ativar flash visual
-            }
+            columnsHeld[col] = true;
+            columnHighlights[col] = 1.0;
             
             const H = gameCanvas.clientHeight;
-            const hitZoneY = H - 120;
-            const hitZoneHeight = 80;
-            const hitCenter = hitZoneY + hitZoneHeight/2;
-            const currentAudioTime = visualTime; // Usar tempo visual suave
-            const currentSpeed = baseSpeed + (currentAudioTime * 2); // Mesma fórmula do loop
+            const hitCenter = (H - 120) + 40; // hitZoneY + half Height
+            const currentSpeed = baseSpeed + (visualTime * 2);
             
             let hit = false;
             
-            // Encontrar a nota que o jogador tocou
             for(let i=0; i<gameNotes.length; i++) {
                 let note = gameNotes[i];
-                if(note.col === clickedCol && !note.hit && !note.missed) {
-                    const noteBottomY = hitCenter - ((note.time - currentAudioTime) * currentSpeed);
-                    const tileH = 120; // Altura do tile
+                if(note.col === col && !note.hit && !note.missed && !note.holding) {
+                    
+                    const noteBottomY = hitCenter - ((note.time - visualTime) * currentSpeed);
+                    const tileH = note.duration > 0 ? (note.duration * currentSpeed) : 120;
                     const noteTopY = noteBottomY - tileH;
                     
-                    // 1. Tocou diretamente na tecla (qualquer altura da tela - estilo Piano Tiles)
-                    const isTappingTile = (y >= noteTopY - 100 && y <= noteBottomY + 100);
-                    // 2. Tecla está na zona inferior e apenas clicou na coluna (estilo Guitar Hero)
+                    const yTarget = yOverride !== undefined ? yOverride : hitCenter;
+                    
+                    const isTappingTile = (yTarget >= noteTopY - 100 && yTarget <= noteBottomY + 100);
                     const isTileInHitZone = (noteBottomY > hitCenter - 90 && noteBottomY < hitCenter + 120);
                     
                     if(isTappingTile || isTileInHitZone) {
-                        note.hit = true;
-                        score += 10 + (Math.min(combo, 20) * 2);
+                        // Bater numa nota (seja tap normal ou longa)
+                        if (note.duration === 0) {
+                            note.hit = true; // Completa imediatamente as notas normais
+                            score += 10 + (Math.min(combo, 20) * 2);
+                        } else {
+                            note.holding = true; // Inicia a segurar a nota longa
+                        }
+                        
                         combo++;
                         updateGameUI();
-                        // Criar partículas onde clicou (ou no centro da linha se for pelo teclado)
-                        createHitParticles(clickedCol * colW + colW/2, isTappingTile ? y : hitCenter);
+                        createHitParticles(col * (gameCanvas.clientWidth/columns) + (gameCanvas.clientWidth/columns)/2, isTappingTile ? yTarget : hitCenter);
                         hit = true;
                         
                         gameCanvas.classList.remove('game-hit-flash');
-                        void gameCanvas.offsetWidth; // trigger reflow
+                        void gameCanvas.offsetWidth; 
                         gameCanvas.classList.add('game-hit-flash');
                         break;
                     }
                 }
             }
             
-            // Se ativou e falhou completamente todas as notas, desencadeia Game Over
-            if(!hit) {
-                triggerGameOver();
+            // Clicou numa coluna vazia = Miss na hora
+            if(!hit) triggerGameOver();
+        }
+
+        // Largar Tecla (Terminar Nota Longa)
+        function handleGameInputUp(col) {
+            if(!isGamePlaying || isGameOver) return;
+            columnsHeld[col] = false;
+            
+            const hitCenter = (gameCanvas.clientHeight - 120) + 40;
+            const currentSpeed = baseSpeed + (visualTime * 2);
+
+            for(let i=0; i<gameNotes.length; i++) {
+                let note = gameNotes[i];
+                if(note.col === col && note.holding) {
+                    // O jogador largou. Temos de verificar se o topo (final da barra longa)
+                    // já passou ou está MUITO PERTO da zona de acerto.
+                    const noteTopY = hitCenter - ((note.time + note.duration - visualTime) * currentSpeed);
+                    
+                    // Margem de erro de 150px para largar "um pouco mais cedo" sem punir agressivamente
+                    if (noteTopY > hitCenter - 150) { 
+                        note.hit = true;
+                        note.holding = false;
+                        score += 30; // Pontos bónus de conclusão
+                        updateGameUI();
+                    } else {
+                        // Largou demasiado cedo = GAME OVER
+                        note.missed = true;
+                        note.holding = false;
+                        triggerGameOver();
+                    }
+                    break;
+                }
             }
         }
 
+        // Touch Input Dinâmico 
         const gameWrapper = document.getElementById('game-canvas-wrapper');
-
-        gameWrapper.addEventListener('mousedown', (e) => {
-            if(!isGamePlaying || isGameOver) return;
-            const rect = gameCanvas.getBoundingClientRect();
-            handleGameInput(e.clientX - rect.left, e.clientY - rect.top);
-        });
+        let touchActiveCols = {}; // Mapeia Touch ID -> Coluna
 
         gameWrapper.addEventListener('touchstart', (e) => {
             if(!isGamePlaying || isGameOver) return;
             e.preventDefault();
             const rect = gameCanvas.getBoundingClientRect();
             for(let i=0; i<e.changedTouches.length; i++) {
-                handleGameInput(e.changedTouches[i].clientX - rect.left, e.changedTouches[i].clientY - rect.top);
+                const t = e.changedTouches[i];
+                const col = getColFromX(t.clientX - rect.left);
+                touchActiveCols[t.identifier] = col;
+                handleGameInputDown(col, t.clientY - rect.top);
             }
         }, {passive: false});
+
+        gameWrapper.addEventListener('touchend', (e) => {
+            if(!isGamePlaying || isGameOver) return;
+            e.preventDefault();
+            for(let i=0; i<e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if(touchActiveCols[t.identifier] !== undefined) {
+                    handleGameInputUp(touchActiveCols[t.identifier]);
+                    delete touchActiveCols[t.identifier];
+                }
+            }
+        }, {passive: false});
+        
+        gameWrapper.addEventListener('touchcancel', (e) => {
+            if(!isGamePlaying || isGameOver) return;
+            for(let i=0; i<e.changedTouches.length; i++) {
+                if(touchActiveCols[e.changedTouches[i].identifier] !== undefined) {
+                    handleGameInputUp(touchActiveCols[e.changedTouches[i].identifier]);
+                    delete touchActiveCols[e.changedTouches[i].identifier];
+                }
+            }
+        });
+
+        // Mouse Input Dinâmico
+        gameWrapper.addEventListener('mousedown', (e) => {
+            if(!isGamePlaying || isGameOver) return;
+            const rect = gameCanvas.getBoundingClientRect();
+            const col = getColFromX(e.clientX - rect.left);
+            gameWrapper.dataset.mouseCol = col;
+            handleGameInputDown(col, e.clientY - rect.top);
+        });
+        gameWrapper.addEventListener('mouseup', () => {
+            if(gameWrapper.dataset.mouseCol !== undefined) {
+                handleGameInputUp(parseInt(gameWrapper.dataset.mouseCol));
+                delete gameWrapper.dataset.mouseCol;
+            }
+        });
+        gameWrapper.addEventListener('mouseleave', () => {
+            if(gameWrapper.dataset.mouseCol !== undefined) {
+                handleGameInputUp(parseInt(gameWrapper.dataset.mouseCol));
+                delete gameWrapper.dataset.mouseCol;
+            }
+        });
 
         // Eventos base do Player
         DOM.playPause.addEventListener('click', () => { togglePlay(); DOM.playPause.blur(); });
@@ -1136,20 +1267,31 @@
         DOM.prev.addEventListener('click', () => { prevTrack(); DOM.prev.blur(); });
 
         audio.addEventListener('ended', () => { if(isRepeat){audio.currentTime=0; audio.play();}else nextTrack(); });
+        
+        // Teclado com KeyDown (Segurar) e KeyUp (Largar)
+        let keyMappings = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
+        
         document.addEventListener('keydown', e => {
-            if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; if(e.target.tagName === 'BUTTON' && e.code === 'Space') e.preventDefault(); 
+            if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; 
+            if(e.target.tagName === 'BUTTON' && e.code === 'Space') e.preventDefault(); 
+            
+            if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) {
+                if (!e.repeat) handleGameInputDown(keyMappings[e.code]);
+                return;
+            }
+            
             switch(e.code) { 
                 case 'Space': e.preventDefault(); togglePlay(); break; 
                 case 'ArrowRight': e.preventDefault(); nextTrack(); break; 
                 case 'ArrowLeft': e.preventDefault(); prevTrack(); break; 
                 case 'ArrowUp': e.preventDefault(); DOM.volBar.value=Math.min(1,parseFloat(DOM.volBar.value)+0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
                 case 'ArrowDown': e.preventDefault(); DOM.volBar.value=Math.max(0,parseFloat(DOM.volBar.value)-0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
-                
-                // Suporte de teclado para o Jogo
-                case 'KeyD': if(isGamePlaying && !isGameOver) handleGameInput((gameCanvas.clientWidth/columns)*0.5, gameCanvas.clientHeight-100); break;
-                case 'KeyF': if(isGamePlaying && !isGameOver) handleGameInput((gameCanvas.clientWidth/columns)*1.5, gameCanvas.clientHeight-100); break;
-                case 'KeyJ': if(isGamePlaying && !isGameOver) handleGameInput((gameCanvas.clientWidth/columns)*2.5, gameCanvas.clientHeight-100); break;
-                case 'KeyK': if(isGamePlaying && !isGameOver) handleGameInput((gameCanvas.clientWidth/columns)*3.5, gameCanvas.clientHeight-100); break;
+            }
+        });
+        
+        document.addEventListener('keyup', e => {
+            if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) {
+                handleGameInputUp(keyMappings[e.code]);
             }
         });
 
