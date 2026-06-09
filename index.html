@@ -299,7 +299,7 @@
                         <h3 id="list-title" class="text-base md:text-lg font-semibold text-white flex items-center gap-2 pointer-events-none">
                             <svg class="w-4 h-4 md:w-5 md:h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
                             Sua Playlist
-                        </h3>
+                        </select>
                         <select id="sort-select" class="bg-transparent text-[10px] md:text-xs text-gray-400 outline-none hover:text-accent transition cursor-pointer p-0 border-0" onclick="event.stopPropagation()">
                             <option value="recent" class="bg-gray-800 text-white">Adicionadas Recentemente</option>
                             <option value="most_played" class="bg-gray-800 text-white">Mais Tocadas</option>
@@ -1048,45 +1048,54 @@
                 const response = await fetch(url);
                 const arrayBuffer = await response.arrayBuffer();
                 const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-                const channelData = audioBuffer.getChannelData(0); // Apenas canal esquerdo p/ performance
+                const channelData = audioBuffer.getChannelData(0); 
                 const sampleRate = audioBuffer.sampleRate;
 
-                // Analisar RMS (Energia) em pedaços de 20ms
-                const step = Math.floor(sampleRate * 0.02); 
-                const rmsArray = [];
-                let totalRms = 0;
-
+                // 1. Calcular a energia (RMS) em janelas de 15ms
+                const step = Math.floor(sampleRate * 0.015); 
+                const energyArray = [];
                 for (let i = 0; i < channelData.length; i += step) {
                     let sum = 0;
                     let chunkLength = Math.min(step, channelData.length - i);
                     for(let j = 0; j < chunkLength; j++) {
                         sum += channelData[i+j] * channelData[i+j];
                     }
-                    const rms = Math.sqrt(sum / chunkLength);
-                    rmsArray.push({ time: i / sampleRate, rms: rms });
-                    totalRms += rms;
+                    energyArray.push(Math.sqrt(sum / chunkLength));
                 }
 
-                const avgRms = totalRms / rmsArray.length;
-                
-                // Determina o limite para o que consideramos ser um "Pico/Batida"
-                const sortedRms = [...rmsArray].sort((a, b) => a.rms - b.rms);
-                const thresholdRms = sortedRms[Math.floor(sortedRms.length * 0.85)].rms;
-                const threshold = Math.max(avgRms * 1.2, thresholdRms);
+                // 2. Calcular o "Fluxo" (Aumentos repentinos de energia = Ataques/Batidas)
+                const fluxArray = [0];
+                for (let i = 1; i < energyArray.length; i++) {
+                    let diff = energyArray[i] - energyArray[i-1];
+                    fluxArray.push(Math.max(0, diff));
+                }
 
+                // 3. Deteção de Picos com Limiar Dinâmico (Moving Average)
                 let peaks = [];
                 let lastPeakTime = 0;
+                const windowSize = Math.floor(0.5 / 0.015); // Janela de ~0.5 segundos para calcular a média local
 
-                // Encontrar os picos locais
-                for (let i = 1; i < rmsArray.length - 1; i++) {
-                    if (rmsArray[i].rms > threshold &&
-                        rmsArray[i].rms > rmsArray[i-1].rms &&
-                        rmsArray[i].rms > rmsArray[i+1].rms) {
+                for (let i = windowSize; i < fluxArray.length - windowSize; i++) {
+                    let localSum = 0;
+                    for (let j = i - windowSize; j <= i + windowSize; j++) {
+                        localSum += fluxArray[j];
+                    }
+                    let localAvg = localSum / (windowSize * 2 + 1);
 
-                        // Margem mínima de 0.25s entre notas (Impede spam de notas a mais de 240 BPM)
-                        if (rmsArray[i].time - lastPeakTime > 0.25) {
-                            peaks.push(rmsArray[i].time);
-                            lastPeakTime = rmsArray[i].time;
+                    // O valor atual deve ser X vezes maior que a média local e ser um pico local
+                    // Usamos 1.6 como multiplicador.
+                    const threshold = localAvg * 1.6;
+
+                    if (fluxArray[i] > threshold &&
+                        fluxArray[i] > fluxArray[i-1] &&
+                        fluxArray[i] > fluxArray[i+1]) {
+
+                        let time = i * step / sampleRate;
+                        
+                        // Margem mínima de 0.18s entre notas para captar ritmos mais complexos e rápidos sem spammar
+                        if (time - lastPeakTime > 0.18) {
+                            peaks.push(time);
+                            lastPeakTime = time;
                         }
                     }
                 }
@@ -1116,9 +1125,9 @@
                     let noteDuration = 0;
 
                     // Se a próxima nota demora, chance de transformar esta num "Hold"
-                    if (timeDiff > 0.6 && Math.random() > 0.3) {
-                        noteDuration = timeDiff - 0.2; // Deixa 0.2s de pausa na cauda
-                        if (noteDuration > 1.5) noteDuration = 1.5; // Limite máximo para uma nota longa
+                    if (timeDiff > 0.4 && Math.random() > 0.4) {
+                        noteDuration = timeDiff - 0.15; // Deixa 0.15s de pausa na cauda
+                        if (noteDuration > 2.0) noteDuration = 2.0; // Limite máximo para uma nota longa
                     }
 
                     gameNotes.push({
@@ -1130,7 +1139,7 @@
                         missed: false
                     });
 
-                    colActiveUntil[col] = time + noteDuration + 0.15;
+                    colActiveUntil[col] = time + noteDuration + 0.10;
                     lastCol = col;
                 });
 
