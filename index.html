@@ -197,7 +197,13 @@
                             <svg class="w-8 h-8 md:w-10 md:h-10 text-white transform -rotate-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
                         </div>
                         <h2 class="text-2xl md:text-3xl font-bold text-white mb-2" id="game-track-title">Emera Tiles</h2>
-                        <p class="text-gray-400 mb-8 max-w-[280px] text-xs md:text-sm">As notas cairão sincronizadas com as batidas reais da música. Toque na coluna correta quando a nota atingir a área inferior!</p>
+                        <p class="text-gray-400 mb-6 max-w-[280px] text-xs md:text-sm">As notas cairão sincronizadas com as batidas reais da música. Toque na coluna correta quando a nota atingir a área inferior!</p>
+                        
+                        <!-- NOVO: Display de Recordes -->
+                        <div id="game-stats-display" class="mb-6 bg-gray-900/80 border border-gray-700 px-4 py-2 rounded-xl hidden">
+                            <p class="text-accent font-bold text-sm tracking-wider">RECORDE: <span id="stat-highscore" class="text-white">0</span></p>
+                            <p class="text-yellow-400 font-bold text-xs tracking-wider">NÍVEL MÁXIMO: <span id="stat-maxlevel" class="text-white">1</span>X</p>
+                        </div>
                         
                         <div class="flex flex-col gap-3 w-full max-w-xs">
                             <button id="start-game-btn" class="w-full bg-accent text-white py-3 rounded-xl font-bold hover:scale-105 transition shadow-lg flex items-center justify-center gap-2">
@@ -939,7 +945,35 @@
             
             const track = playlist[currentTrackIndex];
             document.getElementById('game-track-title').textContent = track ? track.title : "Emera Tiles";
+            
+            // NOVO: Mostrar recordes da música ao abrir ou mudar de faixa
+            const statsDisplay = document.getElementById('game-stats-display');
+            if (track && track.highScore !== undefined && track.highScore > 0) {
+                statsDisplay.classList.remove('hidden');
+                document.getElementById('stat-highscore').textContent = track.highScore;
+                document.getElementById('stat-maxlevel').textContent = track.maxLevel || 1;
+            } else {
+                statsDisplay.classList.add('hidden');
+            }
+            
             gCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+        }
+
+        // NOVO: Guardar progresso de forma persistente (IndexedDB)
+        function saveGameProgress() {
+            const track = playlist[currentTrackIndex];
+            if (!track) return;
+            let updated = false;
+            
+            if (track.highScore === undefined) track.highScore = 0;
+            if (track.maxLevel === undefined) track.maxLevel = 1;
+            
+            if (score > track.highScore) { track.highScore = score; updated = true; }
+            if (currentMultiplier > track.maxLevel) { track.maxLevel = currentMultiplier; updated = true; }
+            
+            if (updated && track.isLocal) {
+                saveTrackToDB(track);
+            }
         }
 
         // Função ativada quando atinge o FIM da música
@@ -949,6 +983,8 @@
             cancelAnimationFrame(gameAnimFrame);
             
             if(isPlaying) togglePlay(); 
+            
+            saveGameProgress(); // GUARDA O PROGRESSO AQUI
             
             document.getElementById('victory-score-display').textContent = score;
             document.getElementById('victory-multiplier-display').textContent = `Nível Concluído: ${currentMultiplier}X Velocidade`;
@@ -977,6 +1013,8 @@
             cancelAnimationFrame(gameAnimFrame);
             
             if(isPlaying) togglePlay(); 
+            
+            saveGameProgress(); // GUARDA O PROGRESSO AQUI TAMBÉM
             
             document.getElementById('final-score-display').textContent = score;
             
