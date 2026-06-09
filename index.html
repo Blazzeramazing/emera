@@ -72,12 +72,6 @@
             .drawer-puller { display: none; }
             #right-panel { position: relative; height: auto; transform: none !important; }
         }
-
-        /* Efeitos para o Jogo */
-        .game-hit-flash { animation: hitFlash 0.3s ease-out forwards; }
-        @keyframes hitFlash { 0% { background-color: var(--accent-light); } 100% { background-color: transparent; } }
-        .game-miss-flash { animation: missFlash 0.3s ease-out forwards; }
-        @keyframes missFlash { 0% { background-color: rgba(239, 68, 68, 0.3); } 100% { background-color: transparent; } }
     </style>
 </head>
 <body class="bg-gray-950 min-h-[100dvh] md:min-h-screen text-gray-100 font-sans selection:bg-accent selection:text-white flex items-center justify-center md:p-4 lg:p-8 overflow-hidden md:overflow-auto relative transition-colors duration-500">
@@ -576,7 +570,7 @@
 
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
-            if (!isPlaying || visualizerMode === 5) return; 
+            if (!isPlaying || visualizerMode === 5 || isGameActive) return; // PAUSADO DURANTE O JOGO para salvar FPS
 
             const W = DOM.canvas.clientWidth; const H = DOM.canvas.clientHeight;
             if(DOM.canvas.width !== W || DOM.canvas.height !== H) { DOM.canvas.width = W; DOM.canvas.height = H; }
@@ -789,6 +783,12 @@
         let visualTime = 0; // Para fluidez do FPS
         let lastFrameTime = 0; // Para cálculo do Delta Time
         let columnsHeld = [false, false, false, false]; // Rastreio contínuo do HOLD
+        
+        // Renderização Otimizada (Evita DOM Reflows)
+        let gameHitFlash = 0;
+        let gameMissFlash = 0;
+        let lastRenderedScore = -1;
+        let lastRenderedCombo = -1;
 
         document.getElementById('open-game-btn').addEventListener('click', () => {
             gamePanel.classList.remove('hidden');
@@ -819,6 +819,8 @@
             gameOverOverlay.classList.remove('flex');
             score = 0;
             combo = 0;
+            lastRenderedScore = -1; // Força re-render
+            lastRenderedCombo = -1;
             visualTime = audio.currentTime;
             lastFrameTime = performance.now();
             columnsHeld = [false, false, false, false]; // Resetar hold
@@ -888,9 +890,12 @@
                 btnExit.style.pointerEvents = 'auto';
             }, 600); // Aguarda 600ms antes de permitir cliques
             
-            gameCanvas.classList.remove('game-miss-flash');
-            void gameCanvas.offsetWidth;
-            gameCanvas.classList.add('game-miss-flash');
+            // Substitui reflow agressivo por flag Canvas
+            gameMissFlash = 1.0; 
+            // Como o loop parou, precisamos renderizar o ecrã vermelho manualmente uma última vez
+            const W = gameCanvas.clientWidth; const H = gameCanvas.clientHeight;
+            gCtx.fillStyle = `rgba(239, 68, 68, 0.4)`;
+            gCtx.fillRect(0, 0, W, H);
         }
 
         // Gera as notas (tiles) com base na duração da música (Agora com Notas Longas)
@@ -949,10 +954,17 @@
             }
         }
 
+        // Sistema de cache para evitar atualizar o DOM (lento) em cada frame
         function updateGameUI() {
-            gameScoreEl.textContent = score;
-            gameComboEl.textContent = `Combo x${combo}`;
-            gameComboEl.style.color = combo > 10 ? 'var(--accent)' : '#9ca3af';
+            if (score !== lastRenderedScore) {
+                gameScoreEl.textContent = score;
+                lastRenderedScore = score;
+            }
+            if (combo !== lastRenderedCombo) {
+                gameComboEl.textContent = `Combo x${combo}`;
+                gameComboEl.style.color = combo > 10 ? 'var(--accent)' : '#9ca3af';
+                lastRenderedCombo = combo;
+            }
         }
 
         function gameLoop(timestamp) {
@@ -966,9 +978,9 @@
             if (isPlaying) {
                 visualTime += dt * audio.playbackRate;
                 const drift = audio.currentTime - visualTime;
-                // Soft sync para manter suave, Hard sync se desviar muito
-                if (Math.abs(drift) > 0.1) visualTime = audio.currentTime;
-                else visualTime += drift * 0.2;
+                // Tolerância maior (0.25) para prevenir "saltos" devido a atualizações espaçadas do audio.currentTime
+                if (Math.abs(drift) > 0.25) visualTime = audio.currentTime;
+                else visualTime += drift * 0.1; // Suavização subtil (0.1)
             } else {
                 visualTime = audio.currentTime;
             }
@@ -1097,7 +1109,7 @@
                         // Pontos Constantes & Efeitos de Partículas enquanto Segura
                         if (note.holding) {
                             score += 1; 
-                            if(score % 5 === 0) updateGameUI(); // Atualiza a UI espaçadamente
+                            updateGameUI(); // Atualiza a UI sem travar graças ao sistema de cache
                             if(Math.random() > 0.6) createHitParticles(note.col * colW + colW/2, renderBottomY);
                         }
                     }
@@ -1121,6 +1133,13 @@
                     gCtx.fill();
                 }
                 gCtx.globalAlpha = 1.0;
+                
+                // Desenha os flashes baseados no canvas em vez do CSS DOM para salvar desempenho
+                if(gameHitFlash > 0) {
+                    gCtx.fillStyle = `rgba(16, 185, 129, ${gameHitFlash * 0.2})`;
+                    gCtx.fillRect(0, 0, W, H);
+                    gameHitFlash -= 0.05;
+                }
                 
                 // Fim do Jogo (Vitória)
                 if(currentAudioTime >= audio.duration - 1 && audio.duration > 0) {
@@ -1184,9 +1203,7 @@
                         createHitParticles(col * (gameCanvas.clientWidth/columns) + (gameCanvas.clientWidth/columns)/2, note.holdY !== undefined ? note.holdY : (isTappingTile ? yTarget : hitCenter));
                         hit = true;
                         
-                        gameCanvas.classList.remove('game-hit-flash');
-                        void gameCanvas.offsetWidth; 
-                        gameCanvas.classList.add('game-hit-flash');
+                        gameHitFlash = 1.0; // Flash desenhado no canvas
                         break;
                     }
                 }
@@ -1242,7 +1259,7 @@
         gameCanvas.addEventListener('pointerdown', (e) => {
             if(!isGamePlaying || isGameOver) return;
             e.preventDefault();
-            gameCanvas.setPointerCapture(e.pointerId);
+            try { gameCanvas.setPointerCapture(e.pointerId); } catch(err){}
             
             const rect = gameCanvas.getBoundingClientRect();
             const col = getColFromX(e.clientX - rect.left);
