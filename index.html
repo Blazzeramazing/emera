@@ -181,6 +181,8 @@
                     <div class="text-right min-w-[80px]">
                         <div class="text-xl md:text-2xl font-black text-accent leading-none" id="game-score">0</div>
                         <div class="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider" id="game-combo">Combo x0</div>
+                        <!-- NOVO: Display da Velocidade Atual -->
+                        <div class="text-[9px] md:text-[10px] text-yellow-400 font-bold uppercase tracking-wider mt-1 hidden" id="game-speed-display">VELOCIDADE 1X</div>
                     </div>
                 </div>
                 
@@ -222,6 +224,30 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- NOVO: Overlay de Vitória (100% Concluído) -->
+                    <div id="victory-overlay" class="absolute inset-0 bg-black/90 flex-col items-center justify-center z-30 backdrop-blur-md p-6 text-center hidden opacity-0 transition-opacity duration-300">
+                        <h2 class="text-3xl md:text-4xl font-black text-accent mb-2 tracking-widest drop-shadow-[0_0_15px_var(--accent-light)]">MÚSICA CONCLUÍDA!</h2>
+                        <p class="text-gray-300 mb-2 text-xs md:text-sm">Pontuação Atual</p>
+                        <div class="text-4xl md:text-5xl font-black text-white mb-2" id="victory-score-display">0</div>
+                        <div class="text-sm font-bold text-yellow-400 mb-8" id="victory-multiplier-display">Nível Atual: 1X</div>
+                        
+                        <div class="flex flex-col gap-3 w-full max-w-xs">
+                            <button id="victory-continue-btn" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black py-3 rounded-xl font-black transition shadow-[0_0_15px_rgba(234,179,8,0.4)] flex items-center justify-center gap-2 hover:scale-105">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <span>CONTINUAR (<span id="next-mult-text">2X</span>)</span>
+                            </button>
+                            <button id="victory-next-btn" class="w-full bg-accent text-white py-3 rounded-xl font-bold hover:scale-105 transition shadow-lg flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                PRÓXIMA MÚSICA
+                            </button>
+                            <button id="victory-exit-btn" class="w-full bg-gray-800 text-gray-300 hover:text-white py-3 rounded-xl font-bold hover:bg-gray-700 transition flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                SAIR DO JOGO
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
             <!-- FIM DA SECÇÃO DO JOGO -->
@@ -770,25 +796,28 @@
         const gamePanel = document.getElementById('game-panel');
         const gameOverlay = document.getElementById('game-overlay');
         const gameOverOverlay = document.getElementById('game-over-overlay');
+        const victoryOverlay = document.getElementById('victory-overlay');
         const gameCanvas = document.getElementById('game-canvas');
         const gCtx = gameCanvas.getContext('2d');
         const gameScoreEl = document.getElementById('game-score');
         const gameComboEl = document.getElementById('game-combo');
+        const gameSpeedDisplay = document.getElementById('game-speed-display');
         
         let isGameActive = false;
         let isGamePlaying = false;
-        let isGameOver = false; // FLAG DO GAME OVER
+        let isGameOver = false; 
         let gameAnimFrame;
         let gameNotes = [];
         let score = 0;
         let combo = 0;
         let columns = 4;
-        let baseSpeed = 350; // Começa ligeiramente mais lento (era 400) para ter margem de aumento
+        let baseSpeed = 350; 
+        let currentMultiplier = 1; // NOVO: Nível de Velocidade
         let particles = [];
-        let columnHighlights = [0, 0, 0, 0]; // Flash visual ao clicar na coluna
-        let visualTime = 0; // Para fluidez do FPS
-        let lastFrameTime = 0; // Para cálculo do Delta Time
-        let columnsHeld = [false, false, false, false]; // Rastreio contínuo do HOLD
+        let columnHighlights = [0, 0, 0, 0]; 
+        let visualTime = 0; 
+        let lastFrameTime = 0; 
+        let columnsHeld = [false, false, false, false]; 
         
         // Renderização Otimizada (Evita DOM Reflows)
         let gameHitFlash = 0;
@@ -796,7 +825,13 @@
         let lastRenderedScore = -1;
         let lastRenderedCombo = -1;
 
+        // Calcula a velocidade com o multiplicador do Nível
+        function getCurrentSpeed(t) {
+            return (baseSpeed + (t * 2)) * currentMultiplier;
+        }
+
         document.getElementById('open-game-btn').addEventListener('click', () => {
+            currentMultiplier = 1; // Reinicia ao abrir a aba
             gamePanel.classList.remove('hidden');
             gamePanel.classList.add('flex');
             setTimeout(() => gamePanel.classList.remove('opacity-0'), 10);
@@ -816,10 +851,14 @@
             cancelAnimationFrame(gameAnimFrame);
         });
 
-        document.getElementById('start-game-btn').addEventListener('click', async () => {
+        // Modificado para suportar Continuar vs Reiniciar
+        async function startMiniGame(keepMult = false, keepScore = false) {
             if(playlist.length === 0) { showToast("Adicione músicas na playlist primeiro!"); return; }
             if(isNaN(audio.duration) || !audio.src) { showToast("Aguarde a música carregar..."); return; }
             
+            if(!keepMult) currentMultiplier = 1;
+            if(!keepScore) { score = 0; combo = 0; }
+
             const startBtn = document.getElementById('start-game-btn');
             const originalContent = startBtn.innerHTML;
             
@@ -836,36 +875,56 @@
             gameOverlay.classList.add('hidden');
             gameOverOverlay.classList.add('hidden', 'opacity-0');
             gameOverOverlay.classList.remove('flex');
-            score = 0;
-            combo = 0;
+            victoryOverlay.classList.add('hidden', 'opacity-0');
+            victoryOverlay.classList.remove('flex');
+            
             lastRenderedScore = -1; // Força re-render
             lastRenderedCombo = -1;
             
-            if(!isPlaying) togglePlay(); // Inicia a música
+            if(!isPlaying) togglePlay(); 
             
             visualTime = audio.currentTime;
             lastFrameTime = performance.now();
-            columnsHeld = [false, false, false, false]; // Resetar hold
+            columnsHeld = [false, false, false, false]; 
             updateGameUI();
             
             isGamePlaying = true;
             isGameOver = false;
             gameAnimFrame = requestAnimationFrame(gameLoop);
-        });
+        }
 
-        // Eventos dos Botões do Game Over
+        document.getElementById('start-game-btn').addEventListener('click', () => startMiniGame(false, false));
+
+        // Eventos dos Botões do Game Over e Vitória
         document.getElementById('restart-game-btn').addEventListener('click', () => {
-            gameOverOverlay.classList.add('hidden', 'opacity-0');
-            gameOverOverlay.classList.remove('flex');
             audio.currentTime = 0;
             visualTime = 0;
-            document.getElementById('start-game-btn').click();
+            startMiniGame(true, false); // Guarda multiplicador para o jogador tentar vencer a mesma velocidade
         });
 
         document.getElementById('exit-game-btn').addEventListener('click', () => {
-            gameOverOverlay.classList.add('hidden', 'opacity-0');
-            gameOverOverlay.classList.remove('flex');
             document.getElementById('close-game-btn').click();
+        });
+
+        document.getElementById('victory-exit-btn').addEventListener('click', () => {
+            document.getElementById('close-game-btn').click();
+        });
+
+        document.getElementById('victory-continue-btn').addEventListener('click', () => {
+            currentMultiplier++; // Sobe de nível!
+            audio.currentTime = 0;
+            visualTime = 0;
+            startMiniGame(true, true); // Guarda o Multiplicador e Score
+        });
+
+        document.getElementById('victory-next-btn').addEventListener('click', () => {
+            victoryOverlay.classList.add('hidden', 'opacity-0');
+            victoryOverlay.classList.remove('flex');
+            nextTrack();
+            // Aguarda a nova música carregar e arranca do zero
+            setTimeout(() => {
+                if(isGameActive) startMiniGame(false, false);
+            }, 500);
         });
 
         function resetGameForNewTrack() {
@@ -875,9 +934,39 @@
             gameOverlay.classList.remove('hidden');
             gameOverOverlay.classList.add('hidden', 'opacity-0');
             gameOverOverlay.classList.remove('flex');
+            victoryOverlay.classList.add('hidden', 'opacity-0');
+            victoryOverlay.classList.remove('flex');
+            
             const track = playlist[currentTrackIndex];
             document.getElementById('game-track-title').textContent = track ? track.title : "Emera Tiles";
             gCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+        }
+
+        // Função ativada quando atinge o FIM da música
+        function triggerVictory() {
+            if(isGameOver || !isGamePlaying) return;
+            isGamePlaying = false;
+            cancelAnimationFrame(gameAnimFrame);
+            
+            if(isPlaying) togglePlay(); 
+            
+            document.getElementById('victory-score-display').textContent = score;
+            document.getElementById('victory-multiplier-display').textContent = `Nível Concluído: ${currentMultiplier}X Velocidade`;
+            document.getElementById('next-mult-text').textContent = `${currentMultiplier + 1}X`;
+            
+            const btnContinue = document.getElementById('victory-continue-btn');
+            const btnNext = document.getElementById('victory-next-btn');
+            btnContinue.style.pointerEvents = 'none';
+            btnNext.style.pointerEvents = 'none';
+            
+            victoryOverlay.classList.remove('hidden');
+            victoryOverlay.classList.add('flex');
+            
+            setTimeout(() => victoryOverlay.classList.remove('opacity-0'), 10);
+            setTimeout(() => {
+                btnContinue.style.pointerEvents = 'auto';
+                btnNext.style.pointerEvents = 'auto';
+            }, 600); 
         }
 
         // Função que é ativada quando o jogador erra ou deixa passar nota
@@ -887,12 +976,10 @@
             isGameOver = true;
             cancelAnimationFrame(gameAnimFrame);
             
-            // Pausa a música ao morrer para efeito dramático
             if(isPlaying) togglePlay(); 
             
             document.getElementById('final-score-display').textContent = score;
             
-            // Prevenção de "Ghost Clicks": Desativa os botões temporariamente
             const btnRestart = document.getElementById('restart-game-btn');
             const btnExit = document.getElementById('exit-game-btn');
             btnRestart.style.pointerEvents = 'none';
@@ -901,16 +988,13 @@
             gameOverOverlay.classList.remove('hidden');
             gameOverOverlay.classList.add('flex');
             
-            // Fade-in suave e reativação dos botões
             setTimeout(() => gameOverOverlay.classList.remove('opacity-0'), 10);
             setTimeout(() => {
                 btnRestart.style.pointerEvents = 'auto';
                 btnExit.style.pointerEvents = 'auto';
-            }, 600); // Aguarda 600ms antes de permitir cliques
+            }, 600); 
             
-            // Substitui reflow agressivo por flag Canvas
             gameMissFlash = 1.0; 
-            // Como o loop parou, precisamos renderizar o ecrã vermelho manualmente uma última vez
             const W = gameCanvas.clientWidth; const H = gameCanvas.clientHeight;
             gCtx.fillStyle = `rgba(239, 68, 68, 0.4)`;
             gCtx.fillRect(0, 0, W, H);
@@ -948,8 +1032,6 @@
                 const avgRms = totalRms / rmsArray.length;
                 
                 // Determina o limite para o que consideramos ser um "Pico/Batida"
-                // Músicas eletrónicas têm um perfil de picos diferente de acústicas.
-                // Ao capturar o percentil 85, a deteção é autoajustável ao volume da música.
                 const sortedRms = [...rmsArray].sort((a, b) => a.rms - b.rms);
                 const thresholdRms = sortedRms[Math.floor(sortedRms.length * 0.85)].rms;
                 const threshold = Math.max(avgRms * 1.2, thresholdRms);
@@ -1079,6 +1161,12 @@
                 gameComboEl.style.color = combo > 10 ? 'var(--accent)' : '#9ca3af';
                 lastRenderedCombo = combo;
             }
+            if(currentMultiplier > 1) {
+                gameSpeedDisplay.classList.remove('hidden');
+                gameSpeedDisplay.textContent = `VELOCIDADE ${currentMultiplier}X`;
+            } else {
+                gameSpeedDisplay.classList.add('hidden');
+            }
         }
 
         function gameLoop(timestamp) {
@@ -1112,8 +1200,8 @@
             const hitCenter = hitZoneY + hitZoneHeight/2;
             const currentAudioTime = visualTime;
             
-            // Aumento Gradual de Velocidade (+2px por cada segundo de música)
-            const currentSpeed = baseSpeed + (currentAudioTime * 2);
+            // Aumento Gradual de Velocidade Aplicado com Multiplicador
+            const currentSpeed = getCurrentSpeed(currentAudioTime);
             
             // Fundo e Colunas
             gCtx.strokeStyle = 'rgba(255,255,255,0.1)';
@@ -1257,10 +1345,7 @@
                 
                 // Fim do Jogo (Vitória)
                 if(currentAudioTime >= audio.duration - 1 && audio.duration > 0) {
-                    isGamePlaying = false;
-                    gameOverlay.classList.remove('hidden');
-                    document.querySelector('#game-overlay p').textContent = `Música concluída! Pontuação Final: ${score}`;
-                    document.querySelector('#start-game-btn').innerHTML = 'JOGAR NOVAMENTE';
+                    triggerVictory();
                 } else {
                     gameAnimFrame = requestAnimationFrame(gameLoop);
                 }
@@ -1283,7 +1368,7 @@
             
             const H = gameCanvas.clientHeight;
             const hitCenter = (H - 120) + 40; // hitZoneY + half Height
-            const currentSpeed = baseSpeed + (visualTime * 2);
+            const currentSpeed = getCurrentSpeed(visualTime);
             
             let hit = false;
             
@@ -1333,7 +1418,7 @@
             columnsHeld[col] = false;
             
             const hitCenter = (gameCanvas.clientHeight - 120) + 40;
-            const currentSpeed = baseSpeed + (visualTime * 2);
+            const currentSpeed = getCurrentSpeed(visualTime);
 
             for(let i=0; i<gameNotes.length; i++) {
                 let note = gameNotes[i];
