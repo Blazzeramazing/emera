@@ -167,7 +167,8 @@
             </div>
 
             <!-- --- SECÇÃO DO JOGO EMERA TILES --- -->
-            <div id="game-panel" class="absolute inset-0 bg-gray-950 z-[60] hidden flex-col overflow-hidden transition-opacity duration-300 opacity-0">
+            <!-- CORRIGIDO: Adicionado "flex" na lista de classes abaixo do id="game-panel" -->
+            <div id="game-panel" class="absolute inset-0 bg-gray-950 z-[60] hidden flex flex-col overflow-hidden transition-opacity duration-300 opacity-0">
                 <!-- Game Header -->
                 <div class="w-full p-4 md:p-6 flex justify-between items-center bg-gray-900 border-b border-gray-800 z-10 shadow-lg flex-shrink-0">
                     <button id="close-game-btn" class="text-gray-400 hover:text-white transition p-2 bg-gray-800 hover:bg-red-600/50 rounded-full" title="Fechar Jogo">
@@ -186,9 +187,10 @@
                 </div>
                 
                 <!-- Game Canvas Container -->
-                <div class="flex-1 w-full flex justify-center relative bg-black overflow-hidden" id="game-canvas-wrapper">
+                <!-- CORRIGIDO: Adicionado "min-h-0" para forçar o flexbox a calcular o height corretamente -->
+                <div class="flex-1 w-full flex justify-center relative bg-black overflow-hidden min-h-0" id="game-canvas-wrapper">
                     <!-- Canvas (onde as notas caem) -->
-                    <canvas id="game-canvas" class="w-full max-w-md h-full touch-none bg-gray-900 border-x border-gray-800"></canvas>
+                    <canvas id="game-canvas" class="w-full max-w-md h-full touch-none bg-gray-900 border-x border-gray-800 block"></canvas>
                     
                     <!-- Overlay de Início/Pausa -->
                     <div id="game-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20 backdrop-blur-sm p-6 text-center">
@@ -671,7 +673,20 @@
         DOM.mute.addEventListener('click', () => { const m = !audio.muted; audio.muted = m; if(m){DOM.volBar.value=0; DOM.volFill.style.width='0%';}else{DOM.volBar.value=parseFloat(localStorage.getItem('webPlayerVol'))||0.5; DOM.volFill.style.width=DOM.volBar.value*100+'%';} });
 
         // --- UI E MENUS ---
-        const tModal = (m, s) => { if(s){m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('opacity-0'),10);} else{m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'),300);} if(m === DOM.eqModal) eqModalVisible = s; };
+        const tModal = (m, s) => { 
+            if(s) { 
+                m.classList.remove('hidden'); 
+                m.classList.add('flex'); // Add flex on show
+                setTimeout(()=>m.classList.remove('opacity-0'),10);
+            } else {
+                m.classList.add('opacity-0'); 
+                setTimeout(()=>{
+                    m.classList.add('hidden');
+                    m.classList.remove('flex'); // Remove flex on hide
+                },300);
+            } 
+            if(m === DOM.eqModal) eqModalVisible = s; 
+        };
         
         document.getElementById('eq-btn').addEventListener('click', () => tModal(DOM.eqModal, true));
         document.getElementById('close-eq-btn').addEventListener('click', () => tModal(DOM.eqModal, false));
@@ -756,7 +771,9 @@
         let columnHighlights = [0, 0, 0, 0]; // Flash visual ao clicar na coluna
 
         document.getElementById('open-game-btn').addEventListener('click', () => {
+            // CORRIGIDO: Certifica-se de que a class 'flex' é aplicada quando aberto para suportar o flexbox flex-1.
             gamePanel.classList.remove('hidden');
+            gamePanel.classList.add('flex');
             setTimeout(() => gamePanel.classList.remove('opacity-0'), 10);
             isGameActive = true;
             resetGameForNewTrack();
@@ -764,7 +781,10 @@
 
         document.getElementById('close-game-btn').addEventListener('click', () => {
             gamePanel.classList.add('opacity-0');
-            setTimeout(() => gamePanel.classList.add('hidden'), 300);
+            setTimeout(() => {
+                gamePanel.classList.add('hidden');
+                gamePanel.classList.remove('flex'); // Limpeza
+            }, 300);
             isGameActive = false;
             isGamePlaying = false;
             cancelAnimationFrame(gameAnimFrame);
