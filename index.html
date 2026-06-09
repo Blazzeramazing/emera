@@ -94,7 +94,6 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <!-- NOVO BOTÃO: MODO JOGO -->
                     <button id="open-game-btn" class="text-gray-300 hover:text-accent transition mr-2" title="Jogar Piano Tiles">
                         <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4M15 13h.01M18 11h.01"/>
@@ -902,7 +901,7 @@
                 
                 // 25% de probabilidade de ser uma "Barra Longa" (Hold Note)
                 let isHoldNote = Math.random() > 0.75;
-                let noteDuration = isHoldNote ? (Math.random() * 0.8 + 0.4) : 0; // Duração entre 0.4s e 1.2s
+                let noteDuration = isHoldNote ? (Math.random() * 0.5 + 0.3) : 0; // Duração entre 0.3s e 0.8s
                 
                 gameNotes.push({ 
                     time: currentTime, 
@@ -1020,12 +1019,19 @@
                 // O Y do Topo (Fim da nota longa)
                 let noteTopY = noteBottomY - tileH;
                 
-                // Onde renderizar o fundo. Se estiver a segurar, trava no centro (efeito que a nota está a ser engolida)
+                // Onde renderizar o fundo. Se estiver a segurar, trava na posição do clique
                 let renderBottomY = noteBottomY;
                 if (note.holding) {
-                    renderBottomY = hitCenter;
-                    // Se o topo da nota também passar da linha enquanto segura, a nota foi concluída com sucesso!
-                    if (noteTopY > hitCenter) {
+                    renderBottomY = note.holdY !== undefined ? note.holdY : hitCenter;
+                    
+                    // Aumenta a velocidade de consumo visual do topo para ser mais dinâmico
+                    if (note.holdStartTime) {
+                        const heldTime = currentAudioTime - note.holdStartTime;
+                        noteTopY += heldTime * (currentSpeed * 0.5); // Topo desce 50% mais rápido
+                    }
+
+                    // Se o topo da nota passar do dedo (renderBottomY), a nota foi concluída com sucesso!
+                    if (noteTopY >= renderBottomY - 10) {
                         note.hit = true;
                         note.holding = false;
                         score += 50; // Bónus extra por completar a barra inteira
@@ -1037,7 +1043,7 @@
                 // Só desenha se estiver visível no ecrã
                 if(renderBottomY > 0 && noteTopY < H) {
                     
-                    // Falhar (Miss) - Deixou passar o Início sem clicar, ou soltou antes da barra acabar
+                    // Falhar (Miss) - Deixou passar o Início sem clicar
                     if(!note.holding && renderBottomY > hitCenter + 120 && !note.missed) {
                         note.missed = true;
                         triggerGameOver();
@@ -1051,13 +1057,13 @@
                         gCtx.beginPath();
                         
                         let currentTileH = renderBottomY - noteTopY;
-                        if(currentTileH < 20) currentTileH = 20; // Prevenção visual para que não desapareça
+                        if(currentTileH < 10) currentTileH = 10; // Prevenção visual
                         
                         gCtx.roundRect(note.col * colW + padding, noteTopY, colW - padding*2, currentTileH, 8);
                         gCtx.fill();
                         
                         // Design especial interior para identificar barras longas visualmente
-                        if (note.duration > 0) {
+                        if (note.duration > 0 && currentTileH > 30) {
                             gCtx.fillStyle = 'rgba(0, 0, 0, 0.25)';
                             gCtx.beginPath();
                             gCtx.roundRect(note.col * colW + padding + 15, noteTopY + 10, colW - padding*2 - 30, currentTileH - 20, 4);
@@ -1073,8 +1079,8 @@
                         // Pontos Constantes & Efeitos de Partículas enquanto Segura
                         if (note.holding) {
                             score += 1; 
-                            if(score % 5 === 0) updateGameUI(); // Atualiza a UI espaçadamente para não pesar no ecrã
-                            if(Math.random() > 0.6) createHitParticles(note.col * colW + colW/2, hitCenter);
+                            if(score % 5 === 0) updateGameUI(); // Atualiza a UI espaçadamente
+                            if(Math.random() > 0.6) createHitParticles(note.col * colW + colW/2, renderBottomY);
                         }
                     }
                 }
@@ -1151,11 +1157,15 @@
                             score += 10 + (Math.min(combo, 20) * 2);
                         } else {
                             note.holding = true; // Inicia a segurar a nota longa
+                            // Garante que o ponto de ancoragem não faz a nota "saltar"
+                            // Fixa no ponto clicado, mas se o utilizador clicou muito abaixo, fixa na base real da nota
+                            note.holdY = Math.min(yTarget, noteBottomY); 
+                            note.holdStartTime = visualTime;
                         }
                         
                         combo++;
                         updateGameUI();
-                        createHitParticles(col * (gameCanvas.clientWidth/columns) + (gameCanvas.clientWidth/columns)/2, isTappingTile ? yTarget : hitCenter);
+                        createHitParticles(col * (gameCanvas.clientWidth/columns) + (gameCanvas.clientWidth/columns)/2, note.holdY !== undefined ? note.holdY : (isTappingTile ? yTarget : hitCenter));
                         hit = true;
                         
                         gameCanvas.classList.remove('game-hit-flash');
@@ -1181,12 +1191,20 @@
             for(let i=0; i<gameNotes.length; i++) {
                 let note = gameNotes[i];
                 if(note.col === col && note.holding) {
-                    // O jogador largou. Temos de verificar se o topo (final da barra longa)
-                    // já passou ou está MUITO PERTO da zona de acerto.
-                    const noteTopY = hitCenter - ((note.time + note.duration - visualTime) * currentSpeed);
+                    // Recalcula o topo com a velocidade acelerada
+                    const noteBottomY = hitCenter - ((note.time - visualTime) * currentSpeed);
+                    const tileH = note.duration * currentSpeed;
+                    let noteTopY = noteBottomY - tileH;
                     
-                    // Margem de erro de 150px para largar "um pouco mais cedo" sem punir agressivamente
-                    if (noteTopY > hitCenter - 150) { 
+                    if (note.holdStartTime) {
+                        const heldTime = visualTime - note.holdStartTime;
+                        noteTopY += heldTime * (currentSpeed * 0.5);
+                    }
+                    
+                    const holdY = note.holdY !== undefined ? note.holdY : hitCenter;
+                    
+                    // Margem de erro de 180px para largar (para não punir tanto se largar cedo)
+                    if (noteTopY > holdY - 180) { 
                         note.hit = true;
                         note.holding = false;
                         score += 30; // Pontos bónus de conclusão
