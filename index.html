@@ -319,7 +319,7 @@
                         <h3 id="list-title" class="text-base md:text-lg font-semibold text-white flex items-center gap-2 pointer-events-none">
                             <svg class="w-4 h-4 md:w-5 md:h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
                             Sua Playlist
-                        </h3>
+                        </select>
                         <select id="sort-select" class="bg-transparent text-[10px] md:text-xs text-gray-400 outline-none hover:text-accent transition cursor-pointer p-0 border-0" onclick="event.stopPropagation()">
                             <option value="recent" class="bg-gray-800 text-white">Adicionadas Recentemente</option>
                             <option value="most_played" class="bg-gray-800 text-white">Mais Tocadas</option>
@@ -782,6 +782,11 @@
             updateModeUI(); showToast(playMode === 0 ? "Modo Normal" : playMode === 1 ? "Repetir Faixa" : "Aleatório");
         });
 
+        // Controles Principais e Mini Player
+        DOM.playPause.addEventListener('click', () => { togglePlay(); DOM.playPause.blur(); });
+        DOM.next.addEventListener('click', () => { nextTrack(); DOM.next.blur(); });
+        DOM.prev.addEventListener('click', () => { prevTrack(); DOM.prev.blur(); });
+
         // EVENTOS GLOBAIS DE AUDIO
         audio.addEventListener('play', () => {
             DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); 
@@ -1115,14 +1120,32 @@
             
             secondChances--; localStorage.setItem('emeraSecondChances', secondChances); updateBonusUI();
 
-            let rewindAmount = 2.0; 
-            audio.currentTime = Math.max(0, audio.currentTime - rewindAmount);
-            visualTime = audio.currentTime;
+            let rewindAmount = 3.0; // Recuo aumentado para dar espaço de manobra visual
+            let newTime = Math.max(0, audio.currentTime - rewindAmount);
 
+            // Proteção para não "partir" notas longas a meio do reinício
+            for(let n of gameNotes) {
+                if (n.time < newTime + 1.2 && n.time + n.duration > newTime + 1.2) {
+                    newTime = Math.max(0, n.time - 2.0); 
+                }
+            }
+
+            audio.currentTime = newTime;
+            visualTime = newTime;
+
+            // Limpa a passadeira visual: auto-completa notas do passado ou que estariam demasiado perto da linha de clique
             gameNotes.forEach(n => {
-                if (n.time >= visualTime) { n.missed = false; n.hit = false; n.holding = false; }
-                if (n.missed && n.time < visualTime) { n.hit = true; }
+                if (n.time >= newTime + 1.2) { 
+                    n.missed = false; n.hit = false; n.holding = false; 
+                } else {
+                    n.hit = true; n.missed = false; n.holding = false; 
+                }
             });
+
+            // Reseta controlos para evitar que cliques antigos fiquem colados
+            columnsHeld = [false, false, false, false]; 
+            columnHighlights = [0, 0, 0, 0];
+            gameHitFlash = 0; gameMissFlash = 0;
 
             gameOverOverlay.classList.add('hidden', 'opacity-0'); gameOverOverlay.classList.remove('flex');
 
@@ -1132,6 +1155,9 @@
             let count = 5;
             const numberEl = document.getElementById('countdown-number');
             numberEl.textContent = count;
+
+            // Renderiza o frame estático para o jogador se orientar visualmente
+            drawGameStatic();
 
             const interval = setInterval(() => {
                 count--;
@@ -1151,6 +1177,57 @@
                 }
             }, 1000);
         });
+
+        // Função auxiliar para desenhar o cenário estático durante a contagem regressiva
+        function drawGameStatic() {
+            const W = gameCanvas.clientWidth; const H = gameCanvas.clientHeight;
+            if(gameCanvas.width !== W) gameCanvas.width = W; if(gameCanvas.height !== H) gameCanvas.height = H;
+            gCtx.clearRect(0, 0, W, H);
+            
+            const colW = W / columns; const hitZoneY = H - 120; const hitZoneHeight = 80; const hitCenter = hitZoneY + hitZoneHeight/2; 
+            const currentSpeed = getCurrentSpeed(visualTime);
+            
+            gCtx.strokeStyle = 'rgba(255,255,255,0.1)'; gCtx.lineWidth = 1;
+            for(let i=0; i<=columns; i++) { gCtx.beginPath(); gCtx.moveTo(i * colW, 0); gCtx.lineTo(i * colW, H); gCtx.stroke(); }
+            
+            const gradient = gCtx.createLinearGradient(0, hitZoneY, 0, hitZoneY + hitZoneHeight);
+            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.0)'); gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.15)'); gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+            gCtx.fillStyle = gradient; gCtx.fillRect(0, hitZoneY, W, hitZoneHeight);
+            
+            gCtx.strokeStyle = 'var(--accent)'; gCtx.lineWidth = 2; gCtx.beginPath(); gCtx.moveTo(0, hitCenter); gCtx.lineTo(W, hitCenter); gCtx.stroke();
+            
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#10b981';
+            
+            for(let i=0; i<gameNotes.length; i++) {
+                let note = gameNotes[i]; if(note.hit) continue;
+                
+                const tileH = note.duration > 0 ? (note.duration * currentSpeed) : 120;
+                const noteBottomY = hitCenter - ((note.time - visualTime) * currentSpeed);
+                let noteTopY = noteBottomY - tileH;
+                
+                // Se a nota já está visível dentro do canvas, renderiza
+                if(noteBottomY > 0 && noteTopY < H && !note.missed) {
+                    const padding = 6;
+                    gCtx.fillStyle = note.isBonus ? '#eab308' : accentColor;
+                    if(note.isBonus) { gCtx.shadowColor = '#eab308'; gCtx.shadowBlur = 15; }
+                    
+                    gCtx.beginPath();
+                    let currentTileH = noteBottomY - noteTopY; if(currentTileH < 10) currentTileH = 10; 
+                    gCtx.roundRect(note.col * colW + padding, noteTopY, colW - padding*2, currentTileH, 8);
+                    gCtx.fill();
+                    
+                    gCtx.shadowBlur = 0; 
+                    
+                    if (note.duration > 0 && currentTileH > 30) {
+                        gCtx.fillStyle = 'rgba(0, 0, 0, 0.25)'; gCtx.beginPath();
+                        gCtx.roundRect(note.col * colW + padding + 15, noteTopY + 10, colW - padding*2 - 30, currentTileH - 20, 4); gCtx.fill();
+                    }
+                    
+                    gCtx.fillStyle = 'rgba(255,255,255,0.2)'; gCtx.beginPath();
+                    gCtx.roundRect(note.col * colW + padding, noteTopY, colW/3, currentTileH, 8); gCtx.fill();
+                }
+            }
+        }
 
         function resetGameForNewTrack() {
             isGamePlaying = false; isGameOver = false; cancelAnimationFrame(gameAnimFrame);
