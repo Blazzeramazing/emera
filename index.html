@@ -319,8 +319,9 @@
                         <h3 id="list-title" class="text-base md:text-lg font-semibold text-white flex items-center gap-2 pointer-events-none">
                             <svg class="w-4 h-4 md:w-5 md:h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
                             Sua Playlist
-                        </select>
+                        </h3>
                         <select id="sort-select" class="bg-transparent text-[10px] md:text-xs text-gray-400 outline-none hover:text-accent transition cursor-pointer p-0 border-0" onclick="event.stopPropagation()">
+                            <option value="manual" class="bg-gray-800 text-white">Ordem Manual</option>
                             <option value="recent" class="bg-gray-800 text-white">Adicionadas Recentemente</option>
                             <option value="most_played" class="bg-gray-800 text-white">Mais Tocadas</option>
                         </select>
@@ -516,10 +517,14 @@
     <audio id="audio-player"></audio>
 
     <script>
+        // --- INICIALIZAÇÃO DO POLYFILL PARA DRAG AND DROP MOBILE ---
+        MobileDragDrop.polyfill({ holdToDrag: 300 }); // Segurar 300ms na música para iniciar o arraste no telemóvel
+        window.addEventListener('touchmove', function() {}, {passive: false}); // Obrigatório para o polyfill funcionar
+
         // --- ESTADO & DOM ---
         const audio = document.getElementById('audio-player');
-        let isPlaying = false, currentTrackIndex = 0, currentSortMode = 'recent', playlist = [];
-        let trackToEditIndex = null, editCoverBase64 = null;
+        let isPlaying = false, currentTrackIndex = 0, currentSortMode = 'manual', playlist = [];
+        let trackToEditIndex = null, editCoverBase64 = null, dragSourceIndex = null;
         let playMode = parseInt(localStorage.getItem('webPlayerMode')) || 0; // 0: Normal, 1: Repeat, 2: Shuffle
         let isRepeat = playMode === 1; let isShuffle = playMode === 2;
         const savedEq = JSON.parse(localStorage.getItem('webPlayerEq')) || [0,0,0,0,0];
@@ -550,11 +555,13 @@
         // --- TEMAS & MODO OLED ---
         const oledToggle = document.getElementById('oled-toggle');
         const oledBg = document.querySelector('.oled-bg');
+        let cachedAccentColor = '#10b981'; // Cache para o jogo evitar getComputedStyle
         
         function applyTheme(hex, hover, light) {
             document.documentElement.style.setProperty('--accent', hex); document.documentElement.style.setProperty('--accent-hover', hover); document.documentElement.style.setProperty('--accent-light', light);
             localStorage.setItem('webPlayerTheme', `${hex},${hover},${light}`);
             document.getElementById('dynamic-favicon').href = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${hex.replace('#','%23')}'><path d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'/></svg>`;
+            cachedAccentColor = hex; // Atualiza a cache
         }
         
         function applyOled(isActive) {
@@ -678,8 +685,7 @@
             const bufferL = 128; const dataFreq = new Uint8Array(bufferL); const dataTime = new Uint8Array(bufferL);
             if (analyser) { if(visualizerMode === 2) analyser.getByteTimeDomainData(dataTime); else analyser.getByteFrequencyData(dataFreq); }
 
-            const accentRGB = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-            const strokeColor = accentRGB.startsWith('#') ? accentRGB : '#10b981';
+            const strokeColor = cachedAccentColor; // Substituição pelo valor em cache
             canvasCtx.lineWidth = 3; const cX = W/2, cY = H/2;
 
             if (visualizerMode === 0) {
@@ -869,7 +875,7 @@
             
             let pToRender = [...playlist];
             if(currentSortMode === 'most_played') pToRender.sort((a,b)=>(b.playCount||0)-(a.playCount||0));
-            else pToRender.sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
+            else if(currentSortMode === 'recent') pToRender.sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
 
             pToRender.forEach((track, pIndex) => {
                 if(isSearching && !track.title.toLowerCase().includes(term) && !track.artist.toLowerCase().includes(term)) return;
@@ -877,6 +883,9 @@
                 const isActive = originalIndex === currentTrackIndex;
                 const item = document.createElement('div');
                 item.className = `playlist-item flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl cursor-pointer transition mb-2 border ${isActive ? 'bg-accentLight border-accent/30' : 'border-transparent hover:bg-gray-800'}`;
+                
+                // Ativar drag & drop para o elemento HTML
+                item.draggable = true;
                 
                 const playingBars = isActive && isPlaying ? `<div class="flex items-end gap-0.5 h-3 w-3 sm:h-4 sm:w-4 ml-1 mr-1 flex-shrink-0"><div class="w-[3px] sm:w-1 bg-accent animate-[bounce_1s_infinite_0ms] h-full"></div><div class="w-[3px] sm:w-1 bg-accent animate-[bounce_1s_infinite_200ms] h-2/3"></div><div class="w-[3px] sm:w-1 bg-accent animate-[bounce_1s_infinite_400ms] h-4/5"></div></div>` : ``;
                 
@@ -890,6 +899,60 @@
                     </div>
                 `;
                 item.addEventListener('click', e => { if(e.target.closest('.actions')) return; loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play(); });
+                
+                // EVENTOS DE DRAG AND DROP
+                item.addEventListener('dragstart', (e) => {
+                    dragSourceIndex = originalIndex;
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', originalIndex);
+                    setTimeout(() => item.classList.add('opacity-50'), 0); // Efeito fantasma na música original
+                });
+                
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('opacity-50');
+                    document.querySelectorAll('.playlist-item').forEach(el => el.classList.remove('drag-over'));
+                });
+                
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault(); // Impede o bloqueio padrão e permite largar
+                    e.dataTransfer.dropEffect = 'move';
+                });
+                
+                item.addEventListener('dragenter', (e) => {
+                    e.preventDefault();
+                    if(dragSourceIndex !== originalIndex) item.classList.add('drag-over');
+                });
+                
+                item.addEventListener('dragleave', () => {
+                    item.classList.remove('drag-over');
+                });
+                
+                item.addEventListener('drop', (e) => {
+                    e.stopPropagation();
+                    item.classList.remove('drag-over');
+                    
+                    if (dragSourceIndex !== null && dragSourceIndex !== originalIndex) {
+                        // Ativa o modo manual para a nova organização não ser anulada
+                        currentSortMode = 'manual';
+                        DOM.sortSel.value = 'manual';
+                        
+                        // Reordenar a array original da playlist
+                        const draggedTrack = playlist.splice(dragSourceIndex, 1)[0];
+                        playlist.splice(originalIndex, 0, draggedTrack);
+                        
+                        // Atualizar o track a tocar atualmente para que a música não salte no final
+                        if (currentTrackIndex === dragSourceIndex) {
+                            currentTrackIndex = originalIndex;
+                        } else if (dragSourceIndex < currentTrackIndex && originalIndex >= currentTrackIndex) {
+                            currentTrackIndex--;
+                        } else if (dragSourceIndex > currentTrackIndex && originalIndex <= currentTrackIndex) {
+                            currentTrackIndex++;
+                        }
+                        
+                        renderList(); // Atualiza a UI para refletir a nova ordem
+                    }
+                });
+
                 DOM.container.appendChild(item);
             });
             
@@ -1178,10 +1241,25 @@
             }, 1000);
         });
 
+        // Variável de Cache para dimensões do jogo para evitar Layout Thrashing
+        let gameLayoutCache = { w: 0, h: 0, gradient: null };
+        function updateGameLayout() {
+            const w = gameCanvas.clientWidth; const h = gameCanvas.clientHeight;
+            if (gameLayoutCache.w !== w || gameLayoutCache.h !== h) {
+                gameCanvas.width = w; gameCanvas.height = h; gameLayoutCache.w = w; gameLayoutCache.h = h;
+                const hitZoneY = h - 120;
+                gameLayoutCache.gradient = gCtx.createLinearGradient(0, hitZoneY, 0, hitZoneY + 80);
+                gameLayoutCache.gradient.addColorStop(0, 'rgba(16, 185, 129, 0.0)');
+                gameLayoutCache.gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.15)');
+                gameLayoutCache.gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+            }
+            return gameLayoutCache;
+        }
+
         // Função auxiliar para desenhar o cenário estático durante a contagem regressiva
         function drawGameStatic() {
-            const W = gameCanvas.clientWidth; const H = gameCanvas.clientHeight;
-            if(gameCanvas.width !== W) gameCanvas.width = W; if(gameCanvas.height !== H) gameCanvas.height = H;
+            const layout = updateGameLayout();
+            const W = layout.w; const H = layout.h;
             gCtx.clearRect(0, 0, W, H);
             
             const colW = W / columns; const hitZoneY = H - 120; const hitZoneHeight = 80; const hitCenter = hitZoneY + hitZoneHeight/2; 
@@ -1190,13 +1268,9 @@
             gCtx.strokeStyle = 'rgba(255,255,255,0.1)'; gCtx.lineWidth = 1;
             for(let i=0; i<=columns; i++) { gCtx.beginPath(); gCtx.moveTo(i * colW, 0); gCtx.lineTo(i * colW, H); gCtx.stroke(); }
             
-            const gradient = gCtx.createLinearGradient(0, hitZoneY, 0, hitZoneY + hitZoneHeight);
-            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.0)'); gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.15)'); gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
-            gCtx.fillStyle = gradient; gCtx.fillRect(0, hitZoneY, W, hitZoneHeight);
+            gCtx.fillStyle = layout.gradient; gCtx.fillRect(0, hitZoneY, W, hitZoneHeight);
             
-            gCtx.strokeStyle = 'var(--accent)'; gCtx.lineWidth = 2; gCtx.beginPath(); gCtx.moveTo(0, hitCenter); gCtx.lineTo(W, hitCenter); gCtx.stroke();
-            
-            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#10b981';
+            gCtx.strokeStyle = cachedAccentColor; gCtx.lineWidth = 2; gCtx.beginPath(); gCtx.moveTo(0, hitCenter); gCtx.lineTo(W, hitCenter); gCtx.stroke();
             
             for(let i=0; i<gameNotes.length; i++) {
                 let note = gameNotes[i]; if(note.hit) continue;
@@ -1208,15 +1282,20 @@
                 // Se a nota já está visível dentro do canvas, renderiza
                 if(noteBottomY > 0 && noteTopY < H && !note.missed) {
                     const padding = 6;
-                    gCtx.fillStyle = note.isBonus ? '#eab308' : accentColor;
-                    if(note.isBonus) { gCtx.shadowColor = '#eab308'; gCtx.shadowBlur = 15; }
+                    let currentTileH = noteBottomY - noteTopY; if(currentTileH < 10) currentTileH = 10; 
+                    
+                    // Otimização: Substituído shadowBlur pesado por preenchimento de caixa alargada com opacidade reduzida
+                    if(note.isBonus) { 
+                        gCtx.fillStyle = 'rgba(234, 179, 8, 0.4)';
+                        gCtx.beginPath(); gCtx.roundRect(note.col * colW + padding - 4, noteTopY - 4, colW - padding*2 + 8, currentTileH + 8, 12); gCtx.fill();
+                        gCtx.fillStyle = '#eab308'; 
+                    } else { 
+                        gCtx.fillStyle = cachedAccentColor; 
+                    }
                     
                     gCtx.beginPath();
-                    let currentTileH = noteBottomY - noteTopY; if(currentTileH < 10) currentTileH = 10; 
                     gCtx.roundRect(note.col * colW + padding, noteTopY, colW - padding*2, currentTileH, 8);
                     gCtx.fill();
-                    
-                    gCtx.shadowBlur = 0; 
                     
                     if (note.duration > 0 && currentTileH > 30) {
                         gCtx.fillStyle = 'rgba(0, 0, 0, 0.25)'; gCtx.beginPath();
@@ -1395,8 +1474,7 @@
         }
 
         function createHitParticles(x, y, isBonus = false) {
-            const accentRGB = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-            const color = isBonus ? '#eab308' : (accentRGB.startsWith('#') ? accentRGB : '#10b981');
+            const color = isBonus ? '#eab308' : cachedAccentColor;
             for(let i=0; i<12; i++) {
                 particles.push({
                     x: x, y: y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8 - 2,
@@ -1420,8 +1498,8 @@
                 if (Math.abs(drift) > 0.25) visualTime = audio.currentTime; else visualTime += drift * 0.1; 
             } else { visualTime = audio.currentTime; }
 
-            const W = gameCanvas.clientWidth; const H = gameCanvas.clientHeight;
-            if(gameCanvas.width !== W) gameCanvas.width = W; if(gameCanvas.height !== H) gameCanvas.height = H;
+            const layout = updateGameLayout();
+            const W = layout.w; const H = layout.h;
             gCtx.clearRect(0, 0, W, H);
             
             const colW = W / columns; const hitZoneY = H - 120; const hitZoneHeight = 80; const hitCenter = hitZoneY + hitZoneHeight/2; const currentAudioTime = visualTime;
@@ -1438,13 +1516,9 @@
                 }
             }
             
-            const gradient = gCtx.createLinearGradient(0, hitZoneY, 0, hitZoneY + hitZoneHeight);
-            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.0)'); gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.15)'); gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
-            gCtx.fillStyle = gradient; gCtx.fillRect(0, hitZoneY, W, hitZoneHeight);
+            gCtx.fillStyle = layout.gradient; gCtx.fillRect(0, hitZoneY, W, hitZoneHeight);
             
-            gCtx.strokeStyle = 'var(--accent)'; gCtx.lineWidth = 2; gCtx.beginPath(); gCtx.moveTo(0, hitCenter); gCtx.lineTo(W, hitCenter); gCtx.stroke();
-            
-            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#10b981';
+            gCtx.strokeStyle = cachedAccentColor; gCtx.lineWidth = 2; gCtx.beginPath(); gCtx.moveTo(0, hitCenter); gCtx.lineTo(W, hitCenter); gCtx.stroke();
             
             for(let i=0; i<gameNotes.length; i++) {
                 if(isGameOver) break; let note = gameNotes[i]; if(note.hit) continue;
@@ -1469,16 +1543,20 @@
                     
                     if(!note.missed) {
                         const padding = 6;
-                        
-                        gCtx.fillStyle = note.isBonus ? '#eab308' : accentColor;
-                        if(note.isBonus) { gCtx.shadowColor = '#eab308'; gCtx.shadowBlur = 15; }
+                        let currentTileH = renderBottomY - noteTopY; if(currentTileH < 10) currentTileH = 10; 
+
+                        // Brilho Falso Otimizado
+                        if(note.isBonus) { 
+                            gCtx.fillStyle = 'rgba(234, 179, 8, 0.4)';
+                            gCtx.beginPath(); gCtx.roundRect(note.col * colW + padding - 4, noteTopY - 4, colW - padding*2 + 8, currentTileH + 8, 12); gCtx.fill();
+                            gCtx.fillStyle = '#eab308'; 
+                        } else { 
+                            gCtx.fillStyle = cachedAccentColor; 
+                        }
                         
                         gCtx.beginPath();
-                        let currentTileH = renderBottomY - noteTopY; if(currentTileH < 10) currentTileH = 10; 
                         gCtx.roundRect(note.col * colW + padding, noteTopY, colW - padding*2, currentTileH, 8);
                         gCtx.fill();
-                        
-                        gCtx.shadowBlur = 0; 
                         
                         if (note.duration > 0 && currentTileH > 30) {
                             gCtx.fillStyle = 'rgba(0, 0, 0, 0.25)'; gCtx.beginPath();
@@ -1512,13 +1590,14 @@
             }
         }
 
-        function getColFromX(x) { const colW = gameCanvas.clientWidth / columns; return Math.floor(Math.max(0, Math.min(x, gameCanvas.clientWidth - 1)) / colW); }
+        function getColFromX(x) { const layout = updateGameLayout(); const colW = layout.w / columns; return Math.floor(Math.max(0, Math.min(x, layout.w - 1)) / colW); }
 
         function handleGameInputDown(col, yOverride) {
             if(!isGamePlaying || isGameOver) return; if(columnsHeld[col]) return; 
             columnsHeld[col] = true; columnHighlights[col] = 1.0;
             
-            const hitCenter = (gameCanvas.clientHeight - 120) + 40; const currentSpeed = getCurrentSpeed(visualTime);
+            const layout = updateGameLayout();
+            const hitCenter = (layout.h - 120) + 40; const currentSpeed = getCurrentSpeed(visualTime);
             let hit = false;
             
             for(let i=0; i<gameNotes.length; i++) {
@@ -1541,7 +1620,7 @@
                             note.holding = true; note.holdY = Math.min(yTarget, noteBottomY); note.holdStartTime = visualTime;
                         }
                         
-                        combo++; updateGameUI(); createHitParticles(col * (gameCanvas.clientWidth/columns) + (gameCanvas.clientWidth/columns)/2, note.holdY !== undefined ? note.holdY : (yTarget >= noteTopY - 120 && yTarget <= noteBottomY + 120 ? yTarget : hitCenter), note.isBonus);
+                        combo++; updateGameUI(); createHitParticles(col * (layout.w/columns) + (layout.w/columns)/2, note.holdY !== undefined ? note.holdY : (yTarget >= noteTopY - 120 && yTarget <= noteBottomY + 120 ? yTarget : hitCenter), note.isBonus);
                         hit = true; gameHitFlash = 1.0; break;
                     }
                 }
@@ -1551,7 +1630,8 @@
 
         function handleGameInputUp(col) {
             if(!isGamePlaying || isGameOver) return; columnsHeld[col] = false;
-            const hitCenter = (gameCanvas.clientHeight - 120) + 40; const currentSpeed = getCurrentSpeed(visualTime);
+            const layout = updateGameLayout();
+            const hitCenter = (layout.h - 120) + 40; const currentSpeed = getCurrentSpeed(visualTime);
 
             for(let i=0; i<gameNotes.length; i++) {
                 let note = gameNotes[i];
