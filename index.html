@@ -517,6 +517,16 @@
     <audio id="audio-player"></audio>
 
     <script>
+        // --- UTILITÁRIOS DE OTIMIZAÇÃO (DEBOUNCE / IDLE) ---
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+        const runIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
+
         // --- INICIALIZAÇÃO DO POLYFILL PARA DRAG AND DROP MOBILE ---
         MobileDragDrop.polyfill({ holdToDrag: 300 }); // Segurar 300ms na música para iniciar o arraste no telemóvel
         window.addEventListener('touchmove', function() {}, {passive: false}); // Obrigatório para o polyfill funcionar
@@ -551,6 +561,12 @@
             miniPlay: document.getElementById('mini-play'), miniPause: document.getElementById('mini-pause'), miniCover: document.getElementById('mini-cover'), miniTitle: document.getElementById('mini-title'), miniArtist: document.getElementById('mini-artist')
         };
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
+
+        // --- GRAVADORES (SAVERS) OTIMIZADOS ---
+        // Previnem o bloqueio do navegador a gravar o localStorage sempre que o slider desliza um milímetro
+        const saveVolToStorage = debounce((v) => localStorage.setItem('webPlayerVol', v), 500);
+        const saveEqToStorage = debounce((eq) => localStorage.setItem('webPlayerEq', JSON.stringify(eq)), 500);
+        const savePreampToStorage = debounce((v) => localStorage.setItem('webPlayerPreamp', v), 500);
 
         // --- TEMAS & MODO OLED ---
         const oledToggle = document.getElementById('oled-toggle');
@@ -590,10 +606,19 @@
             setTimeout(() => { toast.classList.replace('toast-enter-active', 'toast-exit-active'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        // --- BANCO DE DADOS ---
+        // --- BANCO DE DADOS (INDEXED DB OTIMIZADO) ---
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
         function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 1); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
-        function saveTrackToDB(track) { if(db){ const t={...track}; delete t.src; db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); } }
+        
+        // Agora o salvamento é deferido. O browser vai fazer isso no fundo sem bloquear a UI.
+        function saveTrackToDB(track) { 
+            if(db){ 
+                runIdle(() => {
+                    const t={...track}; delete t.src; 
+                    db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); 
+                });
+            } 
+        }
         function deleteTrackFromDB(id) { if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).delete(id); }
         function loadTracksFromDB() {
             if(!db) return Promise.resolve();
@@ -646,13 +671,13 @@
                 const idx = e.target.dataset.idx; const v = parseFloat(e.target.value);
                 if(eqFilters.length > 0) eqFilters[idx].gain.value = v; 
                 savedEq[idx] = v;
-                localStorage.setItem('webPlayerEq', JSON.stringify(savedEq));
+                saveEqToStorage(savedEq); // Otimizado: grava passados 500ms de terminar o movimento
                 e.target.parentElement.nextElementSibling.textContent = (v>0?'+':'')+v;
             });
         });
         
         document.getElementById('reset-eq-btn').addEventListener('click', () => {
-            savedEq.fill(0); localStorage.setItem('webPlayerEq', JSON.stringify(savedEq));
+            savedEq.fill(0); saveEqToStorage(savedEq);
             if(eqFilters.length > 0) eqFilters.forEach(f => f.gain.value = 0);
             document.querySelectorAll('.eq-slider').forEach(s => { s.value = 0; s.dispatchEvent(new Event('input')); });
         });
@@ -665,7 +690,7 @@
                     const slider = document.querySelector(`.eq-slider[data-idx="${i}"]`);
                     if(slider) { slider.value = v; slider.parentElement.nextElementSibling.textContent = (v>0?'+':'')+v; }
                 });
-                localStorage.setItem('webPlayerEq', JSON.stringify(savedEq));
+                saveEqToStorage(savedEq);
             });
         });
 
@@ -835,14 +860,33 @@
             }
         });
 
+        let lastRenderedSecond = -1; // Cache de optimização para o tempo de áudio
         audio.addEventListener('timeupdate', () => {
             if(isNaN(audio.duration) || isDraggingProgress) return; 
-            const pct = (audio.currentTime/audio.duration)*100; DOM.progBar.value = pct; DOM.progFill.style.width = pct+'%';
-            const fT = s => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; DOM.curTime.textContent = fT(audio.currentTime);
+            
+            const currentTime = audio.currentTime;
+            const pct = (currentTime/audio.duration)*100; 
+            DOM.progBar.value = pct; 
+            DOM.progFill.style.width = pct+'%';
+
+            // Otimização: Apenas altera e escreve texto na tela quando o número inteiro de segundos muda (Reduz custo de DOM reflow)
+            const currentSecond = Math.floor(currentTime);
+            if(currentSecond !== lastRenderedSecond) {
+                const fT = s => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; 
+                DOM.curTime.textContent = fT(currentSecond);
+                lastRenderedSecond = currentSecond;
+            }
         });
         
-        DOM.volBar.addEventListener('input', e => { const v = e.target.value; audio.volume = v; DOM.volFill.style.width = v*100+'%'; const m = (v==0); audio.muted = m; localStorage.setItem('webPlayerVol', v); });
-        DOM.mute.addEventListener('click', () => { const m = !audio.muted; audio.muted = m; if(m){DOM.volBar.value=0; DOM.volFill.style.width='0%';}else{DOM.volBar.value=parseFloat(localStorage.getItem('webPlayerVol'))||0.5; DOM.volFill.style.width=DOM.volBar.value*100+'%';} });
+        DOM.volBar.addEventListener('input', e => { 
+            const v = e.target.value; audio.volume = v; DOM.volFill.style.width = v*100+'%'; 
+            const m = (v==0); audio.muted = m; 
+            saveVolToStorage(v); 
+        });
+        DOM.mute.addEventListener('click', () => { 
+            const m = !audio.muted; audio.muted = m; 
+            if(m){ DOM.volBar.value=0; DOM.volFill.style.width='0%'; } else { DOM.volBar.value=parseFloat(localStorage.getItem('webPlayerVol'))||0.5; DOM.volFill.style.width=DOM.volBar.value*100+'%'; } 
+        });
 
         // --- UI E MENUS ---
         const tModal = (m, s) => { 
@@ -871,11 +915,14 @@
         DOM.listHeader.addEventListener('click', toggleDrawer); DOM.drawerHandle.addEventListener('click', toggleDrawer);
 
         function renderList() {
-            DOM.container.innerHTML = ''; const term = DOM.search.value.toLowerCase(); const isSearching = term.length > 0;
+            const term = DOM.search.value.toLowerCase(); const isSearching = term.length > 0;
             
             let pToRender = [...playlist];
             if(currentSortMode === 'most_played') pToRender.sort((a,b)=>(b.playCount||0)-(a.playCount||0));
             else if(currentSortMode === 'recent') pToRender.sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
+
+            // Otimização: DocumentFragment impede o layout thrashing na renderização (Injeta todas as divs de uma vez só)
+            const fragment = document.createDocumentFragment();
 
             pToRender.forEach((track, pIndex) => {
                 if(isSearching && !track.title.toLowerCase().includes(term) && !track.artist.toLowerCase().includes(term)) return;
@@ -905,57 +952,29 @@
                     dragSourceIndex = originalIndex;
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', originalIndex);
-                    setTimeout(() => item.classList.add('opacity-50'), 0); // Efeito fantasma na música original
+                    setTimeout(() => item.classList.add('opacity-50'), 0); 
                 });
-                
-                item.addEventListener('dragend', () => {
-                    item.classList.remove('opacity-50');
-                    document.querySelectorAll('.playlist-item').forEach(el => el.classList.remove('drag-over'));
-                });
-                
-                item.addEventListener('dragover', (e) => {
-                    e.preventDefault(); // Impede o bloqueio padrão e permite largar
-                    e.dataTransfer.dropEffect = 'move';
-                });
-                
-                item.addEventListener('dragenter', (e) => {
-                    e.preventDefault();
-                    if(dragSourceIndex !== originalIndex) item.classList.add('drag-over');
-                });
-                
-                item.addEventListener('dragleave', () => {
-                    item.classList.remove('drag-over');
-                });
-                
+                item.addEventListener('dragend', () => { item.classList.remove('opacity-50'); document.querySelectorAll('.playlist-item').forEach(el => el.classList.remove('drag-over')); });
+                item.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+                item.addEventListener('dragenter', (e) => { e.preventDefault(); if(dragSourceIndex !== originalIndex) item.classList.add('drag-over'); });
+                item.addEventListener('dragleave', () => { item.classList.remove('drag-over'); });
                 item.addEventListener('drop', (e) => {
-                    e.stopPropagation();
-                    item.classList.remove('drag-over');
-                    
+                    e.stopPropagation(); item.classList.remove('drag-over');
                     if (dragSourceIndex !== null && dragSourceIndex !== originalIndex) {
-                        // Ativa o modo manual para a nova organização não ser anulada
-                        currentSortMode = 'manual';
-                        DOM.sortSel.value = 'manual';
-                        
-                        // Reordenar a array original da playlist
+                        currentSortMode = 'manual'; DOM.sortSel.value = 'manual';
                         const draggedTrack = playlist.splice(dragSourceIndex, 1)[0];
                         playlist.splice(originalIndex, 0, draggedTrack);
-                        
-                        // Atualizar o track a tocar atualmente para que a música não salte no final
-                        if (currentTrackIndex === dragSourceIndex) {
-                            currentTrackIndex = originalIndex;
-                        } else if (dragSourceIndex < currentTrackIndex && originalIndex >= currentTrackIndex) {
-                            currentTrackIndex--;
-                        } else if (dragSourceIndex > currentTrackIndex && originalIndex <= currentTrackIndex) {
-                            currentTrackIndex++;
-                        }
-                        
-                        renderList(); // Atualiza a UI para refletir a nova ordem
+                        if (currentTrackIndex === dragSourceIndex) { currentTrackIndex = originalIndex; } else if (dragSourceIndex < currentTrackIndex && originalIndex >= currentTrackIndex) { currentTrackIndex--; } else if (dragSourceIndex > currentTrackIndex && originalIndex <= currentTrackIndex) { currentTrackIndex++; }
+                        renderList(); 
                     }
                 });
 
-                DOM.container.appendChild(item);
+                fragment.appendChild(item);
             });
             
+            DOM.container.innerHTML = '';
+            DOM.container.appendChild(fragment);
+
             document.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', e => {
                 e.stopPropagation(); const idx=parseInt(btn.dataset.index); const t=playlist[idx];
                 if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(idx,1); showToast("Eliminado");
@@ -984,7 +1003,8 @@
             const v = parseFloat(e.target.value); 
             if(preampNode) preampNode.gain.value = v; 
             DOM.preampDisp.textContent = Math.round(v*100)+'%'; 
-            localStorage.setItem('webPlayerPreamp', v); savedPreamp = v; 
+            savedPreamp = v; 
+            savePreampToStorage(v);
         });
         DOM.preampSlider.value = savedPreamp; DOM.preampDisp.textContent = Math.round(savedPreamp*100)+'%';
 
