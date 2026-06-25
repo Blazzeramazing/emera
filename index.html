@@ -528,14 +528,14 @@
         const runIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
 
         // --- INICIALIZAÇÃO DO POLYFILL PARA DRAG AND DROP MOBILE ---
-        MobileDragDrop.polyfill({ holdToDrag: 300 }); // Segurar 300ms na música para iniciar o arraste no telemóvel
-        window.addEventListener('touchmove', function() {}, {passive: false}); // Obrigatório para o polyfill funcionar
+        MobileDragDrop.polyfill({ holdToDrag: 300 }); 
+        window.addEventListener('touchmove', function() {}, {passive: false});
 
         // --- ESTADO & DOM ---
         const audio = document.getElementById('audio-player');
         let isPlaying = false, currentTrackIndex = 0, currentSortMode = 'manual', playlist = [];
         let trackToEditIndex = null, editCoverBase64 = null, dragSourceIndex = null;
-        let playMode = parseInt(localStorage.getItem('webPlayerMode')) || 0; // 0: Normal, 1: Repeat, 2: Shuffle
+        let playMode = parseInt(localStorage.getItem('webPlayerMode')) || 0; 
         let isRepeat = playMode === 1; let isShuffle = playMode === 2;
         const savedEq = JSON.parse(localStorage.getItem('webPlayerEq')) || [0,0,0,0,0];
         let savedPreamp = parseFloat(localStorage.getItem('webPlayerPreamp')); if (isNaN(savedPreamp)) savedPreamp = 1.0;
@@ -563,7 +563,6 @@
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
 
         // --- GRAVADORES (SAVERS) OTIMIZADOS ---
-        // Previnem o bloqueio do navegador a gravar o localStorage sempre que o slider desliza um milímetro
         const saveVolToStorage = debounce((v) => localStorage.setItem('webPlayerVol', v), 500);
         const saveEqToStorage = debounce((eq) => localStorage.setItem('webPlayerEq', JSON.stringify(eq)), 500);
         const savePreampToStorage = debounce((v) => localStorage.setItem('webPlayerPreamp', v), 500);
@@ -571,13 +570,13 @@
         // --- TEMAS & MODO OLED ---
         const oledToggle = document.getElementById('oled-toggle');
         const oledBg = document.querySelector('.oled-bg');
-        let cachedAccentColor = '#10b981'; // Cache para o jogo evitar getComputedStyle
+        let cachedAccentColor = '#10b981';
         
         function applyTheme(hex, hover, light) {
             document.documentElement.style.setProperty('--accent', hex); document.documentElement.style.setProperty('--accent-hover', hover); document.documentElement.style.setProperty('--accent-light', light);
             localStorage.setItem('webPlayerTheme', `${hex},${hover},${light}`);
             document.getElementById('dynamic-favicon').href = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${hex.replace('#','%23')}'><path d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'/></svg>`;
-            cachedAccentColor = hex; // Atualiza a cache
+            cachedAccentColor = hex; 
         }
         
         function applyOled(isActive) {
@@ -606,11 +605,10 @@
             setTimeout(() => { toast.classList.replace('toast-enter-active', 'toast-exit-active'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        // --- BANCO DE DADOS (INDEXED DB OTIMIZADO) ---
+        // --- BANCO DE DADOS (INDEXED DB) ---
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
         function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 1); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
         
-        // Agora o salvamento é deferido. O browser vai fazer isso no fundo sem bloquear a UI.
         function saveTrackToDB(track) { 
             if(db){ 
                 runIdle(() => {
@@ -671,7 +669,7 @@
                 const idx = e.target.dataset.idx; const v = parseFloat(e.target.value);
                 if(eqFilters.length > 0) eqFilters[idx].gain.value = v; 
                 savedEq[idx] = v;
-                saveEqToStorage(savedEq); // Otimizado: grava passados 500ms de terminar o movimento
+                saveEqToStorage(savedEq); 
                 e.target.parentElement.nextElementSibling.textContent = (v>0?'+':'')+v;
             });
         });
@@ -701,7 +699,7 @@
 
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
-            if (!isPlaying || visualizerMode === 5 || isGameActive) return; // PAUSADO DURANTE O JOGO para salvar FPS
+            if (!isPlaying || visualizerMode === 5 || isGameActive) return; 
 
             const W = DOM.canvas.clientWidth; const H = DOM.canvas.clientHeight;
             if(DOM.canvas.width !== W || DOM.canvas.height !== H) { DOM.canvas.width = W; DOM.canvas.height = H; }
@@ -710,7 +708,7 @@
             const bufferL = 128; const dataFreq = new Uint8Array(bufferL); const dataTime = new Uint8Array(bufferL);
             if (analyser) { if(visualizerMode === 2) analyser.getByteTimeDomainData(dataTime); else analyser.getByteFrequencyData(dataFreq); }
 
-            const strokeColor = cachedAccentColor; // Substituição pelo valor em cache
+            const strokeColor = cachedAccentColor; 
             canvasCtx.lineWidth = 3; const cX = W/2, cY = H/2;
 
             if (visualizerMode === 0) {
@@ -749,7 +747,20 @@
             }
         }
 
-        // --- LÓGICA DO PLAYER E EVENTOS DE ÁUDIO COMPLETOS ---
+        // --- FUNÇÃO DE AJUDA PARA LÓGICA VISUAL DA PLAYLIST ---
+        function getVisualPlaylist() {
+            const term = DOM.search.value.toLowerCase();
+            let pToRender = [...playlist];
+            if(currentSortMode === 'most_played') pToRender.sort((a,b)=>(b.playCount||0)-(a.playCount||0));
+            else if(currentSortMode === 'recent') pToRender.sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
+
+            if(term.length > 0) {
+                pToRender = pToRender.filter(track => track.title.toLowerCase().includes(term) || track.artist.toLowerCase().includes(term));
+            }
+            return pToRender;
+        }
+
+        // --- LÓGICA DO PLAYER ---
         function updateMainFavoriteIcon() {
             if(playlist.length===0){ DOM.mainFav.classList.add('hidden'); return; }
             DOM.mainFav.classList.remove('hidden'); const isFav = playlist[currentTrackIndex]?.favorite || false;
@@ -788,10 +799,45 @@
             }
         }
 
+        // Correção de Lógica (Bug 1): Agora a Próxima/Anterior navega no que o utilizador está atualmente a ver!
         function nextTrack() {
-            if(playlist.length===0) return; let nI = currentTrackIndex+1; if(isShuffle){ nI = Math.floor(Math.random()*playlist.length); if(nI===currentTrackIndex && playlist.length>1) nI=(nI+1)%playlist.length; } else if(nI>=playlist.length) nI=0; loadTrack(nI); if(!isPlaying) togglePlay(); 
+            if(playlist.length===0) return;
+            const vis = getVisualPlaylist();
+            if(vis.length === 0) return; 
+            
+            let currentVisIndex = vis.findIndex(t => t.id === playlist[currentTrackIndex].id);
+            if(currentVisIndex === -1) currentVisIndex = 0; 
+            
+            let nI = currentVisIndex + 1;
+            if(isShuffle){ 
+                nI = Math.floor(Math.random()*vis.length); 
+                if(nI===currentVisIndex && vis.length>1) nI=(nI+1)%vis.length; 
+            } else if(nI >= vis.length) nI = 0;
+            
+            const targetId = vis[nI].id;
+            const originalIndex = playlist.findIndex(t => t.id === targetId);
+            
+            loadTrack(originalIndex); 
+            if(!isPlaying) togglePlay();
         }
-        function prevTrack() { loadTrack(currentTrackIndex-1); if(!isPlaying) togglePlay(); else audio.play(); }
+
+        function prevTrack() { 
+            if(playlist.length===0) return;
+            const vis = getVisualPlaylist();
+            if(vis.length === 0) return; 
+            
+            let currentVisIndex = vis.findIndex(t => t.id === playlist[currentTrackIndex].id);
+            if(currentVisIndex === -1) currentVisIndex = 0; 
+            
+            let nI = currentVisIndex - 1;
+            if(nI < 0) nI = vis.length - 1;
+            
+            const targetId = vis[nI].id;
+            const originalIndex = playlist.findIndex(t => t.id === targetId);
+            
+            loadTrack(originalIndex); 
+            if(!isPlaying) togglePlay(); else audio.play(); 
+        }
 
         // MODO (REPETIR / ALEATÓRIO)
         function updateModeUI() {
@@ -813,7 +859,6 @@
             updateModeUI(); showToast(playMode === 0 ? "Modo Normal" : playMode === 1 ? "Repetir Faixa" : "Aleatório");
         });
 
-        // Controles Principais e Mini Player
         DOM.playPause.addEventListener('click', () => { togglePlay(); DOM.playPause.blur(); });
         DOM.next.addEventListener('click', () => { nextTrack(); DOM.next.blur(); });
         DOM.prev.addEventListener('click', () => { prevTrack(); DOM.prev.blur(); });
@@ -840,7 +885,6 @@
             DOM.totTime.textContent = fT(audio.duration);
         });
 
-        // BARRA DE PROGRESSO CORRIGIDA
         let isDraggingProgress = false;
         DOM.progBar.addEventListener('mousedown', () => isDraggingProgress = true);
         DOM.progBar.addEventListener('touchstart', () => isDraggingProgress = true, {passive: true});
@@ -860,7 +904,7 @@
             }
         });
 
-        let lastRenderedSecond = -1; // Cache de optimização para o tempo de áudio
+        let lastRenderedSecond = -1; 
         audio.addEventListener('timeupdate', () => {
             if(isNaN(audio.duration) || isDraggingProgress) return; 
             
@@ -869,7 +913,6 @@
             DOM.progBar.value = pct; 
             DOM.progFill.style.width = pct+'%';
 
-            // Otimização: Apenas altera e escreve texto na tela quando o número inteiro de segundos muda (Reduz custo de DOM reflow)
             const currentSecond = Math.floor(currentTime);
             if(currentSecond !== lastRenderedSecond) {
                 const fT = s => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; 
@@ -915,23 +958,16 @@
         DOM.listHeader.addEventListener('click', toggleDrawer); DOM.drawerHandle.addEventListener('click', toggleDrawer);
 
         function renderList() {
-            const term = DOM.search.value.toLowerCase(); const isSearching = term.length > 0;
-            
-            let pToRender = [...playlist];
-            if(currentSortMode === 'most_played') pToRender.sort((a,b)=>(b.playCount||0)-(a.playCount||0));
-            else if(currentSortMode === 'recent') pToRender.sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
+            const pToRender = getVisualPlaylist(); // Agora usa a função de ajuda partilhada com o Next/Prev
 
-            // Otimização: DocumentFragment impede o layout thrashing na renderização (Injeta todas as divs de uma vez só)
             const fragment = document.createDocumentFragment();
 
-            pToRender.forEach((track, pIndex) => {
-                if(isSearching && !track.title.toLowerCase().includes(term) && !track.artist.toLowerCase().includes(term)) return;
+            pToRender.forEach((track) => {
                 const originalIndex = playlist.findIndex(t => t.id === track.id);
                 const isActive = originalIndex === currentTrackIndex;
                 const item = document.createElement('div');
                 item.className = `playlist-item flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl cursor-pointer transition mb-2 border ${isActive ? 'bg-accentLight border-accent/30' : 'border-transparent hover:bg-gray-800'}`;
                 
-                // Ativar drag & drop para o elemento HTML
                 item.draggable = true;
                 
                 const playingBars = isActive && isPlaying ? `<div class="flex items-end gap-0.5 h-3 w-3 sm:h-4 sm:w-4 ml-1 mr-1 flex-shrink-0"><div class="w-[3px] sm:w-1 bg-accent animate-[bounce_1s_infinite_0ms] h-full"></div><div class="w-[3px] sm:w-1 bg-accent animate-[bounce_1s_infinite_200ms] h-2/3"></div><div class="w-[3px] sm:w-1 bg-accent animate-[bounce_1s_infinite_400ms] h-4/5"></div></div>` : ``;
@@ -947,7 +983,7 @@
                 `;
                 item.addEventListener('click', e => { if(e.target.closest('.actions')) return; loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play(); });
                 
-                // EVENTOS DE DRAG AND DROP
+                // Correção Lógica (Bug 2): Otimização Matemática de Drag And Drop
                 item.addEventListener('dragstart', (e) => {
                     dragSourceIndex = originalIndex;
                     e.dataTransfer.effectAllowed = 'move';
@@ -963,8 +999,20 @@
                     if (dragSourceIndex !== null && dragSourceIndex !== originalIndex) {
                         currentSortMode = 'manual'; DOM.sortSel.value = 'manual';
                         const draggedTrack = playlist.splice(dragSourceIndex, 1)[0];
-                        playlist.splice(originalIndex, 0, draggedTrack);
-                        if (currentTrackIndex === dragSourceIndex) { currentTrackIndex = originalIndex; } else if (dragSourceIndex < currentTrackIndex && originalIndex >= currentTrackIndex) { currentTrackIndex--; } else if (dragSourceIndex > currentTrackIndex && originalIndex <= currentTrackIndex) { currentTrackIndex++; }
+                        
+                        // Compensa a posição matemática da array que encolheu se o alvo for depois do inicio
+                        let insertIndex = originalIndex;
+                        if (dragSourceIndex < originalIndex) insertIndex--;
+                        
+                        playlist.splice(insertIndex, 0, draggedTrack);
+                        
+                        if (currentTrackIndex === dragSourceIndex) { 
+                            currentTrackIndex = insertIndex; 
+                        } else {
+                            if (dragSourceIndex < currentTrackIndex && insertIndex >= currentTrackIndex) { currentTrackIndex--; } 
+                            else if (dragSourceIndex > currentTrackIndex && insertIndex <= currentTrackIndex) { currentTrackIndex++; }
+                        }
+                        DOM.search.value = ''; // Limpa a pesquisa para não confundir o drag and drop
                         renderList(); 
                     }
                 });
@@ -998,7 +1046,6 @@
             DOM.miniTitle.textContent = t.title; DOM.miniArtist.textContent = t.artist; DOM.miniCover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop';
         }
 
-        // --- MANUSEAMENTO DE DEFINIÇÕES EXTRAS ---
         DOM.preampSlider.addEventListener('input', e => { 
             const v = parseFloat(e.target.value); 
             if(preampNode) preampNode.gain.value = v; 
@@ -1047,7 +1094,6 @@
             }; r.readAsText(f);
         });
 
-        // --- BOTÕES AUXILIARES ---
         DOM.mainFav.addEventListener('click', () => {
             if(playlist.length===0) return; const t=playlist[currentTrackIndex]; t.favorite = !t.favorite;
             if(t.isLocal) saveTrackToDB(t); updateMainFavoriteIcon(); showToast(t.favorite ? "Adicionado aos Favoritos" : "Removido dos Favoritos");
@@ -1066,7 +1112,6 @@
         });
         document.getElementById('close-lyrics-btn').addEventListener('click', () => tModal(document.getElementById('lyrics-modal'), false));
 
-        // --- EDITAR MODAL ---
         document.getElementById('edit-cover-input').addEventListener('change', e => {
             const f = e.target.files[0]; if(!f) return; const r = new FileReader();
             r.onload = ev => { editCoverBase64 = ev.target.result; document.getElementById('edit-cover-preview').src = editCoverBase64; }; r.readAsDataURL(f);
@@ -1081,7 +1126,7 @@
             renderList(); tModal(document.getElementById('edit-modal'), false); showToast("Informação atualizada");
         });
 
-        // UPLOAD SIMPLIFICADO
+        // UPLOAD SIMPLIFICADO E EXTRAÇÃO DE LETRAS (Bug 3 Corrigido)
         function handleFiles(files) {
             if(files.length === 0) return; let loadedCount = 0; let added = 0; showToast(`A ler ficheiros...`);
             files.forEach(file => {
@@ -1093,8 +1138,15 @@
                     };
                     if (window.jsmediatags) {
                         window.jsmediatags.read(file, { onSuccess: tag => { 
-                            if(tag.tags.title) nT.title = tag.tags.title; if(tag.tags.artist) nT.artist = tag.tags.artist; 
-                            if(tag.tags.picture) { let b64 = ""; for (let i=0; i<tag.tags.picture.data.length; i++) b64 += String.fromCharCode(tag.tags.picture.data[i]); nT.cover = `data:${tag.tags.picture.format};base64,${window.btoa(b64)}`; } finish(); 
+                            if(tag.tags.title) nT.title = tag.tags.title; 
+                            if(tag.tags.artist) nT.artist = tag.tags.artist; 
+                            
+                            // Extração Nativa de Letras (Correção)
+                            if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics;
+                            else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics;
+                            
+                            if(tag.tags.picture) { let b64 = ""; for (let i=0; i<tag.tags.picture.data.length; i++) b64 += String.fromCharCode(tag.tags.picture.data[i]); nT.cover = `data:${tag.tags.picture.format};base64,${window.btoa(b64)}`; } 
+                            finish(); 
                         }, onError: () => finish() });
                     } else finish();
                 } else { loadedCount++; }
@@ -1103,14 +1155,13 @@
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
         DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
 
-        // Modo Compacto (Mini-player)
         document.getElementById('compact-mode-btn').addEventListener('click', () => { isCompact = true; document.body.classList.add('compact-mode'); });
         document.getElementById('restore-mode-btn').addEventListener('click', () => { isCompact = false; document.body.classList.remove('compact-mode'); });
         DOM.miniPlay.parentElement.addEventListener('click', () => { DOM.playPause.click(); });
         document.getElementById('mini-prev-btn').addEventListener('click', () => DOM.prev.click());
         document.getElementById('mini-next-btn').addEventListener('click', () => DOM.next.click());
 
-        // --- LÓGICA DO JOGO (EMERA TILES) COM BÓNUS ---
+        // --- LÓGICA DO JOGO (EMERA TILES) ---
         const gamePanel = document.getElementById('game-panel');
         const gameOverlay = document.getElementById('game-overlay');
         const gameOverOverlay = document.getElementById('game-over-overlay');
@@ -1203,10 +1254,9 @@
             
             secondChances--; localStorage.setItem('emeraSecondChances', secondChances); updateBonusUI();
 
-            let rewindAmount = 3.0; // Recuo aumentado para dar espaço de manobra visual
+            let rewindAmount = 3.0; 
             let newTime = Math.max(0, audio.currentTime - rewindAmount);
 
-            // Proteção para não "partir" notas longas a meio do reinício
             for(let n of gameNotes) {
                 if (n.time < newTime + 1.2 && n.time + n.duration > newTime + 1.2) {
                     newTime = Math.max(0, n.time - 2.0); 
@@ -1216,7 +1266,6 @@
             audio.currentTime = newTime;
             visualTime = newTime;
 
-            // Limpa a passadeira visual: auto-completa notas do passado ou que estariam demasiado perto da linha de clique
             gameNotes.forEach(n => {
                 if (n.time >= newTime + 1.2) { 
                     n.missed = false; n.hit = false; n.holding = false; 
@@ -1225,7 +1274,6 @@
                 }
             });
 
-            // Reseta controlos para evitar que cliques antigos fiquem colados
             columnsHeld = [false, false, false, false]; 
             columnHighlights = [0, 0, 0, 0];
             gameHitFlash = 0; gameMissFlash = 0;
@@ -1239,7 +1287,6 @@
             const numberEl = document.getElementById('countdown-number');
             numberEl.textContent = count;
 
-            // Renderiza o frame estático para o jogador se orientar visualmente
             drawGameStatic();
 
             const interval = setInterval(() => {
@@ -1261,7 +1308,6 @@
             }, 1000);
         });
 
-        // Variável de Cache para dimensões do jogo para evitar Layout Thrashing
         let gameLayoutCache = { w: 0, h: 0, gradient: null };
         function updateGameLayout() {
             const w = gameCanvas.clientWidth; const h = gameCanvas.clientHeight;
@@ -1276,7 +1322,6 @@
             return gameLayoutCache;
         }
 
-        // Função auxiliar para desenhar o cenário estático durante a contagem regressiva
         function drawGameStatic() {
             const layout = updateGameLayout();
             const W = layout.w; const H = layout.h;
@@ -1299,12 +1344,10 @@
                 const noteBottomY = hitCenter - ((note.time - visualTime) * currentSpeed);
                 let noteTopY = noteBottomY - tileH;
                 
-                // Se a nota já está visível dentro do canvas, renderiza
                 if(noteBottomY > 0 && noteTopY < H && !note.missed) {
                     const padding = 6;
                     let currentTileH = noteBottomY - noteTopY; if(currentTileH < 10) currentTileH = 10; 
                     
-                    // Otimização: Substituído shadowBlur pesado por preenchimento de caixa alargada com opacidade reduzida
                     if(note.isBonus) { 
                         gCtx.fillStyle = 'rgba(234, 179, 8, 0.4)';
                         gCtx.beginPath(); gCtx.roundRect(note.col * colW + padding - 4, noteTopY - 4, colW - padding*2 + 8, currentTileH + 8, 12); gCtx.fill();
@@ -1565,7 +1608,6 @@
                         const padding = 6;
                         let currentTileH = renderBottomY - noteTopY; if(currentTileH < 10) currentTileH = 10; 
 
-                        // Brilho Falso Otimizado
                         if(note.isBonus) { 
                             gCtx.fillStyle = 'rgba(234, 179, 8, 0.4)';
                             gCtx.beginPath(); gCtx.roundRect(note.col * colW + padding - 4, noteTopY - 4, colW - padding*2 + 8, currentTileH + 8, 12); gCtx.fill();
