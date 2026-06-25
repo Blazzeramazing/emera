@@ -533,7 +533,8 @@
 
         // --- ESTADO & DOM ---
         const audio = document.getElementById('audio-player');
-        let isPlaying = false, currentTrackIndex = 0, currentSortMode = 'manual', playlist = [];
+        let isPlaying = false, currentTrackIndex = 0, playlist = [];
+        let currentSortMode = localStorage.getItem('webPlayerSortMode') || 'manual';
         let trackToEditIndex = null, editCoverBase64 = null, dragSourceIndex = null;
         let playMode = parseInt(localStorage.getItem('webPlayerMode')) || 0; 
         let isRepeat = playMode === 1; let isShuffle = playMode === 2;
@@ -566,6 +567,7 @@
         const saveVolToStorage = debounce((v) => localStorage.setItem('webPlayerVol', v), 500);
         const saveEqToStorage = debounce((eq) => localStorage.setItem('webPlayerEq', JSON.stringify(eq)), 500);
         const savePreampToStorage = debounce((v) => localStorage.setItem('webPlayerPreamp', v), 500);
+        const savePlaylistOrder = debounce(() => { if(currentSortMode === 'manual') localStorage.setItem('webPlayerOrder', JSON.stringify(playlist.map(t => t.id))); }, 500);
 
         // --- TEMAS & MODO OLED ---
         const oledToggle = document.getElementById('oled-toggle');
@@ -605,10 +607,11 @@
             setTimeout(() => { toast.classList.replace('toast-enter-active', 'toast-exit-active'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        // --- BANCO DE DADOS (INDEXED DB) ---
+        // --- BANCO DE DADOS (INDEXED DB OTIMIZADO) ---
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
         function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 1); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
         
+        // Agora o salvamento é deferido. O browser vai fazer isso no fundo sem bloquear a UI.
         function saveTrackToDB(track) { 
             if(db){ 
                 runIdle(() => {
@@ -620,7 +623,30 @@
         function deleteTrackFromDB(id) { if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).delete(id); }
         function loadTracksFromDB() {
             if(!db) return Promise.resolve();
-            return new Promise(r => { const req = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll(); req.onsuccess = () => { req.result.forEach(t => { t.src = URL.createObjectURL(t.file); t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); }); r(); }; req.onerror = () => r(); });
+            return new Promise(r => { 
+                const req = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll(); 
+                req.onsuccess = () => { 
+                    playlist = [];
+                    req.result.forEach(t => { t.src = URL.createObjectURL(t.file); t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); }); 
+                    
+                    // Restaura a Ordem Manual guardada
+                    try {
+                        const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder'));
+                        if (savedOrder && Array.isArray(savedOrder)) {
+                            playlist.sort((a, b) => {
+                                let indexA = savedOrder.indexOf(a.id);
+                                let indexB = savedOrder.indexOf(b.id);
+                                if (indexA === -1) indexA = 999999;
+                                if (indexB === -1) indexB = 999999;
+                                return indexA - indexB;
+                            });
+                        }
+                    } catch(e) {}
+                    
+                    r(); 
+                }; 
+                req.onerror = () => r(); 
+            });
         }
 
         // --- WEB AUDIO E EQUALIZADOR ---
@@ -958,7 +984,7 @@
         DOM.listHeader.addEventListener('click', toggleDrawer); DOM.drawerHandle.addEventListener('click', toggleDrawer);
 
         function renderList() {
-            const pToRender = getVisualPlaylist(); // Agora usa a função de ajuda partilhada com o Next/Prev
+            const pToRender = getVisualPlaylist(); 
 
             const fragment = document.createDocumentFragment();
 
@@ -997,7 +1023,7 @@
                 item.addEventListener('drop', (e) => {
                     e.stopPropagation(); item.classList.remove('drag-over');
                     if (dragSourceIndex !== null && dragSourceIndex !== originalIndex) {
-                        currentSortMode = 'manual'; DOM.sortSel.value = 'manual';
+                        currentSortMode = 'manual'; DOM.sortSel.value = 'manual'; localStorage.setItem('webPlayerSortMode', 'manual');
                         const draggedTrack = playlist.splice(dragSourceIndex, 1)[0];
                         
                         // Compensa a posição matemática da array que encolheu se o alvo for depois do inicio
@@ -1012,7 +1038,8 @@
                             if (dragSourceIndex < currentTrackIndex && insertIndex >= currentTrackIndex) { currentTrackIndex--; } 
                             else if (dragSourceIndex > currentTrackIndex && insertIndex <= currentTrackIndex) { currentTrackIndex++; }
                         }
-                        DOM.search.value = ''; // Limpa a pesquisa para não confundir o drag and drop
+                        DOM.search.value = ''; 
+                        savePlaylistOrder();
                         renderList(); 
                     }
                 });
@@ -1026,6 +1053,7 @@
             document.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', e => {
                 e.stopPropagation(); const idx=parseInt(btn.dataset.index); const t=playlist[idx];
                 if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(idx,1); showToast("Eliminado");
+                savePlaylistOrder();
                 renderList();
             }));
 
@@ -1038,7 +1066,12 @@
             }));
         }
 
-        DOM.sortSel.addEventListener('change', (e) => { currentSortMode = e.target.value; renderList(); });
+        DOM.sortSel.addEventListener('change', (e) => { 
+            currentSortMode = e.target.value; 
+            localStorage.setItem('webPlayerSortMode', currentSortMode);
+            if(currentSortMode === 'manual') savePlaylistOrder();
+            renderList(); 
+        });
         DOM.search.addEventListener('input', renderList);
 
         function updateMiniPlayer() {
@@ -1067,7 +1100,9 @@
         document.getElementById('clear-db-btn').addEventListener('click', () => {
             if(confirm("Tens a certeza? Esta ação vai eliminar TODAS as músicas e playlists.")) {
                 if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear();
-                playlist=[]; audio.pause(); audio.src=""; renderList();
+                playlist=[]; audio.pause(); audio.src=""; 
+                localStorage.removeItem('webPlayerOrder');
+                renderList();
                 DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar';
                 showToast("Biblioteca eliminada");
             }
@@ -1089,6 +1124,7 @@
                 try {
                     const data = JSON.parse(ev.target.result); let added = 0;
                     data.forEach(t => { if(!playlist.find(x=>x.id===t.id)){ playlist.push(t); saveTrackToDB(t); added++; } });
+                    savePlaylistOrder();
                     renderList(); showToast(`${added} músicas importadas do backup.`);
                 } catch(err) { showToast("Erro: Backup inválido."); }
             }; r.readAsText(f);
@@ -1134,7 +1170,7 @@
                     const cleanTitle = file.name.replace(/\.[^/.]+$/, ""); const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*1000);
                     let nT = { id: trackId, title: cleanTitle, artist: "Desconhecido", file: file, src: null, cover: null, lyrics: "", isLocal: true };
                     const finish = () => { nT.src = URL.createObjectURL(file); playlist.unshift(nT); saveTrackToDB(nT); loadedCount++; added++;
-                        if(loadedCount === files.length) { renderList(); if(!isPlaying && added === playlist.length) loadTrack(0); }
+                        if(loadedCount === files.length) { savePlaylistOrder(); renderList(); if(!isPlaying && added === playlist.length) loadTrack(0); }
                     };
                     if (window.jsmediatags) {
                         window.jsmediatags.read(file, { onSuccess: tag => { 
@@ -1737,7 +1773,9 @@
 
         // Init App
         initDB().then(async () => {
-            await loadTracksFromDB(); renderList();
+            await loadTracksFromDB(); 
+            DOM.sortSel.value = currentSortMode;
+            renderList();
             if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; }
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
