@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#111827">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Emera Player</title>
+    
+    <!-- Otimização de Conexão -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    
     <!-- Favicon dinâmico -->
     <link id="dynamic-favicon" rel="icon" type="image/svg+xml" href="">
     
@@ -547,6 +555,7 @@
         let visualizerMode = 0; let sleepTimerId = null; let eqModalVisible = false; let isCompact = false;
 
         const DOM = {
+            installAppBtn: document.getElementById('install-app-btn'),
             playPause: document.getElementById('play-pause-btn'), playIcon: document.getElementById('play-icon'), pauseIcon: document.getElementById('pause-icon'),
             prev: document.getElementById('prev-btn'), next: document.getElementById('next-btn'), modeBtn: document.getElementById('mode-btn'), iconRepeat: document.getElementById('icon-repeat'), iconShuffle: document.getElementById('icon-shuffle'),
             title: document.getElementById('track-title'), artist: document.getElementById('track-artist'), cover: document.getElementById('cover-art'),
@@ -596,6 +605,62 @@
         oledToggle.addEventListener('change', (e) => applyOled(e.target.checked));
 
         document.querySelectorAll('.theme-btn').forEach(btn => btn.addEventListener('click', (e) => { const c = e.target.dataset.theme.split(','); applyTheme(c[0], c[1], c[2]); }));
+
+        // 1. Geração Dinâmica do Manifest para Instalação
+        const manifestConfig = {
+            name: "Emera Player", short_name: "Emera", start_url: window.location.href.split('?')[0] || ".", display: "standalone",
+            background_color: "#111827", theme_color: cachedAccentColor,
+            icons: [{ src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'><path d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'/></svg>", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }]
+        };
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifestConfig));
+        document.head.appendChild(manifestLink);
+
+        // 2. Lógica do Botão de Instalação e Service Worker Embutido
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); deferredPrompt = e;
+            DOM.installAppBtn.classList.remove('hidden'); DOM.installAppBtn.classList.add('flex');
+        });
+
+        DOM.installAppBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                DOM.installAppBtn.classList.add('hidden'); DOM.installAppBtn.classList.remove('flex');
+                showToast("Emera Player instalado com sucesso!");
+            }
+            deferredPrompt = null;
+        });
+
+        async function initOfflineMode() {
+            try {
+                // Service Worker em formato Blob para forçar o cache de todas as bibliotecas no telemóvel
+                const swCode = `
+                    const CACHE = 'emera-offline-v1';
+                    const urls = [
+                        location.href.split('#')[0],
+                        'https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js',
+                        'https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css',
+                        'https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js',
+                        'https://cdn.tailwindcss.com'
+                    ];
+                    self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(urls))); });
+                    self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+                    self.addEventListener('fetch', e => {
+                        e.respondWith(caches.match(e.request).then(res => res || fetch(e.request).catch(() => new Response('Offline'))));
+                    });
+                `;
+                const swBlob = new Blob([swCode], {type: 'application/javascript'});
+                if ('serviceWorker' in navigator) {
+                    await navigator.serviceWorker.register(URL.createObjectURL(swBlob));
+                    console.log("Sistema de Cache Offline Ativado!");
+                }
+            } catch(e) { console.log("SW offline embutido bloqueado (segurança do browser local). Use um host seguro para modo 100% offline nativo."); }
+        }
+        window.addEventListener('load', initOfflineMode);
 
         // --- TOASTS ---
         function showToast(message) {
@@ -932,7 +997,8 @@
 
         let lastRenderedSecond = -1; 
         audio.addEventListener('timeupdate', () => {
-            if(isNaN(audio.duration) || isDraggingProgress) return; 
+            // OTIMIZAÇÃO: Não gasta CPU a atualizar a UI de fundo se o jogo estiver a cobrir o ecrã
+            if(isNaN(audio.duration) || isDraggingProgress || isGameActive) return; 
             
             const currentTime = audio.currentTime;
             const pct = (currentTime/audio.duration)*100; 
