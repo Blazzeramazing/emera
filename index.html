@@ -898,7 +898,10 @@
             requestAnimationFrame(drawVisualizer);
             if (isGameActive) return; 
             if (!isPlaying && !settingAtmosphere) {
-                if(settingPulse && DOM.coverContainer) { DOM.coverContainer.style.transform = ''; DOM.coverContainer.style.boxShadow = `0 0 30px rgba(0,0,0,0.5)`; }
+                if(settingPulse && DOM.coverContainer) { 
+                    DOM.coverContainer.style.transform = 'scale(1)'; 
+                    DOM.coverContainer.style.boxShadow = '0 0 60px var(--accent-light)'; 
+                }
                 return;
             }
             if (visualizerMode === 5 && !settingChroma && !settingPulse && !settingAtmosphere) return;
@@ -922,15 +925,12 @@
             // Efeito 1: Pulso da Capa
             if (settingPulse && DOM.coverContainer) {
                 if (isPlaying) {
-                    let scale = 1 + (beatInt * 0.08); 
+                    let scale = 1 + (beatInt * 0.05); 
                     DOM.coverContainer.style.transform = `scale(${scale})`;
-                    if(beatInt > 0.7) {
-                        DOM.coverContainer.style.boxShadow = `0 0 ${40 + beatInt*60}px var(--accent), 0 0 ${150 + beatInt*200}px var(--accent-light)`;
-                    } else if(beatInt > 0.4) {
-                        DOM.coverContainer.style.boxShadow = `0 0 ${20 + beatInt*30}px var(--accent-light)`;
-                    } else {
-                        DOM.coverContainer.style.boxShadow = `0 0 30px rgba(0,0,0,0.5)`;
-                    }
+                    DOM.coverContainer.style.boxShadow = `0 0 ${20 + beatInt*40}px var(--accent), 0 0 ${60 + beatInt*200}px var(--accent-light)`;
+                } else {
+                    DOM.coverContainer.style.transform = 'scale(1)';
+                    DOM.coverContainer.style.boxShadow = `0 0 60px var(--accent-light)`;
                 }
             }
 
