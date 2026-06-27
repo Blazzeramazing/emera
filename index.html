@@ -479,14 +479,6 @@
                 </div>
                 <hr class="border-gray-800 my-1">
                 <div>
-                    <label class="text-xs text-gray-400 font-semibold uppercase mb-1 flex justify-between">
-                        <span>Transição Suave (Crossfade)</span>
-                        <span id="crossfade-disp" class="text-accent">0s</span>
-                    </label>
-                    <input type="range" id="crossfade-slider" min="0" max="10" step="1" value="0" class="standard-slider mt-2">
-                    <p class="text-[9px] text-gray-500 mt-2 leading-tight">Mistura o fim de uma música com o início da próxima para eliminar silêncios.</p>
-                </div>
-                <div>
                     <label class="text-xs text-gray-400 font-semibold uppercase mb-1 block">Temporizador (Dormir)</label>
                     <div class="flex gap-2">
                         <input type="number" id="sleep-timer-input" placeholder="Minutos..." min="1" class="w-full bg-gray-800 text-sm text-gray-200 rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-accent">
@@ -570,13 +562,6 @@
         </div>
     </div>
 
-    <!-- Overlay Drag & Drop Global -->
-    <div id="global-drop-zone" class="fixed inset-0 bg-accent/90 z-[300] hidden flex-col items-center justify-center text-white backdrop-blur-md pointer-events-none transition-opacity duration-300 opacity-0">
-        <svg class="w-24 h-24 mb-4 animate-bounce drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-        <h2 class="text-3xl md:text-5xl font-black tracking-widest drop-shadow-lg text-center">LARGUE AQUI</h2>
-        <p class="text-lg md:text-xl mt-2 font-bold drop-shadow">Para adicionar à Playlist</p>
-    </div>
-
     <div id="toast-container" class="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[200] flex flex-col gap-2 pointer-events-none"></div>
 
     <audio id="audio-player"></audio>
@@ -608,12 +593,7 @@
         
         let secondChances = parseInt(localStorage.getItem('emeraSecondChances')) || 0;
         
-        let audioCtx, sourceNode, preampNode, crossfadeGain, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
-        let crossfadeTime = parseInt(localStorage.getItem('webPlayerCrossfade')) || 0;
-        let isCrossfading = false;
-        let parsedLyrics = null;
-        let activeLyricIndex = -1;
-
+        let audioCtx, sourceNode, preampNode, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
         let visualizerMode = 0; let sleepTimerId = null; let eqModalVisible = false; let isCompact = false;
         let settingChroma = JSON.parse(localStorage.getItem('webPlayerChroma')) || false;
         let settingPulse = JSON.parse(localStorage.getItem('webPlayerPulse')) || true;
@@ -848,12 +828,11 @@
                 sourceNode = audioCtx.createMediaElementSource(audio); 
                 analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
                 preampNode = audioCtx.createGain(); preampNode.gain.value = savedPreamp;
-                crossfadeGain = audioCtx.createGain(); crossfadeGain.gain.value = 1;
                 
                 const compressor = audioCtx.createDynamicsCompressor();
                 compressor.threshold.value = -3.0; compressor.knee.value = 12.0; compressor.ratio.value = 20.0; compressor.attack.value = 0.002; compressor.release.value = 0.100;
                 
-                let prev = sourceNode; prev.connect(preampNode); preampNode.connect(crossfadeGain); prev = crossfadeGain;
+                let prev = sourceNode; prev.connect(preampNode); prev = preampNode;
                 eqFrequencies.forEach((freq, i) => {
                     let f = audioCtx.createBiquadFilter(); f.type = i===0?'lowshelf':(i===4?'highshelf':'peaking'); f.frequency.value = freq; f.gain.value = savedEq[i]; if(f.type==='peaking') f.Q.value = 1.414;
                     eqFilters.push(f); prev.connect(f); prev = f;
@@ -971,33 +950,7 @@
         // --- EFEITOS VISUAIS ---
         const visualizerNames = ["Radial", "Barras Clássicas", "Osciloscópio", "Pulso de Graves", "Partículas", "Desligado"];
         DOM.toggleVis.addEventListener('click', (e) => { e.stopPropagation(); visualizerMode = (visualizerMode + 1) % visualizerNames.length; if(visualizerMode===5) canvasCtx.clearRect(0,0,DOM.canvas.width,DOM.canvas.height); showToast(`Efeito: ${visualizerNames[visualizerMode]}`); });
-        
-        let touchStartX = 0, touchEndX = 0, touchStartY = 0, touchEndY = 0;
-        let lastTapTime = 0, tapTimeout;
-        const coverEl = document.getElementById('cover-container');
-
-        coverEl.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, {passive: true});
-        coverEl.addEventListener('touchend', e => { touchEndX = e.changedTouches[0].screenX; touchEndY = e.changedTouches[0].screenY; handleCoverSwipe(); }, {passive: true});
-        
-        let isCoverMouseDown = false;
-        coverEl.addEventListener('mousedown', e => { isCoverMouseDown = true; touchStartX = e.screenX; touchStartY = e.screenY; });
-        coverEl.addEventListener('mouseup', e => { if(isCoverMouseDown) { touchEndX = e.screenX; touchEndY = e.screenY; isCoverMouseDown = false; handleCoverSwipe(); } });
-        coverEl.addEventListener('mouseleave', () => { isCoverMouseDown = false; });
-
-        function handleCoverSwipe() {
-            const dx = touchEndX - touchStartX; const dy = touchEndY - touchStartY;
-            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-                if (dx > 0) prevTrack(); else nextTrack();
-            }
-        }
-
-        coverEl.addEventListener('click', e => {
-            e.preventDefault(); const currentTime = new Date().getTime(); const tapLength = currentTime - lastTapTime;
-            clearTimeout(tapTimeout);
-            if (tapLength < 300 && tapLength > 0) { togglePlay(); } 
-            else { tapTimeout = setTimeout(() => { DOM.toggleVis.click(); }, 300); }
-            lastTapTime = currentTime;
-        });
+        document.getElementById('cover-container').addEventListener('click', () => DOM.toggleVis.click()); 
 
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
@@ -1258,89 +1211,6 @@
             // OTIMIZAÇÃO: Não gasta CPU a atualizar a UI de fundo se o jogo estiver a cobrir o ecrã
             if(isNaN(audio.duration) || isDraggingProgress || isGameActive) return; 
             
-            // 1. LÓGICA DE CROSSFADE (TRANSIÇÃO SUAVE)
-            if (crossfadeTime > 0 && !isCrossfading && audio.duration > 0) {
-                if (audio.currentTime >= audio.duration - crossfadeTime) {
-                    isCrossfading = true;
-
-                    // Cria um clone temporal do áudio para esmaecer
-                    const tempAudio = new Audio(audio.src);
-                    tempAudio.crossOrigin = 'anonymous';
-                    tempAudio.currentTime = audio.currentTime;
-                    tempAudio.volume = audio.volume;
-
-                    tempAudio.play().then(() => {
-                        const steps = 20;
-                        const stepTime = (crossfadeTime * 1000) / steps;
-                        const volStep = tempAudio.volume / steps;
-
-                        const fadeOutInterval = setInterval(() => {
-                            let newVol = tempAudio.volume - volStep;
-                            if (newVol <= 0) {
-                                newVol = 0;
-                                clearInterval(fadeOutInterval);
-                                tempAudio.pause();
-                                tempAudio.removeAttribute('src');
-                            } else {
-                                tempAudio.volume = newVol;
-                            }
-                        }, stepTime);
-                    }).catch(e => console.log('Fade out bloqueado (segurança do browser):', e));
-
-                    // Aplica Fade-In na música que vai entrar (usando GainNode)
-                    if (audioCtx && crossfadeGain) {
-                        crossfadeGain.gain.cancelScheduledValues(audioCtx.currentTime);
-                        crossfadeGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-                        crossfadeGain.gain.exponentialRampToValueAtTime(1, audioCtx.currentTime + crossfadeTime);
-                    }
-
-                    if (isRepeat) { audio.currentTime = 0; audio.play(); } 
-                    else { nextTrack(); }
-
-                    setTimeout(() => { isCrossfading = false; }, crossfadeTime * 1000);
-                }
-            }
-
-            // 2. LÓGICA DO MODO KARAOKE (LETRAS SINCRONIZADAS)
-            const lyricsModal = document.getElementById('lyrics-modal');
-            const lyricsContainer = document.getElementById('lyrics-text');
-            if (!lyricsModal.classList.contains('hidden') && parsedLyrics) {
-                const ct = audio.currentTime;
-                let newIndex = -1;
-                
-                // Encontrar a linha atual baseado no tempo
-                for (let i = 0; i < parsedLyrics.length; i++) {
-                    if (ct >= parsedLyrics[i].time && (!parsedLyrics[i+1] || ct < parsedLyrics[i+1].time)) {
-                        newIndex = i; break;
-                    }
-                }
-                
-                // Se a linha mudou, atualiza a UI e foca na nova!
-                if (newIndex !== -1 && newIndex !== activeLyricIndex) {
-                    if (activeLyricIndex !== -1) {
-                        const oldP = document.getElementById(`lyric-line-${activeLyricIndex}`);
-                        if (oldP) {
-                            oldP.classList.remove('text-accent', 'opacity-100', 'scale-110', 'font-bold');
-                            oldP.classList.add('opacity-40', 'scale-95');
-                            oldP.style.textShadow = 'none';
-                        }
-                    }
-                    const newP = document.getElementById(`lyric-line-${newIndex}`);
-                    if (newP) {
-                        newP.classList.remove('opacity-40', 'scale-95');
-                        newP.classList.add('text-accent', 'opacity-100', 'scale-110', 'font-bold');
-                        newP.style.textShadow = '0 0 15px var(--accent-light)';
-
-                        // Scroll suave para o centro
-                        const containerH = lyricsContainer.clientHeight;
-                        const pTop = newP.offsetTop;
-                        const pH = newP.clientHeight;
-                        lyricsContainer.scrollTo({ top: pTop - (containerH / 2) + (pH / 2), behavior: 'smooth' });
-                    }
-                    activeLyricIndex = newIndex;
-                }
-            }
-
             const currentTime = audio.currentTime;
             const pct = (currentTime/audio.duration)*100; 
             DOM.progBar.value = pct; 
@@ -1587,70 +1457,12 @@
             else { showToast("Partilha não suportada neste browser."); }
         });
 
-        // FUNÇÃO DE LEITURA DE LRC (KARAOKE)
-        function parseLRC(text) {
-            const lines = text.split('\n');
-            const result = [];
-            const timeRegex = /\[(\d{2}):(\d{2}(?:\.\d{1,3})?)\]/g;
-            
-            lines.forEach(line => {
-                let match;
-                const times = [];
-                while ((match = timeRegex.exec(line)) !== null) {
-                    const mins = parseInt(match[1]);
-                    const secs = parseFloat(match[2]);
-                    times.push((mins * 60) + secs);
-                }
-                if (times.length > 0) {
-                    const content = line.replace(/\[.*?\]/g, '').trim();
-                    if (content) { times.forEach(t => result.push({ time: t, text: content })); }
-                }
-            });
-            
-            result.sort((a, b) => a.time - b.time);
-            return result.length > 0 ? result : null;
-        }
-
         DOM.lyricsBtn.addEventListener('click', () => {
             const t = playlist[currentTrackIndex]; if(!t) return;
-            const container = document.getElementById('lyrics-text');
-            container.innerHTML = '';
-            parsedLyrics = t.lyrics ? parseLRC(t.lyrics) : null;
-            activeLyricIndex = -1;
-
-            if (parsedLyrics) {
-                // MODO KARAOKE (TEM TIMESTAMPS)
-                container.className = 'flex-1 overflow-y-auto text-center text-base sm:text-lg text-gray-400 custom-scrollbar leading-relaxed px-2 font-medium relative pt-[30vh] pb-[30vh]';
-                parsedLyrics.forEach((line, i) => {
-                    const p = document.createElement('p');
-                    p.id = `lyric-line-${i}`;
-                    p.className = 'py-3 transition-all duration-500 transform scale-95 opacity-40 hover:opacity-80 cursor-pointer';
-                    p.textContent = line.text;
-                    p.title = "Saltar para esta parte";
-                    p.addEventListener('click', () => { audio.currentTime = line.time; if(!isPlaying) togglePlay(); });
-                    container.appendChild(p);
-                });
-            } else {
-                // MODO TEXTO SIMPLES
-                container.textContent = t.lyrics ? t.lyrics : "Não há letras disponíveis para esta faixa. Pode adicionar colando o formato .LRC na edição para ativar o Karaoke!";
-                container.className = 'flex-1 overflow-y-auto whitespace-pre-wrap text-center text-base sm:text-lg text-gray-200 custom-scrollbar leading-relaxed px-2 font-medium';
-            }
-
+            document.getElementById('lyrics-text').textContent = t.lyrics ? t.lyrics : "Não há letras disponíveis para esta faixa. Pode adicionar na opção Editar Info.";
             tModal(document.getElementById('lyrics-modal'), true, 'lyrics');
         });
         document.getElementById('close-lyrics-btn').addEventListener('click', () => tModal(document.getElementById('lyrics-modal'), false, 'lyrics'));
-
-        const crossfadeSlider = document.getElementById('crossfade-slider');
-        const crossfadeDisp = document.getElementById('crossfade-disp');
-        if(crossfadeSlider) {
-            crossfadeSlider.value = crossfadeTime;
-            crossfadeDisp.textContent = crossfadeTime + 's';
-            crossfadeSlider.addEventListener('input', e => {
-                crossfadeTime = parseInt(e.target.value);
-                crossfadeDisp.textContent = crossfadeTime + 's';
-                localStorage.setItem('webPlayerCrossfade', crossfadeTime);
-            });
-        }
 
         document.getElementById('edit-cover-input').addEventListener('change', e => {
             const f = e.target.files[0]; if(!f) return; const r = new FileReader();
@@ -1694,35 +1506,6 @@
         }
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
         DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
-
-        const globalDropZone = document.getElementById('global-drop-zone');
-        let dragCounter = 0;
-
-        document.body.addEventListener('dragenter', e => {
-            if(e.dataTransfer.types.includes('Files') && typeof isGameActive !== 'undefined' && !isGameActive) {
-                e.preventDefault(); dragCounter++;
-                globalDropZone.classList.remove('hidden'); globalDropZone.classList.add('flex');
-                setTimeout(() => globalDropZone.classList.remove('opacity-0'), 10);
-            }
-        });
-        document.body.addEventListener('dragover', e => { if(e.dataTransfer.types.includes('Files')) e.preventDefault(); });
-        document.body.addEventListener('dragleave', e => {
-            if(e.dataTransfer.types.includes('Files')) {
-                dragCounter--;
-                if(dragCounter <= 0) {
-                    dragCounter = 0; globalDropZone.classList.add('opacity-0');
-                    setTimeout(() => { globalDropZone.classList.add('hidden'); globalDropZone.classList.remove('flex'); }, 300);
-                }
-            }
-        });
-        document.body.addEventListener('drop', e => {
-            if(e.dataTransfer.types.includes('Files')) {
-                e.preventDefault(); dragCounter = 0;
-                globalDropZone.classList.add('opacity-0');
-                setTimeout(() => { globalDropZone.classList.add('hidden'); globalDropZone.classList.remove('flex'); }, 300);
-                if(e.dataTransfer.files.length > 0) handleFiles(Array.from(e.dataTransfer.files));
-            }
-        });
 
         document.getElementById('compact-mode-btn').addEventListener('click', () => { isCompact = true; document.body.classList.add('compact-mode'); });
         document.getElementById('restore-mode-btn').addEventListener('click', () => { isCompact = false; document.body.classList.remove('compact-mode'); });
