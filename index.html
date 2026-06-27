@@ -1478,16 +1478,33 @@
 
         function getCurrentSpeed(t) { return (baseSpeed + (t * 2)) * currentMultiplier; }
 
+        function closeGameUI() {
+            if (!isGameActive) return;
+            gamePanel.classList.add('opacity-0');
+            setTimeout(() => { gamePanel.classList.add('hidden'); gamePanel.classList.remove('flex'); }, 300);
+            isGameActive = false; isGamePlaying = false; isGameOver = false; cancelAnimationFrame(gameAnimFrame);
+        }
+
+        window.addEventListener('popstate', () => {
+            // Se o utilizador pressionou "Voltar" no telemóvel e removeu o #game do link, fechamos o jogo.
+            if (isGameActive && location.hash !== '#game') {
+                closeGameUI();
+            }
+        });
+
         document.getElementById('open-game-btn').addEventListener('click', () => {
+            if (location.hash !== '#game') history.pushState({ modal: 'game' }, '', '#game');
             currentMultiplier = 1; gamePanel.classList.remove('hidden'); gamePanel.classList.add('flex');
             setTimeout(() => gamePanel.classList.remove('opacity-0'), 10);
             isGameActive = true; resetGameForNewTrack();
         });
 
         document.getElementById('close-game-btn').addEventListener('click', () => {
-            gamePanel.classList.add('opacity-0');
-            setTimeout(() => { gamePanel.classList.add('hidden'); gamePanel.classList.remove('flex'); }, 300);
-            isGameActive = false; isGamePlaying = false; isGameOver = false; cancelAnimationFrame(gameAnimFrame);
+            if (location.hash === '#game') {
+                history.back(); // Aciona o popstate e limpa o histórico
+            } else {
+                closeGameUI();
+            }
         });
 
         async function startMiniGame(keepMult = false, keepScore = false) {
