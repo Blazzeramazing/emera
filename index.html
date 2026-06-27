@@ -611,13 +611,71 @@
             container: document.getElementById('list-container'), fileUpload: document.getElementById('file-upload'), folderUpload: document.getElementById('folder-upload'),
             sortSel: document.getElementById('sort-select'), localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
-            coverContainer: document.getElementById('cover-container'),
             preampSlider: document.getElementById('preamp-slider'), preampDisp: document.getElementById('preamp-value-display'),
             rightPanel: document.getElementById('right-panel'), drawerHandle: document.getElementById('drawer-handle'), listHeader: document.getElementById('list-header'),
             eqCanvasBg: document.getElementById('eq-canvas-bg'), eqModal: document.getElementById('eq-modal'), mainAppContainer: document.getElementById('main-app-container'),
             miniPlay: document.getElementById('mini-play'), miniPause: document.getElementById('mini-pause'), miniCover: document.getElementById('mini-cover'), miniTitle: document.getElementById('mini-title'), miniArtist: document.getElementById('mini-artist')
         };
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
+
+        // --- GESTÃO MESTRE DE NAVEGAÇÃO E HISTÓRICO ---
+        if (location.hash === '') history.pushState(null, '', '#main');
+        
+        let exitClicks = 0; let exitTimer = null;
+        
+        function forceCloseModal(m) {
+            if (!m) return;
+            if (!m.classList.contains('hidden')) {
+                m.classList.add('opacity-0');
+                setTimeout(()=>{ m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
+                if (m === DOM.eqModal) eqModalVisible = false;
+            }
+        }
+
+        function closeAllOverlays() {
+            if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
+            if (typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded) {
+                isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded');
+            }
+            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal'));
+            forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal'));
+        }
+
+        window.addEventListener('popstate', (e) => {
+            const h = location.hash;
+            
+            // 1. Lógica de Saída Tripla
+            if (h === '') {
+                exitClicks++;
+                if (exitClicks >= 3) {
+                    history.back(); // Encerra a PWA
+                } else {
+                    history.pushState(null, '', '#main'); // Prende o Utilizador
+                    showToast(`Pressione voltar mais ${3 - exitClicks} vezes para sair.`);
+                    clearTimeout(exitTimer); exitTimer = setTimeout(() => { exitClicks = 0; }, 2000);
+                }
+                return;
+            } else { exitClicks = 0; }
+
+            // 2. Fechar tudo se estiver no Menu Principal
+            if (h === '#main') { closeAllOverlays(); return; }
+
+            // 3. Gaveta Mobile
+            if (h === '#playlist') {
+                forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal'));
+                forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal'));
+                if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
+                if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) { 
+                    isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); 
+                }
+                return;
+            }
+
+            // 4. Modais Individuais
+            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal') };
+            Object.keys(hashToModal).forEach(key => { if (h !== key) forceCloseModal(hashToModal[key]); });
+            if (h !== '#game' && typeof closeGameUI === 'function' && isGameActive) closeGameUI();
+        });
 
         // --- GRAVADORES (SAVERS) OTIMIZADOS ---
         const saveVolToStorage = debounce((v) => localStorage.setItem('webPlayerVol', v), 500);
@@ -1177,25 +1235,21 @@
         });
 
         // --- UI E MENUS ---
-        const tModal = (m, s) => { 
+        const tModal = (m, s, hash) => { 
             if(s) { 
-                m.classList.remove('hidden'); 
-                m.classList.add('flex'); 
-                setTimeout(()=>m.classList.remove('opacity-0'),10);
+                m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(()=>m.classList.remove('opacity-0'),10);
+                if (hash && location.hash !== '#' + hash) history.pushState(null, '', '#' + hash);
             } else {
-                m.classList.add('opacity-0'); 
-                setTimeout(()=>{
-                    m.classList.add('hidden');
-                    m.classList.remove('flex'); 
-                },300);
+                m.classList.add('opacity-0'); setTimeout(()=>{ m.classList.add('hidden'); m.classList.remove('flex'); },300);
+                if (hash && location.hash === '#' + hash) history.back();
             } 
             if(m === DOM.eqModal) eqModalVisible = s; 
         };
         
-        document.getElementById('eq-btn').addEventListener('click', () => tModal(DOM.eqModal, true));
-        document.getElementById('close-eq-btn').addEventListener('click', () => tModal(DOM.eqModal, false));
-        document.getElementById('settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), true));
-        document.getElementById('close-settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), false));
+        document.getElementById('eq-btn').addEventListener('click', () => tModal(DOM.eqModal, true, 'eq'));
+        document.getElementById('close-eq-btn').addEventListener('click', () => tModal(DOM.eqModal, false, 'eq'));
+        document.getElementById('settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), true, 'settings'));
+        document.getElementById('close-settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), false, 'settings'));
 
         const chromaToggle = document.getElementById('chroma-toggle');
         const pulseToggle = document.getElementById('pulse-toggle');
@@ -1231,7 +1285,18 @@
 
         // --- GAVETA E ORDENAÇÃO ---
         let isDrawerExpanded = false;
-        function toggleDrawer(e) { if (window.innerWidth >= 768) return; if(e && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'SELECT')) return; isDrawerExpanded = !isDrawerExpanded; if (isDrawerExpanded) DOM.rightPanel.classList.add('expanded'); else DOM.rightPanel.classList.remove('expanded'); }
+        function toggleDrawer(e) { 
+            if (window.innerWidth >= 768) return; 
+            if(e && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'SELECT')) return; 
+            
+            if (!isDrawerExpanded) {
+                isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded');
+                if (location.hash !== '#playlist') history.pushState(null, '', '#playlist');
+            } else {
+                isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded');
+                if (location.hash === '#playlist') history.back();
+            }
+        }
         DOM.listHeader.addEventListener('click', toggleDrawer); DOM.drawerHandle.addEventListener('click', toggleDrawer);
 
         function renderList() {
@@ -1313,7 +1378,7 @@
                 document.getElementById('edit-title-input').value = t.title; document.getElementById('edit-artist-input').value = t.artist;
                 document.getElementById('edit-lyrics-input').value = t.lyrics || "";
                 document.getElementById('edit-cover-preview').src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop';
-                editCoverBase64 = t.cover; tModal(document.getElementById('edit-modal'), true);
+                editCoverBase64 = t.cover; tModal(document.getElementById('edit-modal'), true, 'edit');
             }));
         }
 
@@ -1395,22 +1460,22 @@
         DOM.lyricsBtn.addEventListener('click', () => {
             const t = playlist[currentTrackIndex]; if(!t) return;
             document.getElementById('lyrics-text').textContent = t.lyrics ? t.lyrics : "Não há letras disponíveis para esta faixa. Pode adicionar na opção Editar Info.";
-            tModal(document.getElementById('lyrics-modal'), true);
+            tModal(document.getElementById('lyrics-modal'), true, 'lyrics');
         });
-        document.getElementById('close-lyrics-btn').addEventListener('click', () => tModal(document.getElementById('lyrics-modal'), false));
+        document.getElementById('close-lyrics-btn').addEventListener('click', () => tModal(document.getElementById('lyrics-modal'), false, 'lyrics'));
 
         document.getElementById('edit-cover-input').addEventListener('change', e => {
             const f = e.target.files[0]; if(!f) return; const r = new FileReader();
             r.onload = ev => { editCoverBase64 = ev.target.result; document.getElementById('edit-cover-preview').src = editCoverBase64; }; r.readAsDataURL(f);
         });
-        document.getElementById('cancel-edit-btn').addEventListener('click', () => tModal(document.getElementById('edit-modal'), false));
+        document.getElementById('cancel-edit-btn').addEventListener('click', () => tModal(document.getElementById('edit-modal'), false, 'edit'));
         document.getElementById('save-edit-btn').addEventListener('click', () => {
             if(trackToEditIndex === null) return; const t = playlist[trackToEditIndex];
             t.title = document.getElementById('edit-title-input').value || "Desconhecido"; t.artist = document.getElementById('edit-artist-input').value || "Desconhecido";
             t.lyrics = document.getElementById('edit-lyrics-input').value; t.cover = editCoverBase64;
             if(t.isLocal) saveTrackToDB(t);
             if(trackToEditIndex === currentTrackIndex) { DOM.title.textContent = t.title; DOM.artist.textContent = t.artist; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; updateMiniPlayer(); }
-            renderList(); tModal(document.getElementById('edit-modal'), false); showToast("Informação atualizada");
+            renderList(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
         });
 
         // UPLOAD SIMPLIFICADO E EXTRAÇÃO DE LETRAS (Bug 3 Corrigido)
@@ -1484,13 +1549,6 @@
             setTimeout(() => { gamePanel.classList.add('hidden'); gamePanel.classList.remove('flex'); }, 300);
             isGameActive = false; isGamePlaying = false; isGameOver = false; cancelAnimationFrame(gameAnimFrame);
         }
-
-        window.addEventListener('popstate', () => {
-            // Se o utilizador pressionou "Voltar" no telemóvel e removeu o #game do link, fechamos o jogo.
-            if (isGameActive && location.hash !== '#game') {
-                closeGameUI();
-            }
-        });
 
         document.getElementById('open-game-btn').addEventListener('click', () => {
             if (location.hash !== '#game') history.pushState({ modal: 'game' }, '', '#game');
