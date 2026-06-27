@@ -33,6 +33,11 @@
         :root { --accent: #10b981; --accent-hover: #059669; --accent-light: rgba(16, 185, 129, 0.2); }
         * { transition: background-color 0.4s, color 0.3s, border-color 0.3s, fill 0.3s; }
 
+        /* Prevenir seleção de texto (efeito app nativo) */
+        body { -webkit-touch-callout: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        /* Permitir seleção/digitação apenas onde é necessário */
+        input, textarea, #lyrics-text { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
+
         .standard-slider { -webkit-appearance: none; width: 100%; background: transparent; }
         .standard-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: var(--accent); cursor: pointer; margin-top: -4px; box-shadow: 0 0 10px var(--accent-light); transition: transform 0.1s; }
         .standard-slider::-webkit-slider-thumb:hover { transform: scale(1.3); }
@@ -94,6 +99,8 @@
         
         <!-- Lado Esquerdo: Player Principal -->
         <div class="w-full md:w-3/5 p-4 sm:p-6 md:p-8 flex flex-col relative h-[100dvh] md:h-full overflow-hidden flex-shrink-0 md:flex-shrink pb-40 md:pb-8" id="player-bg" style="background: linear-gradient(to bottom, #1f2937 0%, #111827 100%);">
+            
+            <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
             
             <div class="flex justify-between items-center mb-3 sm:mb-6 md:mb-8 flex-shrink-0 relative z-10">
                 <div class="flex items-center gap-2 select-none">
@@ -427,6 +434,41 @@
                 </div>
                 <hr class="border-gray-800 my-1">
 
+                <!-- Efeitos Sincronizados -->
+                <div>
+                    <label class="text-xs text-gray-400 font-semibold uppercase mb-2 block">Efeitos Sincronizados (Áudio)</label>
+                    <div class="flex flex-col gap-3">
+                        <label class="flex items-center justify-between cursor-pointer text-sm text-gray-200 bg-gray-800/50 p-2 rounded-lg border border-gray-700 hover:border-accent transition">
+                            <span>Chroma RGB (Cores Móveis)</span>
+                            <div class="relative">
+                                <input type="checkbox" id="chroma-toggle" class="sr-only">
+                                <div class="block bg-gray-600 w-8 h-4 rounded-full transition-colors toggle-bg"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform"></div>
+                            </div>
+                        </label>
+                        <label class="flex items-center justify-between cursor-pointer text-sm text-gray-200 bg-gray-800/50 p-2 rounded-lg border border-gray-700 hover:border-accent transition">
+                            <span>Pulso de Grave (Capa Pulsa)</span>
+                            <div class="relative">
+                                <input type="checkbox" id="pulse-toggle" class="sr-only">
+                                <div class="block bg-gray-600 w-8 h-4 rounded-full transition-colors toggle-bg"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform"></div>
+                            </div>
+                        </label>
+                        <label class="flex items-center justify-between cursor-pointer text-sm text-gray-200 bg-gray-800/50 p-2 rounded-lg border border-gray-700 hover:border-accent transition">
+                            <div class="flex flex-col">
+                                <span>Atmosfera Dinâmica</span>
+                                <span class="text-[9px] text-gray-400">Gera névoa/luz baseada no estilo da música.</span>
+                            </div>
+                            <div class="relative">
+                                <input type="checkbox" id="atmosphere-toggle" class="sr-only">
+                                <div class="block bg-gray-600 w-8 h-4 rounded-full transition-colors toggle-bg"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform"></div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <hr class="border-gray-800 my-1">
+
                 <div>
                     <label class="text-xs text-gray-400 font-semibold uppercase mb-1 flex justify-between">
                         <span>Ganho de Volume (Pre-amp)</span>
@@ -553,6 +595,10 @@
         
         let audioCtx, sourceNode, preampNode, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
         let visualizerMode = 0; let sleepTimerId = null; let eqModalVisible = false; let isCompact = false;
+        let settingChroma = JSON.parse(localStorage.getItem('webPlayerChroma')) || false;
+        let settingPulse = JSON.parse(localStorage.getItem('webPlayerPulse')) || true;
+        let settingAtmosphere = JSON.parse(localStorage.getItem('webPlayerAtmosphere')) || false;
+        let chromaHue = 0; let cachedThemeArgs = ['#10b981', '#059669', 'rgba(16,185,129,0.2)'];
 
         const DOM = {
             installAppBtn: document.getElementById('install-app-btn'),
@@ -565,6 +611,7 @@
             container: document.getElementById('list-container'), fileUpload: document.getElementById('file-upload'), folderUpload: document.getElementById('folder-upload'),
             sortSel: document.getElementById('sort-select'), localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
+            coverContainer: document.getElementById('cover-container'),
             preampSlider: document.getElementById('preamp-slider'), preampDisp: document.getElementById('preamp-value-display'),
             rightPanel: document.getElementById('right-panel'), drawerHandle: document.getElementById('drawer-handle'), listHeader: document.getElementById('list-header'),
             eqCanvasBg: document.getElementById('eq-canvas-bg'), eqModal: document.getElementById('eq-modal'), mainAppContainer: document.getElementById('main-app-container'),
@@ -588,6 +635,7 @@
             localStorage.setItem('webPlayerTheme', `${hex},${hover},${light}`);
             document.getElementById('dynamic-favicon').href = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${hex.replace('#','%23')}'><path d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'/></svg>`;
             cachedAccentColor = hex; 
+            cachedThemeArgs = [hex, hover, light];
         }
         
         function applyOled(isActive) {
@@ -783,6 +831,64 @@
             });
         });
 
+        const Atmosphere = {
+            canvas: null, ctx: null, particles: [], initialized: false, currentDarkness: 0,
+            init() {
+                if(this.initialized) return;
+                this.canvas = document.getElementById('atmosphere-canvas');
+                if(!this.canvas) return;
+                this.ctx = this.canvas.getContext('2d');
+                for(let i=0; i<10; i++) this.particles.push(this.createParticle());
+                this.initialized = true;
+            },
+            createParticle() {
+                return { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: Math.random() * 150 + 80, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, baseHue: Math.random() * 360, life: Math.random() * 100 }
+            },
+            draw(bass, mid, treble, isPlaying) {
+                if(!this.canvas) return;
+                const W = this.canvas.clientWidth; const H = this.canvas.clientHeight;
+                if(this.canvas.width !== W) { this.canvas.width = W; this.canvas.height = H; }
+
+                // Detecção de Estilo (Mood)
+                let moodDark = (bass > 180 && treble < 120); // Música pesada/densa
+                let moodEnergetic = (treble > 180 && bass > 150); // Música rápida/elétrica
+                this.currentDarkness += ((moodDark ? 1 : 0) - this.currentDarkness) * 0.05;
+
+                // Fundo com "Rastro" (Efeito de Movimento)
+                this.ctx.globalCompositeOperation = 'source-over';
+                this.ctx.fillStyle = `rgba(10, 15, 25, 0.4)`; 
+                this.ctx.fillRect(0, 0, W, H);
+
+                this.ctx.globalCompositeOperation = 'screen';
+                let intensity = isPlaying ? ((bass + mid + treble) / 3) : 0;
+
+                this.particles.forEach((p, i) => {
+                    let speedMult = isPlaying ? (0.5 + (intensity/100)) : 0.1;
+                    if(moodEnergetic) speedMult *= 1.5;
+                    
+                    p.x += p.vx * speedMult; p.y += p.vy * speedMult; p.life += 0.02 * speedMult;
+                    if(p.x < -p.r) p.x = W + p.r; if(p.x > W + p.r) p.x = -p.r;
+                    if(p.y < -p.r) p.y = H + p.r; if(p.y > H + p.r) p.y = -p.r;
+
+                    let pulseR = p.r + (isPlaying ? (bass / 255) * p.r * 0.6 : 0);
+                    let grad = this.ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, pulseR);
+                    let alpha = (Math.sin(p.life) * 0.15 + 0.25) * (isPlaying ? 1 : 0.4); 
+                    
+                    let hue = settingChroma ? chromaHue : p.baseHue;
+                    let sat = 70; let light = 40;
+                    
+                    if (this.currentDarkness > 0.1) {
+                        hue = (p.baseHue % 80) + 240; if(i % 3 === 0) hue = 0; // Transição para roxos/vermelhos (Dark)
+                        sat = 80 + (this.currentDarkness * 20); light = 40 - (this.currentDarkness * 20);
+                    }
+                    
+                    grad.addColorStop(0, `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`);
+                    grad.addColorStop(1, `hsla(${hue}, ${sat}%, ${light}%, 0)`);
+                    this.ctx.fillStyle = grad; this.ctx.beginPath(); this.ctx.arc(p.x, p.y, pulseR, 0, Math.PI*2); this.ctx.fill();
+                });
+            }
+        };
+
         // --- EFEITOS VISUAIS ---
         const visualizerNames = ["Radial", "Barras Clássicas", "Osciloscópio", "Pulso de Graves", "Partículas", "Desligado"];
         DOM.toggleVis.addEventListener('click', (e) => { e.stopPropagation(); visualizerMode = (visualizerMode + 1) % visualizerNames.length; if(visualizerMode===5) canvasCtx.clearRect(0,0,DOM.canvas.width,DOM.canvas.height); showToast(`Efeito: ${visualizerNames[visualizerMode]}`); });
@@ -790,47 +896,89 @@
 
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
-            if (!isPlaying || visualizerMode === 5 || isGameActive) return; 
+            if (isGameActive) return; 
+            if (!isPlaying && !settingAtmosphere) {
+                if(settingPulse && DOM.coverContainer) { DOM.coverContainer.style.transform = ''; DOM.coverContainer.style.boxShadow = `0 0 30px rgba(0,0,0,0.5)`; }
+                return;
+            }
+            if (visualizerMode === 5 && !settingChroma && !settingPulse && !settingAtmosphere) return;
 
             const W = DOM.canvas.clientWidth; const H = DOM.canvas.clientHeight;
             if(DOM.canvas.width !== W || DOM.canvas.height !== H) { DOM.canvas.width = W; DOM.canvas.height = H; }
-            canvasCtx.clearRect(0, 0, W, H);
+            if (visualizerMode !== 5) canvasCtx.clearRect(0, 0, W, H);
             
             const bufferL = 128; const dataFreq = new Uint8Array(bufferL); const dataTime = new Uint8Array(bufferL);
             if (analyser) { if(visualizerMode === 2) analyser.getByteTimeDomainData(dataTime); else analyser.getByteFrequencyData(dataFreq); }
 
-            const strokeColor = cachedAccentColor; 
-            canvasCtx.lineWidth = 3; const cX = W/2, cY = H/2;
+            // Análise de Áudio para Efeitos Avançados
+            let bass = 0, mid = 0, treble = 0;
+            if (analyser && isPlaying) {
+                for(let i=0; i<4; i++) bass += dataFreq[i]; bass /= 4;
+                for(let i=4; i<16; i++) mid += dataFreq[i]; mid /= 12;
+                for(let i=16; i<64; i++) treble += dataFreq[i]; treble /= 48;
+            }
+            let beatInt = bass / 255;
 
-            if (visualizerMode === 0) {
-                const R = W/2;
-                for (let i=0; i<bufferL; i++) {
-                    if (dataFreq[i] === 0) continue; const h = dataFreq[i] / 2; const a = (i/bufferL)*Math.PI*2;
-                    canvasCtx.beginPath(); canvasCtx.moveTo(cX+Math.cos(a)*(R-h), cY+Math.sin(a)*(R-h)); canvasCtx.lineTo(cX+Math.cos(a)*R, cY+Math.sin(a)*R); 
-                    canvasCtx.strokeStyle = `rgba(255,255,255, ${dataFreq[i]/255})`; canvasCtx.stroke();
-                }
-            } else if (visualizerMode === 1) {
-                const barW = (W / bufferL) * 2.5; let x = 0;
-                for(let i=0; i<bufferL; i++) { const barH = dataFreq[i] * (H/255) * 0.8; canvasCtx.fillStyle = strokeColor; canvasCtx.globalAlpha = dataFreq[i]/255; canvasCtx.fillRect(x, H - barH, barW, barH); x += barW + 1; }
-                canvasCtx.globalAlpha = 1;
-            } else if (visualizerMode === 2) {
-                canvasCtx.beginPath(); const sliceW = W * 1.0 / bufferL; let x = 0;
-                for(let i=0; i<bufferL; i++) { const v = dataTime[i] / 128.0; const y = v * H/2; if(i===0) canvasCtx.moveTo(x, y); else canvasCtx.lineTo(x, y); x += sliceW; }
-                canvasCtx.lineTo(W, H/2); canvasCtx.strokeStyle = strokeColor; canvasCtx.stroke();
-            } else if (visualizerMode === 3) { 
-                let bass = 0; for(let i=0; i<10; i++) bass += dataFreq[i]; bass = bass/10;
-                canvasCtx.beginPath(); canvasCtx.arc(cX, cY, (W/2.5) + (bass*0.5), 0, Math.PI*2); canvasCtx.fillStyle = strokeColor; canvasCtx.globalAlpha = bass/255 * 0.4; canvasCtx.fill();
-                canvasCtx.beginPath(); canvasCtx.arc(cX, cY, (W/3) + (bass*0.2), 0, Math.PI*2); canvasCtx.strokeStyle = strokeColor; canvasCtx.globalAlpha = bass/255; canvasCtx.stroke();
-                canvasCtx.globalAlpha = 1;
-            } else if (visualizerMode === 4) { 
-                for (let i = 0; i < bufferL; i+=2) {
-                    if (dataFreq[i] === 0) continue; const a = (i/bufferL)*Math.PI*2; const dist = (W/2.8) + (dataFreq[i]*0.8);
-                    const px = cX + Math.cos(a) * dist; const py = cY + Math.sin(a) * dist;
-                    canvasCtx.beginPath(); canvasCtx.arc(px, py, 2 + (dataFreq[i]/80), 0, Math.PI*2); canvasCtx.fillStyle = `rgba(255,255,255, ${dataFreq[i]/255})`; canvasCtx.fill();
+            // Efeito 1: Pulso da Capa
+            if (settingPulse && DOM.coverContainer) {
+                if (isPlaying) {
+                    let scale = 1 + (beatInt * 0.08); 
+                    DOM.coverContainer.style.transform = `scale(${scale})`;
+                    if(beatInt > 0.8) DOM.coverContainer.style.boxShadow = `0 0 ${40 + beatInt*60}px var(--accent)`;
+                    else DOM.coverContainer.style.boxShadow = `0 0 30px rgba(0,0,0,0.5)`;
                 }
             }
 
-            if (eqModalVisible && analyser) {
+            // Efeito 2: Chroma RGB
+            if (settingChroma) {
+                if (isPlaying) chromaHue = (chromaHue + (beatInt * 3) + 0.2) % 360;
+                document.documentElement.style.setProperty('--accent', `hsl(${chromaHue}, 80%, 55%)`);
+                document.documentElement.style.setProperty('--accent-hover', `hsl(${chromaHue}, 80%, 45%)`);
+                document.documentElement.style.setProperty('--accent-light', `hsla(${chromaHue}, 80%, 55%, 0.2)`);
+            }
+
+            // Efeito 3: Atmosfera Temática
+            if (settingAtmosphere) {
+                if(!Atmosphere.initialized) Atmosphere.init();
+                Atmosphere.draw(bass, mid, treble, isPlaying);
+            }
+
+            // Visualizador Principal (Apenas se ativado)
+            if (visualizerMode !== 5 && isPlaying) {
+                const strokeColor = settingChroma ? `hsl(${chromaHue}, 80%, 55%)` : cachedAccentColor; 
+                canvasCtx.lineWidth = 3; const cX = W/2, cY = H/2;
+
+                if (visualizerMode === 0) {
+                    const R = W/2;
+                    for (let i=0; i<bufferL; i++) {
+                        if (dataFreq[i] === 0) continue; const h = dataFreq[i] / 2; const a = (i/bufferL)*Math.PI*2;
+                        canvasCtx.beginPath(); canvasCtx.moveTo(cX+Math.cos(a)*(R-h), cY+Math.sin(a)*(R-h)); canvasCtx.lineTo(cX+Math.cos(a)*R, cY+Math.sin(a)*R); 
+                        canvasCtx.strokeStyle = `rgba(255,255,255, ${dataFreq[i]/255})`; canvasCtx.stroke();
+                    }
+                } else if (visualizerMode === 1) {
+                    const barW = (W / bufferL) * 2.5; let x = 0;
+                    for(let i=0; i<bufferL; i++) { const barH = dataFreq[i] * (H/255) * 0.8; canvasCtx.fillStyle = strokeColor; canvasCtx.globalAlpha = dataFreq[i]/255; canvasCtx.fillRect(x, H - barH, barW, barH); x += barW + 1; }
+                    canvasCtx.globalAlpha = 1;
+                } else if (visualizerMode === 2) {
+                    canvasCtx.beginPath(); const sliceW = W * 1.0 / bufferL; let x = 0;
+                    for(let i=0; i<bufferL; i++) { const v = dataTime[i] / 128.0; const y = v * H/2; if(i===0) canvasCtx.moveTo(x, y); else canvasCtx.lineTo(x, y); x += sliceW; }
+                    canvasCtx.lineTo(W, H/2); canvasCtx.strokeStyle = strokeColor; canvasCtx.stroke();
+                } else if (visualizerMode === 3) { 
+                    let vBass = 0; for(let i=0; i<10; i++) vBass += dataFreq[i]; vBass = vBass/10;
+                    canvasCtx.beginPath(); canvasCtx.arc(cX, cY, (W/2.5) + (vBass*0.5), 0, Math.PI*2); canvasCtx.fillStyle = strokeColor; canvasCtx.globalAlpha = vBass/255 * 0.4; canvasCtx.fill();
+                    canvasCtx.beginPath(); canvasCtx.arc(cX, cY, (W/3) + (vBass*0.2), 0, Math.PI*2); canvasCtx.strokeStyle = strokeColor; canvasCtx.globalAlpha = vBass/255; canvasCtx.stroke();
+                    canvasCtx.globalAlpha = 1;
+                } else if (visualizerMode === 4) { 
+                    for (let i = 0; i < bufferL; i+=2) {
+                        if (dataFreq[i] === 0) continue; const a = (i/bufferL)*Math.PI*2; const dist = (W/2.8) + (dataFreq[i]*0.8);
+                        const px = cX + Math.cos(a) * dist; const py = cY + Math.sin(a) * dist;
+                        canvasCtx.beginPath(); canvasCtx.arc(px, py, 2 + (dataFreq[i]/80), 0, Math.PI*2); canvasCtx.fillStyle = `rgba(255,255,255, ${dataFreq[i]/255})`; canvasCtx.fill();
+                    }
+                }
+            }
+
+            if (eqModalVisible && analyser && isPlaying) {
+                const strokeColor = settingChroma ? `hsl(${chromaHue}, 80%, 55%)` : cachedAccentColor; 
                 const eW = DOM.eqCanvasBg.clientWidth; const eH = DOM.eqCanvasBg.clientHeight;
                 if(DOM.eqCanvasBg.width !== eW) { DOM.eqCanvasBg.width = eW; DOM.eqCanvasBg.height = eH; }
                 eqBgCtx.clearRect(0,0,eW,eH); const barW = eW / 32; let eX = 0;
@@ -1043,6 +1191,38 @@
         document.getElementById('close-eq-btn').addEventListener('click', () => tModal(DOM.eqModal, false));
         document.getElementById('settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), true));
         document.getElementById('close-settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), false));
+
+        const chromaToggle = document.getElementById('chroma-toggle');
+        const pulseToggle = document.getElementById('pulse-toggle');
+        const atmosToggle = document.getElementById('atmosphere-toggle');
+        const atmosCanvas = document.getElementById('atmosphere-canvas');
+
+        function updateEffToggleUI(input, isActive) {
+            const bg = input.nextElementSibling; const dot = bg.nextElementSibling;
+            if(isActive) { bg.classList.replace('bg-gray-600', 'bg-accent'); dot.style.transform = 'translateX(100%)'; }
+            else { bg.classList.replace('bg-accent', 'bg-gray-600'); dot.style.transform = 'translateX(0)'; }
+        }
+
+        if (chromaToggle) {
+            chromaToggle.checked = settingChroma; updateEffToggleUI(chromaToggle, settingChroma);
+            pulseToggle.checked = settingPulse; updateEffToggleUI(pulseToggle, settingPulse);
+            atmosToggle.checked = settingAtmosphere; updateEffToggleUI(atmosToggle, settingAtmosphere);
+            if(settingAtmosphere && atmosCanvas) atmosCanvas.classList.remove('opacity-0');
+
+            chromaToggle.addEventListener('change', e => { 
+                settingChroma = e.target.checked; updateEffToggleUI(e.target, settingChroma); localStorage.setItem('webPlayerChroma', settingChroma); 
+                if(!settingChroma) applyTheme(...cachedThemeArgs); 
+            });
+            pulseToggle.addEventListener('change', e => { 
+                settingPulse = e.target.checked; updateEffToggleUI(e.target, settingPulse); localStorage.setItem('webPlayerPulse', settingPulse); 
+                if(!settingPulse && DOM.coverContainer) { DOM.coverContainer.style.transform = ''; DOM.coverContainer.style.boxShadow = `0 0 30px rgba(0,0,0,0.5)`; }
+            });
+            atmosToggle.addEventListener('change', e => { 
+                settingAtmosphere = e.target.checked; updateEffToggleUI(e.target, settingAtmosphere); localStorage.setItem('webPlayerAtmosphere', settingAtmosphere); 
+                if(settingAtmosphere) { atmosCanvas.classList.remove('opacity-0'); Atmosphere.init(); } 
+                else { atmosCanvas.classList.add('opacity-0'); }
+            });
+        }
 
         // --- GAVETA E ORDENAÇÃO ---
         let isDrawerExpanded = false;
