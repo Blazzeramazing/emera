@@ -782,12 +782,11 @@
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
         function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 1); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
         
+        // Agora o salvamento é deferido. O browser vai fazer isso no fundo sem bloquear a UI.
         function saveTrackToDB(track) { 
             if(db){ 
                 runIdle(() => {
-                    const t={...track}; 
-                    if (t.isLocal) { delete t.src; } // Não guarda o blob do File local na URL temporária
-                    // Podemos guardar o URL das online livremente pois são HTTP/S
+                    const t={...track}; delete t.src; 
                     db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); 
                 });
             } 
@@ -799,13 +798,7 @@
                 const req = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll(); 
                 req.onsuccess = () => { 
                     playlist = [];
-                    req.result.forEach(t => { 
-                        if (t.isLocal && t.file) {
-                            t.src = URL.createObjectURL(t.file); 
-                        }
-                        t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); 
-                        playlist.push(t); 
-                    }); 
+                    req.result.forEach(t => { t.src = URL.createObjectURL(t.file); t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); }); 
                     
                     // Restaura a Ordem Manual guardada
                     try {
@@ -827,52 +820,85 @@
             });
         }
 
-        // --- MOTOR DE BUSCA ONLINE (JioSaavn API) ---
+        // --- MOTOR DE BUSCA ONLINE (JAMENDO API) ---
         async function searchOnlineMusic(query) {
             if (!query || query.trim() === '') return;
             
-            showToast("A pesquisar nos servidores globais...");
+            showToast("A pesquisar na rede Jamendo...");
             
             try {
-                const res = await fetch(`https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}`);
+                // Jamendo API: Totalmente livre de CORS, legal e sem bloqueios de região!
+                const res = await fetch(`https://api.jamendo.com/v3.0/tracks/?client_id=b6747d04&format=json&limit=15&search=${encodeURIComponent(query)}`);
                 const json = await res.json();
 
-                if (!json.data || !json.data.results || json.data.results.length === 0) {
+                if (!json.results || json.results.length === 0) {
                     showToast("Nenhuma música encontrada.");
                     return;
                 }
 
-                const onlineTracks = json.data.results.map(song => {
-                    const bestAudio = (song.downloadUrl && song.downloadUrl.length > 0) ? (song.downloadUrl.find(u => u.quality === "320kbps") || song.downloadUrl[song.downloadUrl.length - 1]) : null;
-                    const bestCover = (song.image && song.image.length > 0) ? (song.image.find(i => i.quality === "500x500") || song.image[song.image.length - 1]) : null;
+                const onlineTracks = json.results.map(song => ({
+                    id: 'jam_' + song.id,
+                    title: song.name,
+                    artist: song.artist_name,
+                    src: song.audio, // Link direto do arquivo sem bloqueio
+                    cover: song.image,
+                    lyrics: "",
+                    isLocal: false
+                }));
 
-                    if(!bestAudio) return null;
-
-                    return {
-                        id: 'online_' + song.id + '_' + Date.now() + Math.random(),
-                        title: song.name,
-                        artist: song.artists.primary.map(a => a.name).join(', '),
-                        src: bestAudio.url, // URL direta do CDN com CORS aberto!
-                        cover: bestCover ? bestCover.url : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop',
-                        lyrics: "", // Deixamos vazio para ser veloz. A ser chamado noutra funcionalidade futura.
-                        isLocal: false
-                    };
-                }).filter(track => track !== null);
-
-                // Adiciona ao topo da playlist
                 playlist = [...onlineTracks, ...playlist];
-                
                 DOM.search.value = '';
                 renderList();
                 showToast(`${onlineTracks.length} músicas carregadas!`);
-                
-                // Se o player estiver parado, já carrega a primeira da busca
                 if (!isPlaying) loadTrack(0);
 
             } catch (error) {
                 console.error(error);
-                showToast("Erro de conexão com o servidor de músicas.");
+                showToast("Erro de conexão com o servidor Jamendo.");
             }
+        }
+
+        // --- CARREGAMENTO NATIVO (AUTO-LOAD INTELIGENTE) ---
+        async function loadNativeLibrary() {
+            showToast("A sintonizar sucessos da rede...");
+            
+            try {
+                // Busca as 10 músicas Pop/Eletrónicas mais populares da semana
+                const res = await fetch('https://api.jamendo.com/v3.0/tracks/?client_id=b6747d04&format=json&limit=10&tags=pop,electronic&order=popularity_week');
+                const json = await res.json();
+                
+                if (json.results && json.results.length > 0) {
+                    const onlineTracks = json.results.map(song => ({
+                        id: 'jam_top_' + song.id,
+                        title: song.name,
+                        artist: song.artist_name,
+                        src: song.audio,
+                        cover: song.image,
+                        lyrics: "",
+                        isLocal: false
+                    }));
+
+                    playlist = [...onlineTracks];
+                    renderList();
+                    loadTrack(0);
+                    showToast("Top 10 Global carregado com sucesso!");
+                    return;
+                }
+            } catch(e) {
+                console.warn("Falha ao carregar API Jamendo", e);
+            }
+
+            // FALLBACK 3: Jamendo Direct Streams (CORS 100% Livre e faixas longas)
+            const fallbackTracks = [
+                { id: 'fb_1', title: "Ethereal", artist: "Punch Deck", src: "https://api.jamendo.com/v3.0/tracks/file/?client_id=b6747d04&id=116174", cover: "https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
+                { id: 'fb_2', title: "Catharsis", artist: "Punch Deck", src: "https://api.jamendo.com/v3.0/tracks/file/?client_id=b6747d04&id=141870", cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
+                { id: 'fb_3', title: "Neon Drive", artist: "Fsm Team", src: "https://api.jamendo.com/v3.0/tracks/file/?client_id=b6747d04&id=1858544", cover: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=500&h=500&fit=crop", lyrics: "", isLocal: false }
+            ];
+            
+            playlist = [...fallbackTracks];
+            renderList();
+            loadTrack(0);
+            showToast("Modo Offline: Faixas de emergência ativadas!");
         }
 
         // --- WEB AUDIO E EQUALIZADOR ---
@@ -1451,6 +1477,84 @@
                 searchOnlineMusic(DOM.search.value);
             }
         });
+
+        // --- CARREGAMENTO NATIVO (AUTO-LOAD) ---
+        async function loadNativeLibrary() {
+            showToast("A iniciar biblioteca nativa...");
+            
+            const apis = [
+                `https://saavn.dev/api/search/songs?query=Top+Hits`,
+                `https://saavn.me/search/songs?query=Top+Hits`,
+                `https://jiosaavn-api-privatecvc2.vercel.app/search/songs?query=Top+Hits`
+            ];
+
+            let json = null;
+            for (let url of apis) {
+                try {
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        json = await res.json();
+                        if (json && json.data && json.data.results && json.data.results.length > 0) break;
+                    }
+                } catch (e) {
+                    console.warn(`Tentativa falhou em: ${url}`);
+                }
+            }
+
+            if (json && json.data && json.data.results && json.data.results.length > 0) {
+                const decodeHTML = (html) => { const txt = document.createElement("textarea"); txt.innerHTML = html; return txt.value; };
+                
+                const onlineTracks = json.data.results.map(song => {
+                    const audioList = song.downloadUrl;
+                    const coverList = song.image;
+                    if(!audioList || audioList.length === 0) return null;
+                    const bestAudio = audioList.find(u => u.quality === "320kbps") || audioList[audioList.length - 1];
+                    const bestCover = coverList ? (coverList.find(i => i.quality === "500x500") || coverList[coverList.length - 1]) : null;
+                    const finalAudioSrc = bestAudio.url || bestAudio.link;
+                    const finalCoverSrc = bestCover ? (bestCover.url || bestCover.link) : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
+                    
+                    if(!finalAudioSrc) return null;
+                    
+                    let artistName = "Desconhecido";
+                    if (song.artists && song.artists.primary && song.artists.primary.length > 0) {
+                        artistName = song.artists.primary.map(a => a.name).join(', ');
+                    } else if (song.primaryArtists) {
+                        artistName = song.primaryArtists;
+                    }
+
+                    return {
+                        id: 'native_' + song.id + '_' + Date.now(),
+                        title: decodeHTML(song.name || "Desconhecida"),
+                        artist: decodeHTML(artistName),
+                        src: finalAudioSrc,
+                        cover: finalCoverSrc,
+                        lyrics: "", 
+                        isLocal: false
+                    };
+                }).filter(track => track !== null);
+
+                if (onlineTracks.length > 0) {
+                    playlist = [...onlineTracks];
+                    renderList();
+                    loadTrack(0);
+                    showToast("Sucessos globais carregados!");
+                    return;
+                }
+            }
+
+            // FALLBACK DE SEGURANÇA (PIXABAY - 100% ONLINE E CORS ABERTO)
+            // Se a API estiver offline, carrega estas para o usuário nunca ficar com app "quebrado"
+            const fallbackTracks = [
+                { id: 'fb_1', title: "Cyberpunk City (Retro)", artist: "Emera Exclusives", src: "https://cdn.pixabay.com/audio/2022/10/25/audio_2eb2d3ceee.mp3", cover: "https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
+                { id: 'fb_2', title: "Lofi Study Beats", artist: "Emera Exclusives", src: "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3", cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
+                { id: 'fb_3', title: "Phonk Drift", artist: "Emera Exclusives", src: "https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3", cover: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=500&h=500&fit=crop", lyrics: "", isLocal: false }
+            ];
+            
+            playlist = [...fallbackTracks];
+            renderList();
+            loadTrack(0);
+            showToast("Modo Offline: Músicas Exclusivas Carregadas!");
+        }
 
         function updateMiniPlayer() {
             const t = playlist[currentTrackIndex]; if(!t) return;
@@ -2162,8 +2266,15 @@
         initDB().then(async () => {
             await loadTracksFromDB(); 
             DOM.sortSel.value = currentSortMode;
-            renderList();
-            if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; }
+            
+            if(playlist.length > 0) {
+                renderList();
+                loadTrack(0);
+            } else {
+                DOM.title.textContent = 'A preparar biblioteca...'; 
+                DOM.artist.textContent = 'Aguarde um momento';
+                await loadNativeLibrary();
+            }
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); } else { audio.volume=1; }
