@@ -357,12 +357,12 @@
                     </div>
                 </div>
                 
-                <!-- Pesquisa Local E ONLINE -->
+                <!-- Pesquisa Híbrida (Local e Online pelo Backend) -->
                 <div id="local-search-container" class="relative w-full mt-2" onclick="event.stopPropagation()">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <svg class="w-3 h-3 md:w-4 md:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <input type="text" id="search-input" placeholder="Pesquisar... (Pressione Enter para Web)" class="w-full bg-gray-800/50 text-xs sm:text-sm text-gray-200 rounded-lg pl-9 pr-3 py-2 outline-none border border-gray-700 focus:border-accent focus:bg-gray-800 transition">
+                    <input type="text" id="search-input" placeholder="Pesquisar... (Aperte Enter para buscar na Nuvem)" class="w-full bg-gray-800/50 text-xs sm:text-sm text-gray-200 rounded-lg pl-9 pr-3 py-2 outline-none border border-gray-700 focus:border-accent focus:bg-gray-800 transition">
                 </div>
             </div>
 
@@ -743,7 +743,6 @@
 
         async function initOfflineMode() {
             try {
-                // Service Worker em formato Blob para forçar o cache de todas as bibliotecas no telemóvel
                 const swCode = `
                     const CACHE = 'emera-offline-v1';
                     const urls = [
@@ -785,9 +784,7 @@
         function saveTrackToDB(track) { 
             if(db){ 
                 runIdle(() => {
-                    const t={...track}; 
-                    if (t.isLocal) { delete t.src; } // Não guarda o blob do File local na URL temporária
-                    // Podemos guardar o URL das online livremente pois são HTTP/S
+                    const t={...track}; delete t.src; 
                     db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); 
                 });
             } 
@@ -801,7 +798,6 @@
                     playlist = [];
                     req.result.forEach(t => { t.src = URL.createObjectURL(t.file); t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); }); 
                     
-                    // Restaura a Ordem Manual guardada
                     try {
                         const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder'));
                         if (savedOrder && Array.isArray(savedOrder)) {
@@ -821,152 +817,134 @@
             });
         }
 
-        // --- MOTOR DE BUSCA ONLINE HÍBRIDO (JioSaavn + Jamendo) ---
+
+        // --- MOTOR DE BUSCA PELO SEU BACKEND (RAILWAY) ---
         async function searchOnlineMusic(query) {
             if (!query || query.trim() === '') return;
             
-            showToast("A pesquisar nos servidores globais...");
+            showToast("A pesquisar no servidor global...");
             
-            // 1. Tenta a JioSaavn (Músicas Globais Comerciais)
-            const apis = [
-                `https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}`,
-                `https://saavn.me/search/songs?query=${encodeURIComponent(query)}`,
-                `https://jiosaavn-api-privatecvc2.vercel.app/search/songs?query=${encodeURIComponent(query)}`,
-                `https://jiosaavn-api-v3.vercel.app/search/songs?query=${encodeURIComponent(query)}`
-            ];
+            try {
+                // Chama o seu próprio servidor hospedado no Railway
+                const res = await fetch(`https://emera-backend-production.up.railway.app/search?q=${encodeURIComponent(query)}`);
+                const json = await res.json();
+                
+                if (!json.data || !json.data.results || json.data.results.length === 0) {
+                    showToast("Música não encontrada.");
+                    return;
+                }
 
-            let onlineTracks = [];
-            
-            for (let url of apis) {
-                try {
-                    const res = await fetch(url);
-                    if (res.ok) {
-                        const json = await res.json();
-                        if (json && json.data && json.data.results && json.data.results.length > 0) {
-                            const decodeHTML = (html) => { const txt = document.createElement("textarea"); txt.innerHTML = html; return txt.value; };
-                            
-                            onlineTracks = json.data.results.map(song => {
-                                const audioList = song.downloadUrl;
-                                const coverList = song.image;
-                                if(!audioList || audioList.length === 0) return null;
-                                const bestAudio = audioList.find(u => u.quality === "320kbps") || audioList[audioList.length - 1];
-                                const bestCover = coverList ? (coverList.find(i => i.quality === "500x500") || coverList[coverList.length - 1]) : null;
-                                const finalAudioSrc = bestAudio.url || bestAudio.link;
-                                if(!finalAudioSrc) return null;
-                                
-                                let artistName = "Desconhecido";
-                                if (song.artists && song.artists.primary && song.artists.primary.length > 0) { artistName = song.artists.primary.map(a => a.name).join(', '); } 
-                                else if (song.primaryArtists) { artistName = song.primaryArtists; }
+                const decodeHTML = (html) => { const txt = document.createElement("textarea"); txt.innerHTML = html; return txt.value; };
+                
+                const onlineTracks = json.data.results.map(song => {
+                    const audioList = song.downloadUrl;
+                    const coverList = song.image;
+                    if(!audioList || audioList.length === 0) return null;
+                    const bestAudio = audioList.find(u => u.quality === "320kbps") || audioList[audioList.length - 1];
+                    const bestCover = coverList ? (coverList.find(i => i.quality === "500x500") || coverList[coverList.length - 1]) : null;
+                    const finalAudioSrc = bestAudio.url || bestAudio.link;
+                    
+                    if(!finalAudioSrc) return null;
+                    
+                    let artistName = "Desconhecido";
+                    if (song.artists && song.artists.primary && song.artists.primary.length > 0) { artistName = song.artists.primary.map(a => a.name).join(', '); } 
+                    else if (song.primaryArtists) { artistName = song.primaryArtists; }
 
-                                return { id: 'online_' + song.id + '_' + Date.now(), title: decodeHTML(song.name || "Desconhecida"), artist: decodeHTML(artistName), src: finalAudioSrc, cover: bestCover ? (bestCover.url || bestCover.link) : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop', lyrics: "", isLocal: false };
-                            }).filter(track => track !== null);
-                            break;
-                        }
-                    }
-                } catch (e) { console.warn(`Saavn falhou: ${url}`); }
+                    return {
+                        id: 'online_' + song.id + '_' + Date.now(),
+                        title: decodeHTML(song.name || "Desconhecida"),
+                        artist: decodeHTML(artistName),
+                        // MAGIA AQUI: O seu backend vai servir a música (resolvendo o bloqueio de CORS)
+                        src: `https://emera-backend-production.up.railway.app/stream?url=${encodeURIComponent(finalAudioSrc)}`,
+                        cover: bestCover ? (bestCover.url || bestCover.link) : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop',
+                        lyrics: "", 
+                        isLocal: false
+                    };
+                }).filter(track => track !== null);
+
+                if (onlineTracks.length === 0) {
+                    showToast("Erro ao processar as músicas do servidor.");
+                    return;
+                }
+
+                playlist = [...onlineTracks, ...playlist];
+                DOM.search.value = '';
+                renderList();
+                showToast(`${onlineTracks.length} músicas carregadas!`);
+                if (!isPlaying) loadTrack(0);
+
+            } catch (e) {
+                console.warn(e);
+                showToast("Erro ao contactar o servidor Backend.");
             }
-
-            // 2. Fallback Secundário: Jamendo (Indie Pop Hits) se o JioSaavn falhar
-            if (onlineTracks.length === 0) {
-                try {
-                    const res = await fetch(`https://api.jamendo.com/v3.0/tracks/?client_id=b6747d04&format=json&limit=15&search=${encodeURIComponent(query)}`);
-                    const json = await res.json();
-                    if (json.results && json.results.length > 0) {
-                        onlineTracks = json.results.map(song => ({
-                            id: 'jam_' + song.id + '_' + Date.now(), title: song.name, artist: song.artist_name, src: song.audio, cover: song.image, lyrics: "", isLocal: false
-                        }));
-                    }
-                } catch(e) { console.warn("Jamendo falhou."); }
-            }
-
-            if (onlineTracks.length === 0) {
-                showToast("Servidores offline ou música não encontrada.");
-                return;
-            }
-
-            playlist = [...onlineTracks, ...playlist];
-            DOM.search.value = '';
-            renderList();
-            showToast(`${onlineTracks.length} músicas carregadas!`);
-            if (!isPlaying) loadTrack(0);
         }
 
-        // --- CARREGAMENTO NATIVO (AUTO-LOAD INTELIGENTE) ---
+
+        // --- CARREGAMENTO NATIVO (AUTO-LOAD PELO BACKEND) ---
         async function loadNativeLibrary() {
             showToast("A sintonizar rádio global...");
             
-            // Em vez de "Top Hits", buscamos por artistas que garantem músicas completas e de estúdio
-            const topQueries = ['The Weeknd', 'Dua Lipa', 'Bruno Mars', 'Coldplay', 'Billie Eilish'];
+            const topQueries = ['The Weeknd', 'Dua Lipa', 'Bruno Mars', 'Coldplay', 'Billie Eilish', 'Taylor Swift'];
             const randomQuery = topQueries[Math.floor(Math.random() * topQueries.length)];
 
-            const apis = [
-                `https://saavn.dev/api/search/songs?query=${encodeURIComponent(randomQuery)}`,
-                `https://saavn.me/search/songs?query=${encodeURIComponent(randomQuery)}`,
-                `https://jiosaavn-api-privatecvc2.vercel.app/search/songs?query=${encodeURIComponent(randomQuery)}`,
-                `https://jiosaavn-api-v3.vercel.app/search/songs?query=${encodeURIComponent(randomQuery)}`
-            ];
+            try {
+                // Tenta puxar do seu próprio backend
+                const res = await fetch(`https://emera-backend-production.up.railway.app/search?q=${encodeURIComponent(randomQuery)}`);
+                const json = await res.json();
+                
+                if (json && json.data && json.data.results && json.data.results.length > 0) {
+                    const decodeHTML = (html) => { const txt = document.createElement("textarea"); txt.innerHTML = html; return txt.value; };
+                    
+                    const onlineTracks = json.data.results.map(song => {
+                        const audioList = song.downloadUrl;
+                        const coverList = song.image;
+                        if(!audioList || audioList.length === 0) return null;
+                        const bestAudio = audioList.find(u => u.quality === "320kbps") || audioList[audioList.length - 1];
+                        const bestCover = coverList ? (coverList.find(i => i.quality === "500x500") || coverList[coverList.length - 1]) : null;
+                        const finalAudioSrc = bestAudio.url || bestAudio.link;
+                        
+                        if(!finalAudioSrc) return null;
+                        
+                        let artistName = "Desconhecido";
+                        if (song.artists && song.artists.primary && song.artists.primary.length > 0) { artistName = song.artists.primary.map(a => a.name).join(', '); } 
+                        else if (song.primaryArtists) { artistName = song.primaryArtists; }
 
-            let onlineTracks = [];
+                        return {
+                            id: 'native_' + song.id + '_' + Date.now(),
+                            title: decodeHTML(song.name || "Desconhecida"),
+                            artist: decodeHTML(artistName),
+                            // MAGIA AQUI TAMBÉM
+                            src: `https://emera-backend-production.up.railway.app/stream?url=${encodeURIComponent(finalAudioSrc)}`,
+                            cover: bestCover ? (bestCover.url || bestCover.link) : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop',
+                            lyrics: "", 
+                            isLocal: false
+                        };
+                    }).filter(track => track !== null);
 
-            for (let url of apis) {
-                try {
-                    const res = await fetch(url);
-                    if (res.ok) {
-                        const json = await res.json();
-                        if (json && json.data && json.data.results && json.data.results.length > 0) {
-                            const decodeHTML = (html) => { const txt = document.createElement("textarea"); txt.innerHTML = html; return txt.value; };
-                            onlineTracks = json.data.results.map(song => {
-                                const audioList = song.downloadUrl;
-                                const coverList = song.image;
-                                if(!audioList || audioList.length === 0) return null;
-                                const bestAudio = audioList.find(u => u.quality === "320kbps") || audioList[audioList.length - 1];
-                                const bestCover = coverList ? (coverList.find(i => i.quality === "500x500") || coverList[coverList.length - 1]) : null;
-                                const finalAudioSrc = bestAudio.url || bestAudio.link;
-                                if(!finalAudioSrc) return null;
-                                
-                                let artistName = "Desconhecido";
-                                if (song.artists && song.artists.primary && song.artists.primary.length > 0) { artistName = song.artists.primary.map(a => a.name).join(', '); } 
-                                else if (song.primaryArtists) { artistName = song.primaryArtists; }
-
-                                return { id: 'native_' + song.id + '_' + Date.now(), title: decodeHTML(song.name || "Desconhecida"), artist: decodeHTML(artistName), src: finalAudioSrc, cover: bestCover ? (bestCover.url || bestCover.link) : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop', lyrics: "", isLocal: false };
-                            }).filter(track => track !== null);
-                            break;
-                        }
+                    if (onlineTracks.length > 0) {
+                        playlist = [...onlineTracks];
+                        renderList();
+                        loadTrack(0);
+                        showToast(`Hits carregados: ${randomQuery}`);
+                        return;
                     }
-                } catch (e) { console.warn(`Tentativa falhou em: ${url}`); }
+                }
+            } catch (e) {
+                console.warn("Backend falhou no auto-load.", e);
             }
 
-            // Fallback 1: Jamendo (Top Pop Tracks Indie Garantidas)
-            if (onlineTracks.length === 0) {
-                try {
-                    const res = await fetch('https://api.jamendo.com/v3.0/tracks/?client_id=b6747d04&format=json&limit=10&tags=pop&order=popularity_week');
-                    const json = await res.json();
-                    if (json.results && json.results.length > 0) {
-                        onlineTracks = json.results.map(song => ({ id: 'jam_top_' + song.id, title: song.name, artist: song.artist_name, src: song.audio, cover: song.image, lyrics: "", isLocal: false }));
-                    }
-                } catch(e) { console.warn("Fallback Jamendo falhou."); }
-            }
-
-            if (onlineTracks.length > 0) {
-                playlist = [...onlineTracks];
-                renderList();
-                loadTrack(0);
-                showToast("Hits globais carregados com sucesso!");
-                return;
-            }
-
-            // FALLBACK 2: SOUNDHELIX (Links diretos imbatíveis, 5+ a 7+ minutos cada)
+            // Fallback de ultra emergência caso o SEU servidor caia (nunca se sabe)
             const fallbackTracks = [
-                { id: 'fb_1', title: "Electronic Pulse", artist: "Emera System", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
-                { id: 'fb_2', title: "Night Rider", artist: "Emera System", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
-                { id: 'fb_3', title: "Neon City", artist: "Emera System", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3", cover: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=500&h=500&fit=crop", lyrics: "", isLocal: false }
+                { id: 'fb_1', title: "Ethereal (Synthwave)", artist: "Punch Deck", src: "https://api.jamendo.com/v3.0/tracks/file/?client_id=b6747d04&id=116174", cover: "https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
+                { id: 'fb_2', title: "Catharsis (Eletrónica)", artist: "Punch Deck", src: "https://api.jamendo.com/v3.0/tracks/file/?client_id=b6747d04&id=141870", cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
+                { id: 'fb_3', title: "Neon Drive (Retrowave)", artist: "Fsm Team", src: "https://api.jamendo.com/v3.0/tracks/file/?client_id=b6747d04&id=1858544", cover: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=500&h=500&fit=crop", lyrics: "", isLocal: false }
             ];
-            
             playlist = [...fallbackTracks];
             renderList();
             loadTrack(0);
             showToast("Modo Offline: Faixas de emergência ativadas!");
         }
+
 
         // --- WEB AUDIO E EQUALIZADOR ---
         function initWebAudio() {
@@ -1221,10 +1199,7 @@
             if(playlist.length===0) return;
             if(index < 0) index = playlist.length-1; if(index >= playlist.length) index = 0;
             currentTrackIndex = index; const t = playlist[currentTrackIndex];
-            
-            // Garantir que a tag lida corretamente com CORS se a track for da internet
-            if(t.isLocal) audio.removeAttribute('crossorigin'); else audio.setAttribute('crossorigin', 'anonymous'); 
-            audio.src = t.src; 
+            if(t.isLocal) audio.removeAttribute('crossorigin'); else audio.setAttribute('crossorigin', 'anonymous'); audio.src = t.src; 
 
             DOM.title.textContent = t.title; DOM.artist.textContent = t.artist || t.genre;
             DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
@@ -1252,6 +1227,7 @@
             }
         }
 
+        // Correção de Lógica (Bug 1): Agora a Próxima/Anterior navega no que o utilizador está atualmente a ver!
         function nextTrack() {
             if(playlist.length===0) return;
             const vis = getVisualPlaylist();
@@ -1358,6 +1334,7 @@
 
         let lastRenderedSecond = -1; 
         audio.addEventListener('timeupdate', () => {
+            // OTIMIZAÇÃO: Não gasta CPU a atualizar a UI de fundo se o jogo estiver a cobrir o ecrã
             if(isNaN(audio.duration) || isDraggingProgress || isGameActive) return; 
             
             const currentTime = audio.currentTime;
@@ -1383,6 +1360,7 @@
             if(m){ DOM.volBar.value=0; DOM.volFill.style.width='0%'; } else { DOM.volBar.value=parseFloat(localStorage.getItem('webPlayerVol'))||0.5; DOM.volFill.style.width=DOM.volBar.value*100+'%'; } 
         });
 
+        // --- UI E MENUS ---
         const tModal = (m, s, hash) => { 
             if(s) { 
                 m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(()=>m.classList.remove('opacity-0'),10);
@@ -1431,6 +1409,7 @@
             });
         }
 
+        // --- GAVETA E ORDENAÇÃO ---
         let isDrawerExpanded = false;
         function toggleDrawer(e) { 
             if (window.innerWidth >= 768) return; 
@@ -1472,6 +1451,7 @@
                 `;
                 item.addEventListener('click', e => { if(e.target.closest('.actions')) return; loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play(); });
                 
+                // Correção Lógica (Bug 2): Otimização Matemática de Drag And Drop
                 item.addEventListener('dragstart', (e) => {
                     dragSourceIndex = originalIndex;
                     e.dataTransfer.effectAllowed = 'move';
@@ -1488,6 +1468,7 @@
                         currentSortMode = 'manual'; DOM.sortSel.value = 'manual'; localStorage.setItem('webPlayerSortMode', 'manual');
                         const draggedTrack = playlist.splice(dragSourceIndex, 1)[0];
                         
+                        // Compensa a posição matemática da array que encolheu se o alvo for depois do inicio
                         let insertIndex = originalIndex;
                         if (dragSourceIndex < originalIndex) insertIndex--;
                         
@@ -1513,8 +1494,7 @@
 
             document.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', e => {
                 e.stopPropagation(); const idx=parseInt(btn.dataset.index); const t=playlist[idx];
-                if(t.id) deleteTrackFromDB(t.id); 
-                playlist.splice(idx,1); showToast("Eliminado");
+                if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(idx,1); showToast("Eliminado");
                 savePlaylistOrder();
                 renderList();
             }));
@@ -1534,94 +1514,7 @@
             if(currentSortMode === 'manual') savePlaylistOrder();
             renderList(); 
         });
-        
         DOM.search.addEventListener('input', renderList);
-        
-        // Evento da pesquisa Online JioSaavn
-        DOM.search.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchOnlineMusic(DOM.search.value);
-            }
-        });
-
-        // --- CARREGAMENTO NATIVO (AUTO-LOAD) ---
-        async function loadNativeLibrary() {
-            showToast("A iniciar biblioteca nativa...");
-            
-            const apis = [
-                `https://saavn.dev/api/search/songs?query=Top+Hits`,
-                `https://saavn.me/search/songs?query=Top+Hits`,
-                `https://jiosaavn-api-privatecvc2.vercel.app/search/songs?query=Top+Hits`
-            ];
-
-            let json = null;
-            for (let url of apis) {
-                try {
-                    const res = await fetch(url);
-                    if (res.ok) {
-                        json = await res.json();
-                        if (json && json.data && json.data.results && json.data.results.length > 0) break;
-                    }
-                } catch (e) {
-                    console.warn(`Tentativa falhou em: ${url}`);
-                }
-            }
-
-            if (json && json.data && json.data.results && json.data.results.length > 0) {
-                const decodeHTML = (html) => { const txt = document.createElement("textarea"); txt.innerHTML = html; return txt.value; };
-                
-                const onlineTracks = json.data.results.map(song => {
-                    const audioList = song.downloadUrl;
-                    const coverList = song.image;
-                    if(!audioList || audioList.length === 0) return null;
-                    const bestAudio = audioList.find(u => u.quality === "320kbps") || audioList[audioList.length - 1];
-                    const bestCover = coverList ? (coverList.find(i => i.quality === "500x500") || coverList[coverList.length - 1]) : null;
-                    const finalAudioSrc = bestAudio.url || bestAudio.link;
-                    const finalCoverSrc = bestCover ? (bestCover.url || bestCover.link) : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
-                    
-                    if(!finalAudioSrc) return null;
-                    
-                    let artistName = "Desconhecido";
-                    if (song.artists && song.artists.primary && song.artists.primary.length > 0) {
-                        artistName = song.artists.primary.map(a => a.name).join(', ');
-                    } else if (song.primaryArtists) {
-                        artistName = song.primaryArtists;
-                    }
-
-                    return {
-                        id: 'native_' + song.id + '_' + Date.now(),
-                        title: decodeHTML(song.name || "Desconhecida"),
-                        artist: decodeHTML(artistName),
-                        src: finalAudioSrc,
-                        cover: finalCoverSrc,
-                        lyrics: "", 
-                        isLocal: false
-                    };
-                }).filter(track => track !== null);
-
-                if (onlineTracks.length > 0) {
-                    playlist = [...onlineTracks];
-                    renderList();
-                    loadTrack(0);
-                    showToast("Sucessos globais carregados!");
-                    return;
-                }
-            }
-
-            // FALLBACK DE SEGURANÇA (PIXABAY - 100% ONLINE E CORS ABERTO)
-            // Se a API estiver offline, carrega estas para o usuário nunca ficar com app "quebrado"
-            const fallbackTracks = [
-                { id: 'fb_1', title: "Cyberpunk City (Retro)", artist: "Emera Exclusives", src: "https://cdn.pixabay.com/audio/2022/10/25/audio_2eb2d3ceee.mp3", cover: "https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
-                { id: 'fb_2', title: "Lofi Study Beats", artist: "Emera Exclusives", src: "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3", cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
-                { id: 'fb_3', title: "Phonk Drift", artist: "Emera Exclusives", src: "https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3", cover: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=500&h=500&fit=crop", lyrics: "", isLocal: false }
-            ];
-            
-            playlist = [...fallbackTracks];
-            renderList();
-            loadTrack(0);
-            showToast("Modo Offline: Músicas Exclusivas Carregadas!");
-        }
 
         function updateMiniPlayer() {
             const t = playlist[currentTrackIndex]; if(!t) return;
@@ -1681,7 +1574,7 @@
 
         DOM.mainFav.addEventListener('click', () => {
             if(playlist.length===0) return; const t=playlist[currentTrackIndex]; t.favorite = !t.favorite;
-            saveTrackToDB(t); updateMainFavoriteIcon(); showToast(t.favorite ? "Adicionado aos Favoritos" : "Removido dos Favoritos");
+            if(t.isLocal) saveTrackToDB(t); updateMainFavoriteIcon(); showToast(t.favorite ? "Adicionado aos Favoritos" : "Removido dos Favoritos");
         });
 
         DOM.shareBtn.addEventListener('click', () => {
@@ -1706,11 +1599,12 @@
             if(trackToEditIndex === null) return; const t = playlist[trackToEditIndex];
             t.title = document.getElementById('edit-title-input').value || "Desconhecido"; t.artist = document.getElementById('edit-artist-input').value || "Desconhecido";
             t.lyrics = document.getElementById('edit-lyrics-input').value; t.cover = editCoverBase64;
-            saveTrackToDB(t);
+            if(t.isLocal) saveTrackToDB(t);
             if(trackToEditIndex === currentTrackIndex) { DOM.title.textContent = t.title; DOM.artist.textContent = t.artist; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; updateMiniPlayer(); }
             renderList(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
         });
 
+        // UPLOAD SIMPLIFICADO E EXTRAÇÃO DE LETRAS (Bug 3 Corrigido)
         function handleFiles(files) {
             if(files.length === 0) return; let loadedCount = 0; let added = 0; showToast(`A ler ficheiros...`);
             files.forEach(file => {
@@ -1725,7 +1619,7 @@
                             if(tag.tags.title) nT.title = tag.tags.title; 
                             if(tag.tags.artist) nT.artist = tag.tags.artist; 
                             
-                            // Extração Nativa de Letras
+                            // Extração Nativa de Letras (Correção)
                             if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics;
                             else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics;
                             
