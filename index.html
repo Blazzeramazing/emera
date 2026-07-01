@@ -56,9 +56,7 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 20px; }
         
-        /* CORREÇÃO DO CSS DEPRECATED REPORTADO NO DEVTOOLS */
-        input[type=range][orient=vertical] { writing-mode: vertical-lr; direction: rtl; appearance: auto; width: 8px; height: 100%; padding: 0 5px; cursor: pointer; }
-        
+        input[type=range][orient=vertical] { writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 8px; height: 100%; padding: 0 5px; cursor: pointer; }
         .drag-over { border: 2px dashed var(--accent) !important; background-color: var(--accent-light) !important; }
         @media (min-width: 768px) { .playlist-item .actions { opacity: 0; transition: opacity 0.2s; } .playlist-item:hover .actions { opacity: 1; } }
 
@@ -182,6 +180,7 @@
                 </button>
             </div>
 
+            <!-- --- SECÇÃO DO JOGO EMERA TILES --- -->
             <div id="game-panel" class="absolute inset-0 bg-gray-950 z-[60] hidden flex flex-col overflow-hidden transition-opacity duration-300 opacity-0">
                 <!-- Game Header -->
                 <div class="w-full p-4 md:p-6 flex justify-between items-center bg-gray-900 border-b border-gray-800 z-10 shadow-lg flex-shrink-0">
@@ -358,12 +357,12 @@
                     </div>
                 </div>
                 
-                <!-- Pesquisa Local / Global Híbrida -->
+                <!-- Pesquisa Local -->
                 <div id="local-search-container" class="relative w-full mt-2" onclick="event.stopPropagation()">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <svg class="w-3 h-3 md:w-4 md:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <input type="text" id="search-input" placeholder="Procurar local ou [ENTER] para global..." class="w-full bg-gray-800/50 text-xs sm:text-sm text-gray-200 rounded-lg pl-9 pr-3 py-2 outline-none border border-gray-700 focus:border-accent focus:bg-gray-800 transition">
+                    <input type="text" id="search-input" placeholder="Procurar..." class="w-full bg-gray-800/50 text-xs sm:text-sm text-gray-200 rounded-lg pl-9 pr-3 py-2 outline-none border border-gray-700 focus:border-accent focus:bg-gray-800 transition">
                 </div>
             </div>
 
@@ -414,16 +413,16 @@
                 
                 <!-- Cores do Tema -->
                 <div>
-                    <label class="text-xs text-gray-400 font-semibold uppercase mb-2 flex justify-between" for="oled-toggle">
+                    <label class="text-xs text-gray-400 font-semibold uppercase mb-2 flex justify-between">
                         Cores do Tema
-                        <span class="flex items-center cursor-pointer gap-2 text-white">
+                        <label class="flex items-center cursor-pointer gap-2 text-white">
                             <span class="text-[10px]">Modo OLED</span>
                             <div class="relative">
                                 <input type="checkbox" id="oled-toggle" class="sr-only">
                                 <div class="block bg-gray-600 w-8 h-4 rounded-full transition-colors oled-bg"></div>
                                 <div class="dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform"></div>
                             </div>
-                        </span>
+                        </label>
                     </label>
                     <div class="flex gap-3 justify-between px-2">
                         <button class="w-8 h-8 rounded-full bg-[#10b981] border-2 border-transparent hover:scale-110 transition theme-btn" data-theme="#10b981,#059669,rgba(16,185,129,0.2)" title="Esmeralda"></button>
@@ -439,7 +438,7 @@
                 <div>
                     <label class="text-xs text-gray-400 font-semibold uppercase mb-2 block">Efeitos Sincronizados (Áudio)</label>
                     <div class="flex flex-col gap-3">
-                        <label class="flex items-center justify-between cursor-pointer text-sm text-gray-200 bg-gray-800/50 p-2 rounded-lg border border-gray-700 hover:border-accent transition" for="chroma-toggle">
+                        <label class="flex items-center justify-between cursor-pointer text-sm text-gray-200 bg-gray-800/50 p-2 rounded-lg border border-gray-700 hover:border-accent transition">
                             <span>Chroma RGB (Cores Móveis)</span>
                             <div class="relative">
                                 <input type="checkbox" id="chroma-toggle" class="sr-only">
@@ -447,7 +446,7 @@
                                 <div class="dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform"></div>
                             </div>
                         </label>
-                        <label class="flex items-center justify-between cursor-pointer text-sm text-gray-200 bg-gray-800/50 p-2 rounded-lg border border-gray-700 hover:border-accent transition" for="pulse-toggle">
+                        <label class="flex items-center justify-between cursor-pointer text-sm text-gray-200 bg-gray-800/50 p-2 rounded-lg border border-gray-700 hover:border-accent transition">
                             <span>Pulso de Grave (Capa Pulsa)</span>
                             <div class="relative">
                                 <input type="checkbox" id="pulse-toggle" class="sr-only">
@@ -455,7 +454,7 @@
                                 <div class="dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform"></div>
                             </div>
                         </label>
-                        <label class="flex items-center justify-between cursor-pointer text-sm text-gray-200 bg-gray-800/50 p-2 rounded-lg border border-gray-700 hover:border-accent transition" for="atmosphere-toggle">
+                        <label class="flex items-center justify-between cursor-pointer text-sm text-gray-200 bg-gray-800/50 p-2 rounded-lg border border-gray-700 hover:border-accent transition">
                             <div class="flex flex-col">
                                 <span>Atmosfera Dinâmica</span>
                                 <span class="text-[9px] text-gray-400">Gera névoa/luz baseada no estilo da música.</span>
@@ -471,7 +470,7 @@
                 <hr class="border-gray-800 my-1">
 
                 <div>
-                    <label class="text-xs text-gray-400 font-semibold uppercase mb-1 flex justify-between" for="preamp-slider">
+                    <label class="text-xs text-gray-400 font-semibold uppercase mb-1 flex justify-between">
                         <span>Ganho de Volume (Pre-amp)</span>
                         <span id="preamp-value-display" class="text-accent">100%</span>
                     </label>
@@ -480,14 +479,14 @@
                 </div>
                 <hr class="border-gray-800 my-1">
                 <div>
-                    <label class="text-xs text-gray-400 font-semibold uppercase mb-1 block" for="sleep-timer-input">Temporizador (Dormir)</label>
+                    <label class="text-xs text-gray-400 font-semibold uppercase mb-1 block">Temporizador (Dormir)</label>
                     <div class="flex gap-2">
                         <input type="number" id="sleep-timer-input" placeholder="Minutos..." min="1" class="w-full bg-gray-800 text-sm text-gray-200 rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-accent">
                         <button id="start-timer-btn" class="bg-accent hover:bg-accentHover text-white text-xs font-bold py-2 px-4 rounded-lg transition">Iniciar</button>
                     </div>
                 </div>
                 <div>
-                    <label class="text-xs text-gray-400 font-semibold uppercase mb-1 block" for="speed-select">Velocidade</label>
+                    <label class="text-xs text-gray-400 font-semibold uppercase mb-1 block">Velocidade</label>
                     <select id="speed-select" class="w-full bg-gray-800 text-sm text-gray-200 rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-accent">
                         <option value="0.5">0.5x (Lento)</option>
                         <option value="1" selected>1.0x (Normal)</option>
@@ -533,15 +532,15 @@
 
             <div class="flex flex-col gap-4">
                 <div>
-                    <label class="text-xs text-gray-400 font-semibold mb-1 block" for="edit-title-input">Título</label>
+                    <label class="text-xs text-gray-400 font-semibold mb-1 block">Título</label>
                     <input type="text" id="edit-title-input" class="w-full bg-gray-800 text-sm text-gray-200 rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-accent">
                 </div>
                 <div>
-                    <label class="text-xs text-gray-400 font-semibold mb-1 block" for="edit-artist-input">Artista</label>
+                    <label class="text-xs text-gray-400 font-semibold mb-1 block">Artista</label>
                     <input type="text" id="edit-artist-input" class="w-full bg-gray-800 text-sm text-gray-200 rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-accent">
                 </div>
                 <div>
-                    <label class="text-xs text-gray-400 font-semibold mb-1 block" for="edit-lyrics-input">Letras</label>
+                    <label class="text-xs text-gray-400 font-semibold mb-1 block">Letras</label>
                     <textarea id="edit-lyrics-input" rows="4" class="w-full bg-gray-800 text-sm text-gray-200 rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-accent custom-scrollbar" placeholder="Cole a letra da música aqui..."></textarea>
                 </div>
                 <div class="flex gap-3 mt-2">
@@ -710,6 +709,8 @@
         const isOled = JSON.parse(localStorage.getItem('webPlayerOled')) || false;
         oledToggle.checked = isOled; applyOled(isOled);
         oledToggle.addEventListener('change', (e) => applyOled(e.target.checked));
+
+        document.querySelectorAll('.theme-btn').forEach(btn => btn.addEventListener('click', (e) => { const c = e.target.dataset.theme.split(','); applyTheme(c[0], c[1], c[2]); }));
 
         // 1. Geração Dinâmica do Manifest para Instalação
         const manifestConfig = {
@@ -1061,110 +1062,6 @@
             return pToRender;
         }
 
-        // DECODIFICADOR HTML (LIMPEZA DE TEXTO)
-        function decodeHTML(html) {
-            var txt = document.createElement("textarea");
-            txt.innerHTML = html;
-            return txt.value;
-        }
-
-        // --- MOTOR DE BUSCA ONLINE ---
-        async function searchOnlineMusic(query) {
-            if (!query || query.trim() === '') return;
-            showToast("A pesquisar no servidor global...");
-            try {
-                const res = await fetch(`https://emera-backend-production.up.railway.app/search?q=${encodeURIComponent(query)}`);
-                const json = await res.json();
-                
-                if (!json.data || !json.data.results || json.data.results.length === 0) {
-                    showToast("Nenhuma música encontrada.");
-                    return;
-                }
-                
-                const onlineTracks = json.data.results.map(song => {
-                    if (!song.downloadUrl || song.downloadUrl.length === 0) return null;
-                    const bestAudio = song.downloadUrl.find(u => u.quality === "320kbps") || song.downloadUrl[song.downloadUrl.length - 1];
-                    const bestCover = song.image.find(i => i.quality === "500x500") || song.image[song.image.length - 1];
-                    const finalAudioSrc = bestAudio.url || bestAudio.link;
-                    if(!finalAudioSrc) return null;
-                    const artistName = song.artists.primary ? song.artists.primary.map(a => a.name).join(', ') : "Desconhecido";
-                    
-                    return {
-                        id: 'online_' + song.id,
-                        title: decodeHTML(song.name),
-                        artist: decodeHTML(artistName),
-                        src: `https://emera-backend-production.up.railway.app/stream?url=${encodeURIComponent(finalAudioSrc)}`,
-                        cover: bestCover ? (bestCover.url || bestCover.link) : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop',
-                        lyrics: "",
-                        isLocal: false
-                    };
-                }).filter(track => track !== null);
-
-                playlist = [...onlineTracks, ...playlist];
-                DOM.search.value = '';
-                renderList();
-                showToast(`${onlineTracks.length} músicas carregadas!`);
-                if (!isPlaying) loadTrack(0);
-                
-            } catch (error) {
-                console.error(error);
-                showToast("Erro ao conectar com o servidor.");
-            }
-        }
-
-        // --- AUTO-LOAD INTELIGENTE ---
-        async function loadNativeLibrary() {
-            showToast("A acordar servidor (pode demorar 30s)...");
-            try {
-                const topQueries = ['The Weeknd', 'Dua Lipa', 'Bruno Mars', 'Coldplay', 'Billie Eilish'];
-                const randomQuery = topQueries[Math.floor(Math.random() * topQueries.length)];
-                const res = await fetch(`https://emera-backend-production.up.railway.app/search?q=${encodeURIComponent(randomQuery)}`);
-                const json = await res.json();
-                
-                if (json.data && json.data.results && json.data.results.length > 0) {
-                    const onlineTracks = json.data.results.map(song => {
-                        if (!song.downloadUrl || song.downloadUrl.length === 0) return null;
-                        const bestAudio = song.downloadUrl.find(u => u.quality === "320kbps") || song.downloadUrl[song.downloadUrl.length - 1];
-                        const bestCover = song.image.find(i => i.quality === "500x500") || song.image[song.image.length - 1];
-                        const finalAudioSrc = bestAudio.url || bestAudio.link;
-                        if(!finalAudioSrc) return null;
-                        const artistName = song.artists.primary ? song.artists.primary.map(a => a.name).join(', ') : "Desconhecido";
-                        
-                        return {
-                            id: 'online_' + song.id,
-                            title: decodeHTML(song.name),
-                            artist: decodeHTML(artistName),
-                            src: `https://emera-backend-production.up.railway.app/stream?url=${encodeURIComponent(finalAudioSrc)}`,
-                            cover: bestCover ? (bestCover.url || bestCover.link) : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop',
-                            lyrics: "",
-                            isLocal: false
-                        };
-                    }).filter(track => track !== null);
-
-                    if (onlineTracks.length > 0) {
-                        playlist = [...onlineTracks];
-                        renderList();
-                        loadTrack(0);
-                        showToast(`Hits globais carregados com sucesso!`);
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.warn("Erro ao iniciar a rádio global", e);
-            }
-            
-            // Fallback final para Jamendo via Railway para evitar CORS
-            const fallbackTracks = [
-                { id: 'fb_1', title: "Ethereal (Synthwave)", artist: "Punch Deck", src: `https://emera-backend-production.up.railway.app/stream?url=${encodeURIComponent("https://api.jamendo.com/v3.0/tracks/file/?client_id=b6747d04&id=116174")}`, cover: "https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
-                { id: 'fb_2', title: "Catharsis (Eletrónica)", artist: "Punch Deck", src: `https://emera-backend-production.up.railway.app/stream?url=${encodeURIComponent("https://api.jamendo.com/v3.0/tracks/file/?client_id=b6747d04&id=141870")}`, cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&h=500&fit=crop", lyrics: "", isLocal: false },
-                { id: 'fb_3', title: "Neon Drive (Retrowave)", artist: "Fsm Team", src: `https://emera-backend-production.up.railway.app/stream?url=${encodeURIComponent("https://api.jamendo.com/v3.0/tracks/file/?client_id=b6747d04&id=1858544")}`, cover: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=500&h=500&fit=crop", lyrics: "", isLocal: false }
-            ];
-            playlist = [...fallbackTracks];
-            renderList();
-            loadTrack(0);
-            showToast("Modo Offline: Faixas de emergência ativadas!");
-        }
-
         // --- LÓGICA DO PLAYER ---
         function updateMainFavoriteIcon() {
             if(playlist.length===0){ DOM.mainFav.classList.add('hidden'); return; }
@@ -1204,6 +1101,7 @@
             }
         }
 
+        // Correção de Lógica (Bug 1): Agora a Próxima/Anterior navega no que o utilizador está atualmente a ver!
         function nextTrack() {
             if(playlist.length===0) return;
             const vis = getVisualPlaylist();
@@ -1310,6 +1208,7 @@
 
         let lastRenderedSecond = -1; 
         audio.addEventListener('timeupdate', () => {
+            // OTIMIZAÇÃO: Não gasta CPU a atualizar a UI de fundo se o jogo estiver a cobrir o ecrã
             if(isNaN(audio.duration) || isDraggingProgress || isGameActive) return; 
             
             const currentTime = audio.currentTime;
@@ -1426,6 +1325,7 @@
                 `;
                 item.addEventListener('click', e => { if(e.target.closest('.actions')) return; loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play(); });
                 
+                // Correção Lógica (Bug 2): Otimização Matemática de Drag And Drop
                 item.addEventListener('dragstart', (e) => {
                     dragSourceIndex = originalIndex;
                     e.dataTransfer.effectAllowed = 'move';
@@ -1442,6 +1342,7 @@
                         currentSortMode = 'manual'; DOM.sortSel.value = 'manual'; localStorage.setItem('webPlayerSortMode', 'manual');
                         const draggedTrack = playlist.splice(dragSourceIndex, 1)[0];
                         
+                        // Compensa a posição matemática da array que encolheu se o alvo for depois do inicio
                         let insertIndex = originalIndex;
                         if (dragSourceIndex < originalIndex) insertIndex--;
                         
@@ -1487,16 +1388,7 @@
             if(currentSortMode === 'manual') savePlaylistOrder();
             renderList(); 
         });
-        
         DOM.search.addEventListener('input', renderList);
-        
-        // INTERCEPÇÃO DA TECLA ENTER PARA BUSCA ONLINE
-        DOM.search.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchOnlineMusic(DOM.search.value);
-            }
-        });
 
         function updateMiniPlayer() {
             const t = playlist[currentTrackIndex]; if(!t) return;
@@ -1586,6 +1478,7 @@
             renderList(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
         });
 
+        // UPLOAD SIMPLIFICADO E EXTRAÇÃO DE LETRAS (Bug 3 Corrigido)
         function handleFiles(files) {
             if(files.length === 0) return; let loadedCount = 0; let added = 0; showToast(`A ler ficheiros...`);
             files.forEach(file => {
@@ -1600,6 +1493,7 @@
                             if(tag.tags.title) nT.title = tag.tags.title; 
                             if(tag.tags.artist) nT.artist = tag.tags.artist; 
                             
+                            // Extração Nativa de Letras (Correção)
                             if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics;
                             else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics;
                             
@@ -2208,13 +2102,8 @@
             await loadTracksFromDB(); 
             DOM.sortSel.value = currentSortMode;
             renderList();
-            if(playlist.length > 0) { 
-                loadTrack(0); 
-            } else { 
-                loadNativeLibrary(); 
-            }
+            if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; }
         });
-        
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); } else { audio.volume=1; }
 
