@@ -184,11 +184,14 @@
             <div id="game-panel" class="absolute inset-0 bg-gray-950 z-[60] hidden flex flex-col overflow-hidden transition-opacity duration-300 opacity-0">
                 <!-- Game Header -->
                 <div class="w-full p-4 md:p-6 flex justify-between items-center bg-gray-900 border-b border-gray-800 z-10 shadow-lg flex-shrink-0">
-                    <button id="close-game-btn" class="text-gray-400 hover:text-white transition p-2 bg-gray-800 hover:bg-red-600/50 rounded-full flex-shrink-0" title="Fechar Jogo">
-                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
+                    <div class="flex gap-2">
+                        <!-- BOTÃO DE PAUSA (O botão de fechar foi removido daqui) -->
+                        <button id="pause-game-btn" class="text-gray-400 hover:text-white transition p-2 bg-gray-800 hover:bg-accent/50 rounded-full flex-shrink-0" title="Pausar Jogo (Tecla: P, Espaço ou Esc)">
+                            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </button>
+                    </div>
                     
-                    <div class="text-center flex-1 mx-2">
+                    <div class="text-center flex-1 mx-2 pointer-events-none">
                         <h3 class="text-white font-bold text-sm md:text-base tracking-widest uppercase flex items-center justify-center gap-2">
                             <svg class="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
                             Emera Tiles
@@ -213,7 +216,7 @@
                 <div class="flex-1 w-full flex justify-center relative bg-black overflow-hidden min-h-0" id="game-canvas-wrapper">
                     <canvas id="game-canvas" class="w-full max-w-md h-full touch-none bg-gray-900 border-x border-gray-800 block"></canvas>
                     
-                    <!-- Overlay de Início/Pausa -->
+                    <!-- Overlay de Início -->
                     <div id="game-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20 backdrop-blur-sm p-6 text-center transition-opacity duration-300">
                         <div class="w-16 h-16 md:w-20 md:h-20 bg-accent rounded-2xl flex items-center justify-center mb-4 md:mb-6 shadow-[0_0_30px_var(--accent-light)] transform rotate-12">
                             <svg class="w-8 h-8 md:w-10 md:h-10 text-white transform -rotate-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
@@ -231,6 +234,23 @@
                             <button id="start-game-btn" class="w-full bg-accent text-white py-3 rounded-xl font-bold hover:scale-105 transition shadow-lg flex items-center justify-center gap-2">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
                                 <span>JOGAR AGORA</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- OVERLAY DE PAUSA (NOVO) -->
+                    <div id="pause-overlay" class="absolute inset-0 bg-black/80 flex-col items-center justify-center z-[50] hidden opacity-0 transition-opacity duration-300 backdrop-blur-md p-6 text-center">
+                        <h2 class="text-4xl md:text-5xl font-black text-white mb-2 tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">PAUSA</h2>
+                        <p class="text-gray-300 mb-8 text-sm">O ritmo está em pausa.</p>
+                        
+                        <div class="flex flex-col gap-3 w-full max-w-xs">
+                            <button id="resume-game-btn" class="w-full bg-accent text-white py-3 rounded-xl font-bold hover:scale-105 transition shadow-lg flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                                CONTINUAR
+                            </button>
+                            <button id="exit-pause-btn" class="w-full bg-gray-800 text-gray-300 hover:text-white py-3 rounded-xl font-bold hover:bg-gray-700 transition flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                SAIR DO JOGO
                             </button>
                         </div>
                     </div>
@@ -259,11 +279,11 @@
                         </div>
                     </div>
 
-                    <!-- Overlay de Contagem Regressiva (Revive) -->
+                    <!-- Overlay de Contagem Regressiva (Revive e Pausa) -->
                     <div id="countdown-overlay" class="absolute inset-0 bg-black/80 flex-col items-center justify-center z-[55] hidden opacity-0 transition-opacity duration-300 backdrop-blur-md text-center p-6">
-                        <h2 class="text-2xl md:text-3xl font-black text-white mb-6 tracking-widest uppercase drop-shadow-lg">A Música Continua em...</h2>
+                        <h2 id="countdown-title" class="text-2xl md:text-3xl font-black text-white mb-6 tracking-widest uppercase drop-shadow-lg">A Música Continua em...</h2>
                         <div id="countdown-number" class="text-7xl md:text-9xl font-black text-yellow-500 drop-shadow-[0_0_30px_rgba(234,179,8,0.8)] animate-pulse">5</div>
-                        <p class="text-gray-300 mt-8 text-sm max-w-xs">Prepara-te! A música vai recuar 2 segundos para apanhares o ritmo.</p>
+                        <p id="countdown-subtitle" class="text-gray-300 mt-8 text-sm max-w-xs">Prepara-te! A música vai recuar para apanhares o ritmo.</p>
                     </div>
 
                     <!-- Overlay de Vitória (100% Concluído) -->
@@ -1513,12 +1533,13 @@
         document.getElementById('mini-prev-btn').addEventListener('click', () => DOM.prev.click());
         document.getElementById('mini-next-btn').addEventListener('click', () => DOM.next.click());
 
-        // --- LÓGICA DO JOGO (EMERA TILES) ---
+        // --- LÓGICA DO JOGO (EMERA TILES) COM SISTEMA DE PAUSA ---
         const gamePanel = document.getElementById('game-panel');
         const gameOverlay = document.getElementById('game-overlay');
         const gameOverOverlay = document.getElementById('game-over-overlay');
         const victoryOverlay = document.getElementById('victory-overlay');
         const countdownOverlay = document.getElementById('countdown-overlay'); 
+        const pauseOverlay = document.getElementById('pause-overlay');
         const gameCanvas = document.getElementById('game-canvas');
         const gCtx = gameCanvas.getContext('2d');
         const gameScoreEl = document.getElementById('game-score');
@@ -1526,7 +1547,7 @@
         const gameSpeedDisplay = document.getElementById('game-speed-display');
         const gameBonusCount = document.getElementById('game-bonus-count'); 
         
-        let isGameActive = false, isGamePlaying = false, isGameOver = false; 
+        let isGameActive = false, isGamePlaying = false, isGameOver = false, isGamePaused = false; 
         let gameAnimFrame, gameNotes = [];
         let score = 0, combo = 0, columns = 4, baseSpeed = 350; 
         let currentMultiplier = 1; 
@@ -1535,6 +1556,7 @@
         let columnsHeld = [false, false, false, false]; 
         let gameHitFlash = 0, gameMissFlash = 0;
         let lastRenderedScore = -1, lastRenderedCombo = -1;
+        let countdownIntervalId = null;
 
         function updateBonusUI() {
             gameBonusCount.textContent = secondChances;
@@ -1547,7 +1569,17 @@
             if (!isGameActive) return;
             gamePanel.classList.add('opacity-0');
             setTimeout(() => { gamePanel.classList.add('hidden'); gamePanel.classList.remove('flex'); }, 300);
-            isGameActive = false; isGamePlaying = false; isGameOver = false; cancelAnimationFrame(gameAnimFrame);
+            
+            // Limpa todos os estados
+            isGameActive = false; isGamePlaying = false; isGameOver = false; isGamePaused = false;
+            cancelAnimationFrame(gameAnimFrame);
+            if(countdownIntervalId) clearInterval(countdownIntervalId);
+            
+            // Esconde overlays
+            pauseOverlay.classList.add('hidden', 'opacity-0');
+            pauseOverlay.classList.remove('flex');
+            countdownOverlay.classList.add('hidden', 'opacity-0');
+            countdownOverlay.classList.remove('flex');
         }
 
         document.getElementById('open-game-btn').addEventListener('click', () => {
@@ -1557,13 +1589,84 @@
             isGameActive = true; resetGameForNewTrack();
         });
 
-        document.getElementById('close-game-btn').addEventListener('click', () => {
+        function handleGameExit() {
             if (location.hash === '#game') {
                 history.back(); // Aciona o popstate e limpa o histórico
             } else {
                 closeGameUI();
             }
+        }
+
+        // --- SISTEMA DE CONTAGEM DECRESCENTE REUTILIZÁVEL ---
+        function runCountdown(seconds, textTitle, textSubtitle, onComplete) {
+            const titleEl = document.getElementById('countdown-title');
+            const subEl = document.getElementById('countdown-subtitle');
+            if(titleEl) titleEl.textContent = textTitle;
+            if(subEl) subEl.textContent = textSubtitle;
+
+            countdownOverlay.classList.remove('hidden');
+            countdownOverlay.classList.add('flex');
+            setTimeout(() => countdownOverlay.classList.remove('opacity-0'), 10);
+
+            let count = seconds;
+            const numberEl = document.getElementById('countdown-number');
+            numberEl.textContent = count;
+
+            drawGameStatic();
+
+            if(countdownIntervalId) clearInterval(countdownIntervalId);
+            countdownIntervalId = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    numberEl.textContent = count;
+                    numberEl.classList.remove('animate-pulse');
+                    void numberEl.offsetWidth; 
+                    numberEl.classList.add('animate-pulse');
+                } else {
+                    clearInterval(countdownIntervalId);
+                    countdownOverlay.classList.add('opacity-0');
+                    setTimeout(() => {
+                        countdownOverlay.classList.add('hidden');
+                        countdownOverlay.classList.remove('flex');
+                    }, 300);
+                    onComplete();
+                }
+            }, 1000);
+        }
+
+        // --- LÓGICA DE PAUSA ---
+        function togglePauseGame() {
+            if (!isGamePlaying || isGameOver) return;
+
+            if (!isGamePaused) {
+                isGamePaused = true;
+                if (isPlaying) togglePlay(); // Pausa a música
+                cancelAnimationFrame(gameAnimFrame); // Para a animação
+                
+                pauseOverlay.classList.remove('hidden');
+                pauseOverlay.classList.add('flex');
+                setTimeout(() => pauseOverlay.classList.remove('opacity-0'), 10);
+            }
+        }
+
+        document.getElementById('pause-game-btn').addEventListener('click', togglePauseGame);
+
+        document.getElementById('resume-game-btn').addEventListener('click', () => {
+            pauseOverlay.classList.add('opacity-0');
+            setTimeout(() => {
+                pauseOverlay.classList.add('hidden');
+                pauseOverlay.classList.remove('flex');
+            }, 300);
+
+            runCountdown(3, "A Retomar Jogo...", "Prepara-te para a batida!", () => {
+                isGamePaused = false;
+                if (!isPlaying) togglePlay();
+                lastFrameTime = performance.now();
+                gameAnimFrame = requestAnimationFrame(gameLoop);
+            });
         });
+
+        document.getElementById('exit-pause-btn').addEventListener('click', handleGameExit);
 
         async function startMiniGame(keepMult = false, keepScore = false) {
             if(playlist.length === 0) { showToast("Adicione músicas na playlist primeiro!"); return; }
@@ -1585,6 +1688,7 @@
             gameOverOverlay.classList.add('hidden', 'opacity-0'); gameOverOverlay.classList.remove('flex');
             victoryOverlay.classList.add('hidden', 'opacity-0'); victoryOverlay.classList.remove('flex');
             countdownOverlay.classList.add('hidden', 'opacity-0'); countdownOverlay.classList.remove('flex');
+            pauseOverlay.classList.add('hidden', 'opacity-0'); pauseOverlay.classList.remove('flex');
             
             lastRenderedScore = -1; lastRenderedCombo = -1;
             if(!isPlaying) togglePlay(); 
@@ -1592,15 +1696,15 @@
             visualTime = audio.currentTime; lastFrameTime = performance.now();
             columnsHeld = [false, false, false, false]; updateGameUI();
             
-            isGamePlaying = true; isGameOver = false;
+            isGamePlaying = true; isGameOver = false; isGamePaused = false;
             gameAnimFrame = requestAnimationFrame(gameLoop);
         }
 
         document.getElementById('start-game-btn').addEventListener('click', () => startMiniGame(false, false));
 
         document.getElementById('restart-game-btn').addEventListener('click', () => { audio.currentTime = 0; visualTime = 0; startMiniGame(true, false); });
-        document.getElementById('exit-game-btn').addEventListener('click', () => document.getElementById('close-game-btn').click());
-        document.getElementById('victory-exit-btn').addEventListener('click', () => document.getElementById('close-game-btn').click());
+        document.getElementById('exit-game-btn').addEventListener('click', handleGameExit);
+        document.getElementById('victory-exit-btn').addEventListener('click', handleGameExit);
 
         document.getElementById('victory-continue-btn').addEventListener('click', () => {
             currentMultiplier++; audio.currentTime = 0; visualTime = 0; startMiniGame(true, true);
@@ -1642,32 +1746,12 @@
 
             gameOverOverlay.classList.add('hidden', 'opacity-0'); gameOverOverlay.classList.remove('flex');
 
-            countdownOverlay.classList.remove('hidden'); countdownOverlay.classList.add('flex');
-            setTimeout(() => countdownOverlay.classList.remove('opacity-0'), 10);
-
-            let count = 5;
-            const numberEl = document.getElementById('countdown-number');
-            numberEl.textContent = count;
-
-            drawGameStatic();
-
-            const interval = setInterval(() => {
-                count--;
-                if (count > 0) {
-                    numberEl.textContent = count; numberEl.classList.remove('animate-pulse');
-                    void numberEl.offsetWidth; 
-                    numberEl.classList.add('animate-pulse');
-                } else {
-                    clearInterval(interval);
-                    countdownOverlay.classList.add('opacity-0');
-                    setTimeout(() => { countdownOverlay.classList.add('hidden'); countdownOverlay.classList.remove('flex'); }, 300);
-
-                    if (!isPlaying) togglePlay(); 
-                    isGameOver = false; isGamePlaying = true;
-                    lastFrameTime = performance.now(); 
-                    gameAnimFrame = requestAnimationFrame(gameLoop);
-                }
-            }, 1000);
+            runCountdown(5, "A Música Continua em...", "Prepara-te! A música recuou para apanhares o ritmo.", () => {
+                if (!isPlaying) togglePlay(); 
+                isGameOver = false; isGamePlaying = true;
+                lastFrameTime = performance.now(); 
+                gameAnimFrame = requestAnimationFrame(gameLoop);
+            });
         });
 
         let gameLayoutCache = { w: 0, h: 0, gradient: null };
@@ -1734,11 +1818,14 @@
         }
 
         function resetGameForNewTrack() {
-            isGamePlaying = false; isGameOver = false; cancelAnimationFrame(gameAnimFrame);
+            isGamePlaying = false; isGameOver = false; isGamePaused = false; cancelAnimationFrame(gameAnimFrame);
+            if(countdownIntervalId) clearInterval(countdownIntervalId);
+
             gameOverlay.classList.remove('hidden');
             gameOverOverlay.classList.add('hidden', 'opacity-0'); gameOverOverlay.classList.remove('flex');
             victoryOverlay.classList.add('hidden', 'opacity-0'); victoryOverlay.classList.remove('flex');
             countdownOverlay.classList.add('hidden', 'opacity-0'); countdownOverlay.classList.remove('flex');
+            pauseOverlay.classList.add('hidden', 'opacity-0'); pauseOverlay.classList.remove('flex');
             
             const track = playlist[currentTrackIndex];
             document.getElementById('game-track-title').textContent = track ? track.title : "Emera Tiles";
@@ -1915,7 +2002,7 @@
         }
 
         function gameLoop(timestamp) {
-            if(!isGamePlaying) return;
+            if(!isGamePlaying || isGamePaused) return; // Se pausado, não renderiza loops
             const now = timestamp || performance.now(); const dt = (now - lastFrameTime) / 1000; lastFrameTime = now;
             
             if (isPlaying) {
@@ -2017,7 +2104,7 @@
         function getColFromX(x) { const layout = updateGameLayout(); const colW = layout.w / columns; return Math.floor(Math.max(0, Math.min(x, layout.w - 1)) / colW); }
 
         function handleGameInputDown(col, yOverride) {
-            if(!isGamePlaying || isGameOver) return; if(columnsHeld[col]) return; 
+            if(!isGamePlaying || isGameOver || isGamePaused) return; if(columnsHeld[col]) return; 
             columnsHeld[col] = true; columnHighlights[col] = 1.0;
             
             const layout = updateGameLayout();
@@ -2053,7 +2140,7 @@
         }
 
         function handleGameInputUp(col) {
-            if(!isGamePlaying || isGameOver) return; columnsHeld[col] = false;
+            if(!isGamePlaying || isGameOver || isGamePaused) return; columnsHeld[col] = false;
             const layout = updateGameLayout();
             const hitCenter = (layout.h - 120) + 40; const currentSpeed = getCurrentSpeed(visualTime);
 
@@ -2077,25 +2164,38 @@
         }
 
         let activePointers = {}; 
-        gameCanvas.addEventListener('pointerdown', (e) => { if(!isGamePlaying || isGameOver) return; e.preventDefault(); try { gameCanvas.setPointerCapture(e.pointerId); } catch(err){} const rect = gameCanvas.getBoundingClientRect(); const col = getColFromX(e.clientX - rect.left); activePointers[e.pointerId] = col; handleGameInputDown(col, e.clientY - rect.top); });
-        gameCanvas.addEventListener('pointerup', (e) => { if(!isGamePlaying || isGameOver) return; e.preventDefault(); if(activePointers[e.pointerId] !== undefined) { handleGameInputUp(activePointers[e.pointerId]); delete activePointers[e.pointerId]; } try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){} });
-        gameCanvas.addEventListener('pointercancel', (e) => { if(!isGamePlaying || isGameOver) return; e.preventDefault(); if(activePointers[e.pointerId] !== undefined) { handleGameInputUp(activePointers[e.pointerId]); delete activePointers[e.pointerId]; } try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){} });
+        gameCanvas.addEventListener('pointerdown', (e) => { if(!isGamePlaying || isGameOver || isGamePaused) return; e.preventDefault(); try { gameCanvas.setPointerCapture(e.pointerId); } catch(err){} const rect = gameCanvas.getBoundingClientRect(); const col = getColFromX(e.clientX - rect.left); activePointers[e.pointerId] = col; handleGameInputDown(col, e.clientY - rect.top); });
+        gameCanvas.addEventListener('pointerup', (e) => { if(!isGamePlaying || isGameOver || isGamePaused) return; e.preventDefault(); if(activePointers[e.pointerId] !== undefined) { handleGameInputUp(activePointers[e.pointerId]); delete activePointers[e.pointerId]; } try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){} });
+        gameCanvas.addEventListener('pointercancel', (e) => { if(!isGamePlaying || isGameOver || isGamePaused) return; e.preventDefault(); if(activePointers[e.pointerId] !== undefined) { handleGameInputUp(activePointers[e.pointerId]); delete activePointers[e.pointerId]; } try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){} });
 
         let keyMappings = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
         document.addEventListener('keydown', e => {
             if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; 
             if(e.target.tagName === 'BUTTON' && e.code === 'Space') e.preventDefault(); 
-            if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { if (!e.repeat) handleGameInputDown(keyMappings[e.code]); return; }
+            
+            // Pausar pelo teclado (Space / P / Esc)
+            if(e.code === 'Space' || e.code === 'KeyP' || e.code === 'Escape') {
+                if (isGameActive && isGamePlaying && !isGameOver) {
+                    e.preventDefault();
+                    if (isGamePaused) document.getElementById('resume-game-btn').click();
+                    else togglePauseGame();
+                    return;
+                }
+            }
+
+            if(isGamePlaying && !isGameOver && !isGamePaused && keyMappings[e.code] !== undefined) { if (!e.repeat) handleGameInputDown(keyMappings[e.code]); return; }
             
             switch(e.code) { 
-                case 'Space': e.preventDefault(); togglePlay(); break; 
+                case 'Space': 
+                    if(!isGameActive) { e.preventDefault(); togglePlay(); }
+                    break; 
                 case 'ArrowRight': e.preventDefault(); nextTrack(); break; 
                 case 'ArrowLeft': e.preventDefault(); prevTrack(); break; 
                 case 'ArrowUp': e.preventDefault(); DOM.volBar.value=Math.min(1,parseFloat(DOM.volBar.value)+0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
                 case 'ArrowDown': e.preventDefault(); DOM.volBar.value=Math.max(0,parseFloat(DOM.volBar.value)-0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
             }
         });
-        document.addEventListener('keyup', e => { if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { handleGameInputUp(keyMappings[e.code]); } });
+        document.addEventListener('keyup', e => { if(isGamePlaying && !isGameOver && !isGamePaused && keyMappings[e.code] !== undefined) { handleGameInputUp(keyMappings[e.code]); } });
 
         // Init App
         initDB().then(async () => {
