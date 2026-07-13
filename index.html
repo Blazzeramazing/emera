@@ -332,13 +332,27 @@
                 <div class="flex justify-between items-end gap-2">
                     <div class="flex flex-col gap-1 max-w-[60%]">
                         <div class="flex items-center gap-1.5 md:gap-2">
-                            <svg class="w-4 h-4 md:w-5 md:h-5 text-accent flex-shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
-                            <select id="playlist-context" class="bg-transparent text-base md:text-lg font-semibold text-white outline-none hover:text-accent transition cursor-pointer p-0 border-0 appearance-none truncate w-full" onclick="event.stopPropagation()" title="Escolha uma Playlist Automática">
-                                <option value="all" class="bg-gray-800 text-white text-sm">Sua Playlist (Todas)</option>
-                                <option value="favorites" class="bg-gray-800 text-white text-sm">Favoritas ❤️</option>
-                                <optgroup label="Artistas" id="artist-optgroup" class="bg-gray-800 text-white text-sm"></optgroup>
-                            </select>
-                            <svg class="w-3 h-3 text-gray-400 pointer-events-none flex-shrink-0 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <div class="relative w-full" id="custom-context-wrapper">
+                                <button id="context-trigger" class="flex items-center gap-1.5 md:gap-2 bg-transparent text-base md:text-lg font-semibold text-white outline-none hover:text-accent transition cursor-pointer p-0 border-0 w-full text-left truncate" onclick="event.stopPropagation()">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-accent flex-shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                                    <span id="context-trigger-text" class="truncate">Sua Playlist (Todas)</span>
+                                    <svg class="w-3 h-3 text-gray-400 pointer-events-none flex-shrink-0 transition-transform duration-300" id="context-trigger-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                
+                                <!-- Custom Dropdown Menu -->
+                                <div id="context-dropdown" class="absolute left-0 top-full mt-2 w-56 sm:w-64 bg-gray-900 border border-gray-700 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-[100] opacity-0 invisible transition-all duration-200 transform -translate-y-2 max-h-64 overflow-y-auto custom-scrollbar flex flex-col py-2" onclick="event.stopPropagation()">
+                                    <div class="context-option px-4 py-2 hover:bg-gray-800 cursor-pointer text-sm text-gray-200 transition-colors flex items-center gap-2" data-value="all" data-text="Sua Playlist (Todas)">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-accent opacity-0 indicator transition-opacity"></div>
+                                        <span>Sua Playlist (Todas)</span>
+                                    </div>
+                                    <div class="context-option px-4 py-2 hover:bg-gray-800 cursor-pointer text-sm text-gray-200 transition-colors flex items-center gap-2" data-value="favorites" data-text="Favoritas ❤️">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-accent opacity-0 indicator transition-opacity"></div>
+                                        <span>Favoritas ❤️</span>
+                                    </div>
+                                    <div class="px-4 py-1 mt-1 mb-1 text-[10px] uppercase font-bold text-gray-500 tracking-wider border-b border-gray-800 pb-2">Artistas</div>
+                                    <div id="custom-artist-list" class="flex flex-col"></div>
+                                </div>
+                            </div>
                         </div>
                         <select id="sort-select" class="bg-transparent text-[10px] md:text-xs text-gray-400 outline-none hover:text-accent transition cursor-pointer p-0 border-0 appearance-none w-fit" onclick="event.stopPropagation()">
                             <option value="manual" class="bg-gray-800 text-white">Ordem Manual</option>
@@ -617,7 +631,7 @@
             volBar: document.getElementById('volume-bar'), volFill: document.getElementById('vol-fill'), mute: document.getElementById('mute-btn'),
             container: document.getElementById('list-container'), fileUpload: document.getElementById('file-upload'), folderUpload: document.getElementById('folder-upload'),
             sortSel: document.getElementById('sort-select'), localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
-            contextSel: document.getElementById('playlist-context'), artistOptGroup: document.getElementById('artist-optgroup'),
+            contextTrigger: document.getElementById('context-trigger'), contextTriggerText: document.getElementById('context-trigger-text'), contextTriggerIcon: document.getElementById('context-trigger-icon'), contextDropdown: document.getElementById('context-dropdown'), customArtistList: document.getElementById('custom-artist-list'),
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
             preampSlider: document.getElementById('preamp-slider'), preampDisp: document.getElementById('preamp-value-display'),
             rightPanel: document.getElementById('right-panel'), drawerHandle: document.getElementById('drawer-handle'), listHeader: document.getElementById('list-header'),
@@ -1059,26 +1073,72 @@
 
         // --- FUNÇÃO DE AJUDA PARA LÓGICA VISUAL DA PLAYLIST E CONTEXTOS ---
         function updatePlaylistContexts() {
-            if(!DOM.artistOptGroup) return;
+            if(!DOM.customArtistList) return;
             const artists = [...new Set(playlist.map(t => t.artist))].filter(a => a && a !== "Desconhecido" && a.trim() !== "").sort();
-            DOM.artistOptGroup.innerHTML = '';
+            DOM.customArtistList.innerHTML = '';
+            
             artists.forEach(a => {
-                const opt = document.createElement('option');
-                opt.value = 'artist:' + a;
-                opt.className = 'bg-gray-800 text-white text-sm';
-                opt.textContent = a;
-                DOM.artistOptGroup.appendChild(opt);
+                const div = document.createElement('div');
+                div.className = 'context-option px-4 py-2 hover:bg-gray-800 cursor-pointer text-sm text-gray-200 transition-colors flex items-center gap-2';
+                div.dataset.value = 'artist:' + a;
+                div.dataset.text = a;
+                div.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-accent opacity-0 indicator transition-opacity"></div><span class="truncate">${a}</span>`;
+                
+                div.addEventListener('click', (e) => { e.stopPropagation(); selectContext('artist:' + a, a); });
+                DOM.customArtistList.appendChild(div);
             });
             
             // Restaura seleção se for válida
             if (currentContext.startsWith('artist:') && !artists.includes(currentContext.split('artist:')[1])) {
-                currentContext = 'all';
-                DOM.contextSel.value = 'all';
-                localStorage.setItem('webPlayerContext', 'all');
+                selectContext('all', 'Sua Playlist (Todas)');
             } else {
-                DOM.contextSel.value = currentContext;
+                let text = currentContext === 'all' ? 'Sua Playlist (Todas)' : (currentContext === 'favorites' ? 'Favoritas ❤️' : currentContext.split('artist:')[1]);
+                updateContextUI(currentContext, text);
             }
         }
+
+        // --- SISTEMA CUSTOMIZADO DE DROPDOWN (UI) ---
+        function selectContext(value, text) {
+            currentContext = value;
+            localStorage.setItem('webPlayerContext', currentContext);
+            updateContextUI(value, text);
+            renderList();
+            closeContextDropdown();
+        }
+
+        function updateContextUI(value, text) {
+            DOM.contextTriggerText.textContent = text;
+            document.querySelectorAll('.context-option .indicator').forEach(ind => ind.classList.replace('opacity-100', 'opacity-0'));
+            const activeOpt = document.querySelector(`.context-option[data-value="${value}"] .indicator`);
+            if(activeOpt) activeOpt.classList.replace('opacity-0', 'opacity-100');
+        }
+
+        function closeContextDropdown() {
+            DOM.contextDropdown.classList.replace('opacity-100', 'opacity-0');
+            DOM.contextDropdown.classList.replace('visible', 'invisible');
+            DOM.contextDropdown.classList.replace('translate-y-0', '-translate-y-2');
+            DOM.contextTriggerIcon.classList.remove('rotate-180');
+        }
+
+        function toggleContextDropdown(e) {
+            e.stopPropagation();
+            const isOpen = DOM.contextDropdown.classList.contains('visible');
+            if (isOpen) { closeContextDropdown(); } 
+            else {
+                DOM.contextDropdown.classList.replace('opacity-0', 'opacity-100');
+                DOM.contextDropdown.classList.replace('invisible', 'visible');
+                DOM.contextDropdown.classList.replace('-translate-y-2', 'translate-y-0');
+                DOM.contextTriggerIcon.classList.add('rotate-180');
+            }
+        }
+
+        DOM.contextTrigger.addEventListener('click', toggleContextDropdown);
+        document.addEventListener('click', closeContextDropdown); // Fecha ao clicar fora
+
+        // Inicializa cliques nas opções estáticas
+        document.querySelectorAll('.context-option[data-value="all"], .context-option[data-value="favorites"]').forEach(opt => {
+            opt.addEventListener('click', (e) => { e.stopPropagation(); selectContext(opt.dataset.value, opt.dataset.text); });
+        });
 
         function getVisualPlaylist() {
             const term = DOM.search.value.toLowerCase();
@@ -1428,12 +1488,6 @@
             renderList(); 
         });
         
-        DOM.contextSel.addEventListener('change', (e) => {
-            currentContext = e.target.value;
-            localStorage.setItem('webPlayerContext', currentContext);
-            renderList();
-        });
-
         DOM.search.addEventListener('input', renderList);
 
         function updateMiniPlayer() {
