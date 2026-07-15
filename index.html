@@ -1344,19 +1344,41 @@
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
         DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
 
+        // --- SINCRONIZAÇÃO COM A NUVEM (CATALOG.JSON) ---
         function syncCloud() {
-            showToast("A procurar músicas na nuvem...");
-            fetch('./catalog.json').then(res => res.json()).then(data => {
+            showToast("A procurar músicas no servidor...");
+            // O parâmetro nocache força o navegador a ler o ficheiro novo e ignorar o antigo
+            fetch('./catalog.json?nocache=' + new Date().getTime(), { cache: "no-store" })
+            .then(res => {
+                if (!res.ok) throw new Error("Arquivo não encontrado (Erro 404)");
+                return res.json();
+            })
+            .then(data => {
                 let added = 0;
                 data.forEach(t => {
                     if(!playlist.find(x => x.src === t.src)) {
-                        const newTrack = { id: 'cloud_' + Date.now() + Math.random(), title: t.title || "Desconhecido", artist: t.artist || "Desconhecido", src: t.src, cover: t.cover || null, isLocal: false, addedAt: Date.now() };
+                        const newTrack = { 
+                            id: 'cloud_' + Date.now() + Math.random(), 
+                            title: t.title || "Desconhecido", 
+                            artist: t.artist || "Desconhecido", 
+                            src: t.src, 
+                            cover: t.cover || null, 
+                            isLocal: false, 
+                            addedAt: Date.now() 
+                        };
                         playlist.push(newTrack); saveTrackToDB(newTrack); added++;
                     }
                 });
-                if(added > 0) { savePlaylistOrder(); updatePlaylistContexts(); renderList(); showToast(`${added} novas músicas sincronizadas!`); } 
-                else { showToast("A biblioteca da nuvem já está atualizada."); }
-            }).catch(e => { showToast("Erro: catalog.json não encontrado ou formato inválido."); });
+                if(added > 0) { 
+                    savePlaylistOrder(); updatePlaylistContexts(); renderList(); 
+                    showToast(`${added} novas músicas sincronizadas!`); 
+                } else { 
+                    showToast("A biblioteca da nuvem já está atualizada."); 
+                }
+            }).catch(e => { 
+                console.error("Erro no Catálogo:", e);
+                showToast("Erro: catalog.json tem um erro de escrita ou não existe."); 
+            });
         }
         DOM.cloudSyncBtn.addEventListener('click', syncCloud);
 
@@ -1795,13 +1817,15 @@
         });
         document.addEventListener('keyup', e => { if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { handleGameInputUp(keyMappings[e.code]); } });
 
-        // --- STREAMING_CHUNK:App Initialization... ---
+        // --- INICIALIZAÇÃO DO APP ---
         initDB().then(async () => {
             await loadTracksFromDB(); 
             DOM.sortSel.value = currentSortMode;
             
-            // Auto check cloud quietly on boot
-            fetch('./catalog.json').then(res => res.json()).then(data => {
+            // Auto check cloud quietly on boot (com cache busting)
+            fetch('./catalog.json?nocache=' + new Date().getTime(), { cache: "no-store" })
+            .then(res => { if(res.ok) return res.json(); throw new Error(); })
+            .then(data => {
                 let added = 0;
                 data.forEach(t => {
                     if(!playlist.find(x => x.src === t.src)) {
@@ -1810,7 +1834,7 @@
                     }
                 });
                 if(added > 0) { savePlaylistOrder(); updatePlaylistContexts(); renderList(); }
-            }).catch(e => { /* Ignore silently in canvas/local environments */ });
+            }).catch(e => { /* Ignora erros no boot silencioso */ });
 
             updatePlaylistContexts();
             renderList();
