@@ -1023,6 +1023,8 @@
             visualPlaylist = pToRender;
             if(DOM.trackCount) DOM.trackCount.textContent = `(${visualPlaylist.length})`;
             if(DOM.virtualSpacer) DOM.virtualSpacer.style.height = `${visualPlaylist.length * VIRTUAL_ITEM_HEIGHT}px`;
+
+            return visualPlaylist;
         }
 
         function renderVirtualList() {
@@ -1185,7 +1187,7 @@
                     const newTargetIndex = playlist.findIndex(t => t.id === targetId);
                     playlist.splice(newTargetIndex, 0, draggedTrack);
                     
-                    currentTrackIndex = playlist.findIndex(t => t.id === currentId);
+                    currentTrackIndex = Math.max(0, playlist.findIndex(t => t.id === currentId));
                     
                     DOM.search.value = ''; 
                     savePlaylistOrder();
