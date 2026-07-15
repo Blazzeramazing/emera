@@ -183,7 +183,6 @@
                 </button>
             </div>
 
-            <!-- --- SECÇÃO DO JOGO EMERA TILES --- -->
             <div id="game-panel" class="absolute inset-0 bg-gray-950 z-[60] hidden flex flex-col overflow-hidden transition-opacity duration-300 opacity-0">
                 <!-- Game Header -->
                 <div class="w-full p-4 md:p-6 flex justify-between items-center bg-gray-900 border-b border-gray-800 z-10 shadow-lg flex-shrink-0">
@@ -334,6 +333,7 @@
                 <div class="flex justify-between items-end gap-2">
                     <div class="flex flex-col gap-1 w-full relative">
                         <div class="relative w-full" id="custom-context-wrapper">
+                            <!-- Custom Context Button -->
                             <button id="context-trigger" class="flex items-center gap-1.5 md:gap-2 bg-transparent text-base md:text-lg font-semibold text-white outline-none hover:text-accent transition cursor-pointer p-0 border-0 w-full text-left truncate" onclick="event.stopPropagation()">
                                 <svg class="w-4 h-4 md:w-5 md:h-5 text-accent flex-shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
                                 <span id="context-trigger-text" class="truncate">Sua Playlist (Todas)</span>
@@ -341,7 +341,7 @@
                                 <svg class="w-3 h-3 text-gray-400 pointer-events-none flex-shrink-0 transition-transform duration-300" id="context-trigger-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             
-                            <!-- Custom Dropdown Menu -->
+                            <!-- Custom Context Dropdown -->
                             <div id="context-dropdown" class="absolute left-0 top-full mt-2 w-full max-w-[250px] bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 dropdown-closed custom-scrollbar overflow-hidden flex flex-col" onclick="event.stopPropagation()">
                                 <button class="context-option w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-accentHover hover:text-white transition flex items-center gap-2" data-value="all">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg> Sua Playlist (Todas)
@@ -364,6 +364,12 @@
                     </div>
                     
                     <div id="local-actions" class="flex items-center gap-1.5 sm:gap-2">
+                        <!-- Cloud Sync Button -->
+                        <button id="sync-cloud-btn" class="cursor-pointer text-[10px] md:text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white py-1.5 px-2 md:px-3 rounded-lg border border-indigo-600/30 transition flex items-center gap-1 shadow-sm" title="Sincronizar Servidor">
+                            <svg class="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                            <span class="hidden sm:inline">Servidor</span>
+                        </button>
+
                         <input type="file" id="folder-upload" webkitdirectory directory multiple class="sr-only">
                         <label for="folder-upload" class="cursor-pointer text-[10px] md:text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 py-1.5 px-2 md:px-3 rounded-lg border border-gray-700 transition flex items-center gap-1 shadow-sm" title="Importar Pasta Inteira" onclick="event.stopPropagation()">
                             <svg class="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
@@ -525,6 +531,7 @@
                     <p class="text-[9px] text-gray-500 mt-2">Exportar pode demorar dependendo da quantidade de músicas (usa Base64).</p>
                 </div>
                 <hr class="border-gray-800 my-1">
+                <!-- Botão de Clear DB Atualizado -->
                 <button id="clear-db-btn" class="w-full text-sm bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-3 px-4 rounded-lg border border-red-600/30 transition flex justify-center items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     Eliminar Biblioteca
@@ -637,7 +644,7 @@
         };
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
 
-        // --- STREAMING_CHUNK:Navigation & History Core ---
+        // --- GESTÃO MESTRE DE NAVEGAÇÃO E HISTÓRICO ---
         if (location.hash === '') history.pushState(null, '', '#main');
         
         let exitClicks = 0; let exitTimer = null;
@@ -649,6 +656,13 @@
                 setTimeout(()=>{ m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
                 if (m === DOM.eqModal) eqModalVisible = false;
             }
+        }
+
+        function closeContextDropdown() {
+            if(!DOM.contextDropdown) return;
+            DOM.contextDropdown.classList.remove('dropdown-open');
+            DOM.contextDropdown.classList.add('dropdown-closed');
+            DOM.contextTriggerIcon.style.transform = 'rotate(0deg)';
         }
 
         function closeAllOverlays() {
@@ -697,13 +711,14 @@
             if (h !== '#game' && typeof closeGameUI === 'function' && isGameActive) closeGameUI();
         });
 
+        // --- STREAMING_CHUNK:Configuring storage and IndexedDB interactions... ---
         // --- GRAVADORES (SAVERS) OTIMIZADOS ---
         const saveVolToStorage = debounce((v) => localStorage.setItem('webPlayerVol', v), 500);
         const saveEqToStorage = debounce((eq) => localStorage.setItem('webPlayerEq', JSON.stringify(eq)), 500);
         const savePreampToStorage = debounce((v) => localStorage.setItem('webPlayerPreamp', v), 500);
         const savePlaylistOrder = debounce(() => { if(currentSortMode === 'manual') localStorage.setItem('webPlayerOrder', JSON.stringify(playlist.map(t => t.id))); }, 500);
 
-        // --- STREAMING_CHUNK:Theme & Aesthetics Engine ---
+        // --- TEMAS & MODO OLED ---
         const oledToggle = document.getElementById('oled-toggle');
         const oledBg = document.querySelector('.oled-bg');
         let cachedAccentColor = '#10b981';
@@ -798,14 +813,15 @@
             setTimeout(() => { toast.classList.replace('toast-enter-active', 'toast-exit-active'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        // --- STREAMING_CHUNK:Database & File Management ---
+        // --- BANCO DE DADOS (INDEXED DB OTIMIZADO) ---
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
         function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 1); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
         
         function saveTrackToDB(track) { 
             if(db){ 
                 runIdle(() => {
-                    const t={...track}; delete t.src; 
+                    const t={...track}; 
+                    if(t.isLocal) { delete t.src; } 
                     db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); 
                 });
             } 
@@ -817,7 +833,10 @@
                 const req = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll(); 
                 req.onsuccess = () => { 
                     playlist = [];
-                    req.result.forEach(t => { t.src = URL.createObjectURL(t.file); t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); }); 
+                    req.result.forEach(t => { 
+                        if(t.isLocal && t.file) t.src = URL.createObjectURL(t.file); 
+                        t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); 
+                    }); 
                     
                     // Restaura a Ordem Manual guardada
                     try {
@@ -839,7 +858,8 @@
             });
         }
 
-        // --- STREAMING_CHUNK:Web Audio API & EQ ---
+        // --- STREAMING_CHUNK:Setting up Web Audio API and visualizers... ---
+        // --- WEB AUDIO E EQUALIZADOR ---
         function initWebAudio() {
             if(audioCtx) return;
             try {
@@ -927,11 +947,10 @@
                 if(this.canvas.width !== W) { this.canvas.width = W; this.canvas.height = H; }
 
                 // Detecção de Estilo (Mood)
-                let moodDark = (bass > 180 && treble < 120); // Música pesada/densa
-                let moodEnergetic = (treble > 180 && bass > 150); // Música rápida/elétrica
+                let moodDark = (bass > 180 && treble < 120); 
+                let moodEnergetic = (treble > 180 && bass > 150); 
                 this.currentDarkness += ((moodDark ? 1 : 0) - this.currentDarkness) * 0.05;
 
-                // Fundo com "Rastro" (Efeito de Movimento)
                 this.ctx.globalCompositeOperation = 'source-over';
                 this.ctx.fillStyle = `rgba(10, 15, 25, 0.4)`; 
                 this.ctx.fillRect(0, 0, W, H);
@@ -955,7 +974,7 @@
                     let sat = 70; let light = 40;
                     
                     if (this.currentDarkness > 0.1) {
-                        hue = (p.baseHue % 80) + 240; if(i % 3 === 0) hue = 0; // Transição para roxos/vermelhos (Dark)
+                        hue = (p.baseHue % 80) + 240; if(i % 3 === 0) hue = 0; 
                         sat = 80 + (this.currentDarkness * 20); light = 40 - (this.currentDarkness * 20);
                     }
                     
@@ -966,7 +985,6 @@
             }
         };
 
-        // --- STREAMING_CHUNK:Visualizer Render Loop ---
         const visualizerNames = ["Radial", "Barras Clássicas", "Osciloscópio", "Pulso de Graves", "Partículas", "Desligado"];
         DOM.toggleVis.addEventListener('click', (e) => { e.stopPropagation(); visualizerMode = (visualizerMode + 1) % visualizerNames.length; if(visualizerMode===5) canvasCtx.clearRect(0,0,DOM.canvas.width,DOM.canvas.height); showToast(`Efeito: ${visualizerNames[visualizerMode]}`); });
         document.getElementById('cover-container').addEventListener('click', () => DOM.toggleVis.click()); 
@@ -1067,7 +1085,29 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Context & Playlist Logic ---
+        // --- STREAMING_CHUNK:Configuring Media Session API and Context filters... ---
+        function updateMediaSession() {
+            if ('mediaSession' in navigator && playlist.length > 0) {
+                const t = playlist[currentTrackIndex];
+                if (!t) return;
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: t.title,
+                    artist: t.artist || t.genre,
+                    album: 'Emera Player',
+                    artwork: [
+                        { src: t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=512&h=512&fit=crop', sizes: '512x512', type: 'image/jpeg' }
+                    ]
+                });
+            }
+        }
+
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', () => togglePlay());
+            navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+            navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
+            navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
+        }
+
         function updatePlaylistContexts() {
             if(!DOM.customArtistList) return;
             const artists = [...new Set(playlist.map(t => t.artist))].filter(a => a && a !== "Desconhecido" && a.trim() !== "").sort();
@@ -1085,7 +1125,6 @@
             if (currentContext.startsWith('artist:') && !artists.includes(currentContext.split('artist:')[1])) {
                 setContext('all', 'Sua Playlist (Todas)');
             } else {
-                // Atualiza o texto do trigger baseado no context atual
                 let text = 'Sua Playlist (Todas)';
                 if(currentContext === 'favorites') text = 'Favoritas ❤️';
                 else if(currentContext.startsWith('artist:')) text = currentContext.split('artist:')[1];
@@ -1097,7 +1136,6 @@
             const term = DOM.search.value.toLowerCase();
             let pToRender = [...playlist];
             
-            // Filtro de Contexto (Playlists Automáticas)
             if (currentContext === 'favorites') {
                 pToRender = pToRender.filter(t => t.favorite);
             } else if (currentContext.startsWith('artist:')) {
@@ -1125,12 +1163,6 @@
                 closeContextDropdown();
             }
         }
-        function closeContextDropdown() {
-            if(!DOM.contextDropdown) return;
-            DOM.contextDropdown.classList.remove('dropdown-open');
-            DOM.contextDropdown.classList.add('dropdown-closed');
-            DOM.contextTriggerIcon.style.transform = 'rotate(0deg)';
-        }
 
         DOM.contextTrigger.addEventListener('click', toggleContextDropdown);
         document.addEventListener('click', closeContextDropdown);
@@ -1140,7 +1172,7 @@
             DOM.contextTriggerText.textContent = text;
             localStorage.setItem('webPlayerContext', currentContext);
             closeContextDropdown();
-            renderList();
+            renderList(true);
         }
 
         DOM.contextDropdown.addEventListener('click', (e) => {
@@ -1150,30 +1182,8 @@
             setContext(btn.dataset.value, btn.textContent.trim());
         });
 
-        // --- STREAMING_CHUNK:Media Session Integration ---
-        function updateMediaSession() {
-            if ('mediaSession' in navigator && playlist.length > 0) {
-                const t = playlist[currentTrackIndex];
-                if (!t) return;
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: t.title,
-                    artist: t.artist || t.genre,
-                    album: 'Emera Player',
-                    artwork: [
-                        { src: t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=512&h=512&fit=crop', sizes: '512x512', type: 'image/jpeg' }
-                    ]
-                });
-            }
-        }
-
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.setActionHandler('play', () => togglePlay());
-            navigator.mediaSession.setActionHandler('pause', () => togglePlay());
-            navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
-            navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
-        }
-
-        // --- STREAMING_CHUNK:Player Core Engine ---
+        // --- STREAMING_CHUNK:Defining player logic, play, next, prev, and modes... ---
+        // --- LÓGICA DO PLAYER ---
         function updateMainFavoriteIcon() {
             if(playlist.length===0){ DOM.mainFav.classList.add('hidden'); return; }
             DOM.mainFav.classList.remove('hidden'); const isFav = playlist[currentTrackIndex]?.favorite || false;
@@ -1190,7 +1200,7 @@
             DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
             DOM.lyricsBtn.classList.remove('hidden'); DOM.shareBtn.classList.remove('hidden');
             
-            updateMainFavoriteIcon(); updateMiniPlayer(); renderList();
+            updateMainFavoriteIcon(); updateMiniPlayer(); renderList(false);
             updateMediaSession();
             
             if(isGameActive) resetGameForNewTrack();
@@ -1276,18 +1286,17 @@
         DOM.next.addEventListener('click', () => { nextTrack(); DOM.next.blur(); });
         DOM.prev.addEventListener('click', () => { prevTrack(); DOM.prev.blur(); });
 
-        // EVENTOS GLOBAIS DE AUDIO
         audio.addEventListener('play', () => {
             DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); 
             DOM.miniPlay.classList.add('hidden'); DOM.miniPause.classList.remove('hidden'); 
-            DOM.cover.classList.remove('spin-paused'); isPlaying = true; renderList(); 
+            DOM.cover.classList.remove('spin-paused'); isPlaying = true; renderList(false); 
             if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
         });
 
         audio.addEventListener('pause', () => {
             DOM.playIcon.classList.remove('hidden'); DOM.pauseIcon.classList.add('hidden'); 
             DOM.miniPlay.classList.remove('hidden'); DOM.miniPause.classList.add('hidden'); 
-            DOM.cover.classList.add('spin-paused'); isPlaying = false; renderList(); 
+            DOM.cover.classList.add('spin-paused'); isPlaying = false; renderList(false); 
             if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
         });
 
@@ -1354,7 +1363,8 @@
             } 
         });
 
-        // --- STREAMING_CHUNK:UI Interactions & Render List ---
+        // --- STREAMING_CHUNK:Implementing UI interactions, toggle elements, and rendering lists... ---
+        // --- UI E MENUS ---
         const tModal = (m, s, hash) => { 
             if(s) { 
                 m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(()=>m.classList.remove('opacity-0'),10);
@@ -1419,15 +1429,18 @@
         }
         DOM.listHeader.addEventListener('click', toggleDrawer); DOM.drawerHandle.addEventListener('click', toggleDrawer);
 
-        function renderList() {
+        let currentRenderLimit = 50;
+
+        function renderList(resetLimit = true) {
+            if(resetLimit) currentRenderLimit = 50;
             const pToRender = getVisualPlaylist(); 
-            
-            // Atualiza o contador de músicas de forma subtil
+
             if(DOM.trackCount) DOM.trackCount.textContent = `(${pToRender.length})`;
 
             const fragment = document.createDocumentFragment();
+            const tracksToRender = pToRender.slice(0, currentRenderLimit);
 
-            pToRender.forEach((track) => {
+            tracksToRender.forEach((track) => {
                 const originalIndex = playlist.findIndex(t => t.id === track.id);
                 const isActive = originalIndex === currentTrackIndex;
                 const item = document.createElement('div');
@@ -1477,7 +1490,7 @@
                         }
                         DOM.search.value = ''; 
                         savePlaylistOrder();
-                        renderList(); 
+                        renderList(true); 
                     }
                 });
 
@@ -1487,12 +1500,20 @@
             DOM.container.innerHTML = '';
             DOM.container.appendChild(fragment);
 
+            if (pToRender.length > currentRenderLimit) {
+                const loadBtn = document.createElement('button');
+                loadBtn.className = 'w-full py-3 mt-2 mb-4 bg-gray-800/40 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border border-gray-700/50 shadow-sm';
+                loadBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> Carregar mais ${pToRender.length - currentRenderLimit} músicas...`;
+                loadBtn.onclick = () => { currentRenderLimit += 50; renderList(false); };
+                DOM.container.appendChild(loadBtn);
+            }
+
             document.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', e => {
                 e.stopPropagation(); const idx=parseInt(btn.dataset.index); const t=playlist[idx];
-                if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(idx,1); showToast("Eliminado");
+                if(t.id) deleteTrackFromDB(t.id); playlist.splice(idx,1); showToast("Eliminado");
                 savePlaylistOrder();
                 updatePlaylistContexts();
-                renderList();
+                renderList(false);
             }));
 
             document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', e => {
@@ -1508,10 +1529,10 @@
             currentSortMode = e.target.value; 
             localStorage.setItem('webPlayerSortMode', currentSortMode);
             if(currentSortMode === 'manual') savePlaylistOrder();
-            renderList(); 
+            renderList(true); 
         });
         
-        DOM.search.addEventListener('input', renderList);
+        DOM.search.addEventListener('input', () => renderList(true));
 
         function updateMiniPlayer() {
             const t = playlist[currentTrackIndex]; if(!t) return;
@@ -1536,7 +1557,7 @@
 
         document.getElementById('speed-select').addEventListener('change', e => { audio.playbackRate = parseFloat(e.target.value); showToast(`Velocidade: ${e.target.value}x`); });
 
-        // --- STREAMING_CHUNK:Double Click Clear DB & File IO ---
+        // --- STREAMING_CHUNK:Implementing Database handling, Backup, Sync and Optimized File Uploads... ---
         let clearDbClicks = 0; let clearDbTimer = null;
         document.getElementById('clear-db-btn').addEventListener('click', (e) => {
             clearDbClicks++;
@@ -1564,7 +1585,6 @@
                 DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar';
                 showToast("Biblioteca eliminada com sucesso.");
                 
-                // Reset Button visual
                 clearDbClicks = 0;
                 btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Eliminar Biblioteca`;
                 btn.classList.remove('bg-red-600', 'text-white', 'animate-pulse');
@@ -1590,9 +1610,60 @@
                     data.forEach(t => { if(!playlist.find(x=>x.id===t.id)){ playlist.push(t); saveTrackToDB(t); added++; } });
                     savePlaylistOrder();
                     updatePlaylistContexts();
-                    renderList(); showToast(`${added} músicas importadas do backup.`);
+                    renderList(true); showToast(`${added} músicas importadas do backup.`);
                 } catch(err) { showToast("Erro: Backup inválido."); }
             }; r.readAsText(f);
+        });
+
+        document.getElementById('sync-cloud-btn').addEventListener('click', async () => {
+            try {
+                const btn = document.getElementById('sync-cloud-btn');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `<svg class="animate-spin w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="hidden sm:inline">A procurar...</span>`;
+                btn.style.pointerEvents = 'none';
+
+                const res = await fetch('./catalog.json?t=' + Date.now()); 
+                if(!res.ok) throw new Error();
+                const data = await res.json();
+                
+                let added = 0;
+                data.forEach((track, index) => {
+                    const trackId = 'cloud_' + encodeURIComponent(track.src);
+                    if(!playlist.find(t => t.id === trackId)) {
+                        let nT = { 
+                            id: trackId, 
+                            title: track.title || "Desconhecido", 
+                            artist: track.artist || "Servidor", 
+                            file: null, 
+                            src: track.src, 
+                            cover: track.cover || null, 
+                            lyrics: track.lyrics || "", 
+                            isLocal: false,
+                            addedAt: Date.now() + index 
+                        };
+                        playlist.push(nT);
+                        saveTrackToDB(nT);
+                        added++;
+                    }
+                });
+
+                if(added > 0) {
+                    savePlaylistOrder();
+                    updatePlaylistContexts();
+                    renderList(true);
+                    showToast(`${added} músicas da nuvem sincronizadas!`);
+                    if(!isPlaying) loadTrack(0);
+                } else {
+                    showToast("A biblioteca da nuvem já está atualizada.");
+                }
+
+                btn.innerHTML = originalHtml; btn.style.pointerEvents = 'auto';
+            } catch(e) {
+                console.warn(e);
+                showToast("Erro: Crie um catalog.json no seu repositório.");
+                document.getElementById('sync-cloud-btn').innerHTML = `<svg class="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg><span class="hidden sm:inline">Servidor</span>`;
+                document.getElementById('sync-cloud-btn').style.pointerEvents = 'auto';
+            }
         });
 
         DOM.mainFav.addEventListener('click', () => {
@@ -1629,16 +1700,14 @@
             renderList(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
         });
 
-        // --- STREAMING_CHUNK:Optimized Chunking Upload ---
+        // UPLOAD SIMPLIFICADO E EXTRAÇÃO DE LETRAS (CHUNKED PARA PERFORMANCE)
         function handleFiles(files) {
             if(files.length === 0) return;
             
             showToast(`A analisar ${files.length} ficheiro(s)...`);
             
-            // Cria um Set O(1) com os nomes+tamanhos dos ficheiros já existentes para barrar duplicados instantly
             const existingIds = new Set(playlist.map(t => t.file ? t.file.name + '_' + t.file.size : t.title));
             
-            // Filtra os arquivos válidos (Áudio) e que não existem no Set (Anti-Duplicação)
             const validFiles = files.filter(f => {
                 const isAudio = f.type.startsWith('audio/') || f.name.endsWith('.mp3') || f.name.endsWith('.wav') || f.name.endsWith('.ogg');
                 const fileId = f.name + '_' + f.size;
@@ -1653,7 +1722,6 @@
             let loadedCount = 0;
             const CHUNK_SIZE = 50; 
             
-            // Processamento em Background para não congelar o browser (Thread Yielding)
             function processChunk(startIndex) {
                 const endIndex = Math.min(startIndex + CHUNK_SIZE, validFiles.length);
                 const chunk = validFiles.slice(startIndex, endIndex);
@@ -1664,21 +1732,20 @@
                     
                     let nT = { 
                         id: trackId, 
-                        title: cleanTitle, 
-                        artist: "Desconhecido", 
-                        file: file, 
-                        src: URL.createObjectURL(file), 
-                        cover: null, 
-                        lyrics: "", 
+                        title: cleanTitle,
+                        artist: "Desconhecido",
+                        file: file,
+                        src: URL.createObjectURL(file),
+                        cover: null,
+                        lyrics: "",
                         isLocal: true,
-                        addedAt: Date.now() + loadedCount // Força ordem de adição correta
+                        addedAt: Date.now()
                     };
                     
                     playlist.unshift(nT);
                     saveTrackToDB(nT);
                     loadedCount++;
 
-                    // LAZY LOADING METADATA: O jsmediatags corre no background e atualiza o objeto depois
                     if (window.jsmediatags) {
                         setTimeout(() => {
                             window.jsmediatags.read(file, { 
@@ -1697,7 +1764,6 @@
                                     } 
                                     if(needsUpdate) {
                                         saveTrackToDB(nT);
-                                        // Update the current playing UI if this is the track
                                         if(playlist[currentTrackIndex] && playlist[currentTrackIndex].id === nT.id) {
                                             DOM.title.textContent = nT.title; DOM.artist.textContent = nT.artist; 
                                             if(nT.cover) DOM.cover.src = nT.cover;
@@ -1706,7 +1772,7 @@
                                 }, 
                                 onError: () => {} 
                             });
-                        }, loadedCount * 20); // Espalha as tarefas pesadas no tempo
+                        }, loadedCount * 20); 
                     }
                 });
 
@@ -1716,7 +1782,7 @@
                 } else {
                     savePlaylistOrder();
                     updatePlaylistContexts();
-                    renderList();
+                    renderList(true);
                     showToast(`${validFiles.length} músicas importadas com sucesso!`);
                     if(!isPlaying) loadTrack(0);
                 }
@@ -1734,7 +1800,7 @@
         document.getElementById('mini-prev-btn').addEventListener('click', () => DOM.prev.click());
         document.getElementById('mini-next-btn').addEventListener('click', () => DOM.next.click());
 
-        // --- STREAMING_CHUNK:Emera Tiles Game Logic ---
+        // --- STREAMING_CHUNK:Configuring the Emera Tiles Minigame Logic... ---
         // --- LÓGICA DO JOGO (EMERA TILES) ---
         const gamePanel = document.getElementById('game-panel');
         const gameOverlay = document.getElementById('game-overlay');
@@ -2319,14 +2385,20 @@
         });
         document.addEventListener('keyup', e => { if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { handleGameInputUp(keyMappings[e.code]); } });
 
-        // --- STREAMING_CHUNK:App Initialization ---
         // Init App
         initDB().then(async () => {
             await loadTracksFromDB(); 
             DOM.sortSel.value = currentSortMode;
             updatePlaylistContexts();
-            renderList();
+            renderList(true);
             if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; }
+            
+            // Tenta sincronizar nuvem automaticamente e silenciosamente no boot se o ficheiro existir
+            try { 
+                fetch('./catalog.json', {method: 'HEAD'})
+                    .then(r => { if(r.ok) document.getElementById('sync-cloud-btn').click(); })
+                    .catch(e => { /* Ignora erros de URL em ambientes blob/iframe como o Canvas */ });
+            } catch(e) {}
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ 
