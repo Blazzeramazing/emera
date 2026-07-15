@@ -1,0 +1,13 @@
+[
+  {
+    "title": "Minha Musica 1",
+    "artist": "Cantor Famoso",
+    "src": "musicas/musica1.mp3",
+    "cover": "https://url-da-capa-se-quiser.jpg"
+  },
+  {
+    "title": "Minha Musica 2",
+    "artist": "Outro Cantor",
+    "src": "musicas/musica2.mp3"
+  }
+]
