@@ -8,21 +8,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Emera Player</title>
     
-    <!-- Otimização de Conexão -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
-    
-    <!-- Favicon dinâmico -->
     <link id="dynamic-favicon" rel="icon" type="image/svg+xml" href="">
     
-    <!-- JS Media Tags -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
-    <!-- Polyfill Drag and Drop -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
-    
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script>
         tailwind.config = {
             theme: { extend: { colors: { accent: 'var(--accent)', accentHover: 'var(--accent-hover)', accentLight: 'var(--accent-light)' } } }
@@ -33,9 +27,7 @@
         :root { --accent: #10b981; --accent-hover: #059669; --accent-light: rgba(16, 185, 129, 0.2); }
         * { transition: background-color 0.4s, color 0.3s, border-color 0.3s, fill 0.3s; }
 
-        /* Prevenir seleção de texto (efeito app nativo) */
         body { -webkit-touch-callout: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; touch-action: pan-y; }
-        /* Permitir seleção/digitação apenas onde é necessário */
         input, textarea, #lyrics-text { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
 
         .standard-slider { -webkit-appearance: none; width: 100%; background: transparent; }
@@ -57,7 +49,13 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 20px; }
         
         input[type=range][orient=vertical] { writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 8px; height: 100%; padding: 0 5px; cursor: pointer; }
+        
+        /* Estilos D&D e Swipe */
         .drag-over { border: 2px dashed var(--accent) !important; background-color: var(--accent-light) !important; }
+        .swipe-item { transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform; position: relative; z-index: 2; background: inherit; }
+        .swipe-action-bg { position: absolute; inset: 0; z-index: 1; border-radius: 0.75rem; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; color: white; font-weight: bold; font-size: 0.75rem; opacity: 0; transition: opacity 0.2s; }
+        .swipe-right-bg { background: var(--accent); justify-content: flex-start; }
+        .swipe-left-bg { background: #ef4444; justify-content: flex-end; }
 
         .toast-enter { transform: translateY(100%); opacity: 0; }
         .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -65,17 +63,14 @@
         
         #player-bg { transition: background 1s ease-in-out; }
         
-        /* Dropdown customizado (Animações) */
         #context-dropdown { transform-origin: top; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .dropdown-open { opacity: 1 !important; transform: scaleY(1) !important; pointer-events: auto !important; }
         .dropdown-closed { opacity: 0; transform: scaleY(0.95); pointer-events: none; }
         
-        /* MODO OLED */
         body.theme-oled, body.theme-oled .bg-gray-900, body.theme-oled .bg-gray-950 { background-color: #000000 !important; }
         body.theme-oled #player-bg { background: linear-gradient(to bottom, #000000 0%, #000000 100%) !important; }
         body.theme-oled .border-gray-800 { border-color: #1a1a1a !important; }
 
-        /* MODO COMPACTO (Mini-Player) */
         .compact-mode #player-bg { display: none !important; }
         .compact-mode #right-panel { width: 100% !important; border-radius: 2rem !important; }
         .compact-mode #mini-player-bar { display: flex !important; }
@@ -90,24 +85,16 @@
             #right-panel { position: relative; height: auto; transform: none !important; }
         }
 
-        /* Efeitos para o Jogo */
         .game-hit-flash { animation: hitFlash 0.3s ease-out forwards; }
         @keyframes hitFlash { 0% { background-color: var(--accent-light); } 100% { background-color: transparent; } }
         .game-miss-flash { animation: missFlash 0.3s ease-out forwards; }
         @keyframes missFlash { 0% { background-color: rgba(239, 68, 68, 0.3); } 100% { background-color: transparent; } }
-
-        /* Estilos Swipe */
-        .swipe-item { transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform; position: relative; z-index: 2; background: inherit; }
-        .swipe-action-bg { position: absolute; inset: 0; z-index: 1; border-radius: 0.75rem; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; color: white; font-weight: bold; font-size: 0.75rem; opacity: 0; transition: opacity 0.2s; }
-        .swipe-right-bg { background: var(--accent); justify-content: flex-start; }
-        .swipe-left-bg { background: #ef4444; justify-content: flex-end; }
     </style>
 </head>
 <body class="bg-gray-950 min-h-[100dvh] md:min-h-screen text-gray-100 font-sans selection:bg-accent selection:text-white flex items-center justify-center md:p-4 lg:p-8 overflow-hidden md:overflow-auto relative transition-colors duration-500">
 
     <div id="main-app-container" class="w-full max-w-5xl bg-gray-900 md:rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden border-0 md:border border-gray-800 h-[100dvh] md:h-[85vh] md:min-h-[600px] md:max-h-[800px] relative transition-all duration-500">
         
-        <!-- Lado Esquerdo: Player Principal -->
         <div class="w-full md:w-3/5 p-4 sm:p-6 md:p-8 flex flex-col relative h-[100dvh] md:h-full overflow-hidden flex-shrink-0 md:flex-shrink pb-40 md:pb-8" id="player-bg" style="background: linear-gradient(to bottom, #1f2937 0%, #111827 100%);">
             
             <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
@@ -285,12 +272,10 @@
 
         </div>
 
-        <!-- Lado Direito: Listas (GAVETA NO MOBILE) -->
         <div id="right-panel" class="w-full md:w-2/5 bg-gray-900 md:border-t-0 md:border-l border-gray-800 flex flex-col flex-1 min-h-[35%] md:min-h-0 overflow-hidden shadow-[0_-10px_20px_rgba(0,0,0,0.5)] md:shadow-none rounded-t-[2rem] md:rounded-none relative z-20">
             
             <div class="drawer-puller cursor-pointer" id="drawer-handle"></div>
 
-            <!-- Mini Player (Apenas Modo Compacto) -->
             <div id="mini-player-bar" class="hidden p-4 border-b border-gray-800 items-center gap-4 bg-gray-900 shadow-md">
                 <button id="restore-mode-btn" class="text-gray-400 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
                 <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-10 h-10 rounded shadow object-cover">
@@ -308,7 +293,6 @@
                 </div>
             </div>
 
-            <!-- Controle de Volume -->
             <div class="p-4 md:p-6 border-b border-gray-800 flex items-center gap-3 md:gap-4 flex-shrink-0" id="volume-section">
                 <button id="mute-btn" class="text-gray-400 hover:text-white transition"><svg id="vol-icon" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
                 <div class="progress-bar-container flex-1">
@@ -318,7 +302,6 @@
                 <span id="vol-value-display" class="text-[10px] md:text-xs text-gray-400 font-medium w-8 text-right flex-shrink-0">100%</span>
             </div>
 
-            <!-- Cabeçalho Dinâmico da Lista -->
             <div class="p-4 md:p-6 pb-2 md:pb-2 flex flex-col gap-3 flex-shrink-0 border-b border-gray-800/50 cursor-pointer md:cursor-default" id="list-header">
                 <div class="flex justify-between items-end gap-2">
                     <div class="flex flex-col gap-1 w-full relative">
@@ -330,7 +313,6 @@
                                 <svg class="w-3 h-3 text-gray-400 pointer-events-none flex-shrink-0 transition-transform duration-300" id="context-trigger-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             
-                            <!-- Custom Dropdown Menu -->
                             <div id="context-dropdown" class="absolute left-0 top-full mt-2 w-full max-w-[250px] bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 dropdown-closed custom-scrollbar overflow-hidden flex flex-col" onclick="event.stopPropagation()">
                                 <button class="context-option w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-accentHover hover:text-white transition flex items-center gap-2" data-value="all">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg> Sua Playlist (Todas)
@@ -379,7 +361,6 @@
                 </div>
             </div>
 
-            <!-- Virtual List Container -->
             <div class="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 pb-12 relative touch-pan-y" id="list-container">
                 <div id="virtual-spacer" style="height: 0px; width: 100%;"></div>
                 <div id="virtual-content" class="absolute top-0 left-0 w-full p-2 sm:p-4 pb-12"></div>
@@ -387,7 +368,7 @@
         </div>
     </div>
 
-    <!-- Modais Definições & Outros -->
+    <!-- Modal EQ -->
     <div id="eq-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-gray-900 p-5 sm:p-8 rounded-[1.5rem] border border-gray-800 w-full sm:w-[90%] max-w-md shadow-2xl relative overflow-hidden">
             <div class="flex justify-between items-center mb-4 sm:mb-6 relative z-20">
@@ -517,16 +498,25 @@
                     </select>
                 </div>
                 <hr class="border-gray-800 my-1">
-                
+                <div>
+                    <label class="text-xs text-gray-400 font-semibold uppercase mb-2 block">Backup de Biblioteca</label>
+                    <div class="flex gap-2">
+                        <button id="export-backup-btn" class="flex-1 text-xs bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg border border-gray-700 transition">Exportar (.emera)</button>
+                        <input type="file" id="import-backup-input" accept=".emera,.json" class="hidden">
+                        <button onclick="document.getElementById('import-backup-input').click()" class="flex-1 text-xs bg-accent hover:bg-accentHover text-white py-2 rounded-lg border border-accent transition">Importar</button>
+                    </div>
+                    <p class="text-[9px] text-gray-500 mt-2">Exportar faixas (Pode não incluir imagens de álbuns processadas em formato Blob).</p>
+                </div>
+                <hr class="border-gray-800 my-1">
                 <button id="clear-db-btn" class="w-full text-sm bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-3 px-4 rounded-lg border border-red-600/30 transition flex justify-center items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    Eliminar Biblioteca Inteira
+                    Eliminar Biblioteca
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Editar Tags e Letras -->
+    <!-- Modais de Edição e Letras -->
     <div id="edit-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-gray-900 p-6 sm:p-8 rounded-[1.5rem] border border-gray-800 w-full sm:w-[90%] max-w-md shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
             <h3 class="text-lg font-bold text-white mb-4">Editar Informação</h3>
@@ -572,7 +562,7 @@
         </div>
     </div>
 
-    <!-- Modal Criar Playlist -->
+    <!-- Modais de Playlist Personalizada -->
     <div id="create-pl-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-gray-900 p-6 rounded-[1.5rem] border border-gray-800 w-full max-w-xs shadow-2xl">
             <h3 class="text-lg font-bold text-white mb-4">Nova Playlist</h3>
@@ -584,7 +574,6 @@
         </div>
     </div>
 
-    <!-- Modal Selecionar Playlist (Swipe Right) -->
     <div id="select-pl-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-gray-900 p-6 rounded-[1.5rem] border border-gray-800 w-full max-w-xs shadow-2xl flex flex-col max-h-[80vh]">
             <div class="flex justify-between items-center mb-4">
@@ -600,22 +589,21 @@
     <audio id="audio-player"></audio>
 
     <script>
-        // --- UTILITÁRIOS & INIT ---
+        // --- STREAMING_CHUNK:Utilities & Setup... ---
         function debounce(func, wait) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; }
         MobileDragDrop.polyfill({ holdToDrag: 300 }); 
         window.addEventListener('touchmove', function() {}, {passive: false});
 
-        // --- ESTADO GLOBAL ---
+        // ESTADO GLOBAL
         const audio = document.getElementById('audio-player');
         let isPlaying = false, currentTrackIndex = 0, playlist = [], customPlaylists = {};
         let currentSortMode = localStorage.getItem('webPlayerSortMode') || 'manual';
         let currentContext = localStorage.getItem('webPlayerContext') || 'all';
-        let trackToEditIndex = null, editCoverBase64 = null, dragSourceIndex = null;
+        let trackToEditIndex = null, editCoverBase64 = null;
         let playMode = parseInt(localStorage.getItem('webPlayerMode')) || 0; 
         let isRepeat = playMode === 1; let isShuffle = playMode === 2;
         const savedEq = JSON.parse(localStorage.getItem('webPlayerEq')) || [0,0,0,0,0];
         let savedPreamp = parseFloat(localStorage.getItem('webPlayerPreamp')); if (isNaN(savedPreamp)) savedPreamp = 1.0;
-        
         let secondChances = parseInt(localStorage.getItem('emeraSecondChances')) || 0;
         
         let audioCtx, sourceNode, preampNode, fadeGainNode, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
@@ -644,7 +632,7 @@
         };
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
 
-        // --- WEB WORKER EMBUTIDO PARA LER JSMEDIATAGS SEM TRAVAR UI ---
+        // --- STREAMING_CHUNK:Web Worker for Meta Tags... ---
         const workerCode = `
             importScripts('https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js');
             self.onmessage = function(e) {
@@ -667,6 +655,7 @@
         const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
         const metadataWorker = new Worker(URL.createObjectURL(workerBlob));
         let workerQueue = []; let isWorkerBusy = false;
+        const debouncedListUpdate = debounce(triggerListUpdate, 500);
 
         metadataWorker.onmessage = async (e) => {
             const data = e.data;
@@ -679,7 +668,6 @@
                     if(data.lyrics) { track.lyrics = data.lyrics; needsUpdate = true; }
                     
                     if(data.coverBase64) {
-                        // Converter Base64 gerado pelo worker num Blob Binário
                         const r = await fetch(data.coverBase64); const blob = await r.blob();
                         const hash = await hashBlob(blob);
                         await saveCoverToDB(hash, blob);
@@ -690,8 +678,9 @@
                         saveTrackToDB(track);
                         if(playlist[currentTrackIndex] && playlist[currentTrackIndex].id === track.id) {
                             DOM.title.textContent = track.title; DOM.artist.textContent = track.artist; if(track.cover) DOM.cover.src = track.cover;
+                            updateMiniPlayer(); updateMediaSession();
                         }
-                        triggerListUpdate();
+                        debouncedListUpdate();
                     }
                 }
             }
@@ -705,9 +694,7 @@
         }
 
         // --- STREAMING_CHUNK:IndexedDB v2 with Cover Deduplication... ---
-        const DB_NAME = "MusicPlayerDB"; const DB_VERSION = 2;
-        let db;
-
+        const DB_NAME = "MusicPlayerDB"; const DB_VERSION = 2; let db;
         async function hashBlob(blob) {
             const buffer = await blob.arrayBuffer();
             const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
@@ -735,6 +722,7 @@
             if(!db) return; const t={...track}; delete t.src; delete t.file; delete t.cover;
             db.transaction("local_tracks", "readwrite").objectStore("local_tracks").put(t); 
         }
+        function deleteTrackFromDB(id) { if(db) db.transaction("local_tracks", "readwrite").objectStore("local_tracks").delete(id); }
         
         function saveCoverToDB(hash, blob) {
             return new Promise((resolve) => {
@@ -742,15 +730,14 @@
                 const tx = db.transaction("local_covers", "readwrite");
                 const store = tx.objectStore("local_covers");
                 const req = store.get(hash);
-                req.onsuccess = (e) => { if(!e.target.result) { store.put({ hash: hash, blob: blob }); } resolve(); };
+                req.onsuccess = (e) => { if(!e.target.result) store.put({ hash: hash, blob: blob }); resolve(); };
             });
         }
-        
         function getCoverFromDB(hash) {
             return new Promise((resolve) => {
                 if(!db || !hash) return resolve(null);
                 const req = db.transaction("local_covers", "readonly").objectStore("local_covers").get(hash);
-                req.onsuccess = (e) => { resolve(e.target.result ? URL.createObjectURL(e.target.result.blob) : null); };
+                req.onsuccess = (e) => resolve(e.target.result ? URL.createObjectURL(e.target.result.blob) : null);
                 req.onerror = () => resolve(null);
             });
         }
@@ -760,8 +747,7 @@
             return new Promise(r => { 
                 const req = db.transaction("local_tracks", "readonly").objectStore("local_tracks").getAll(); 
                 req.onsuccess = async () => { 
-                    playlist = [];
-                    const items = req.result;
+                    playlist = []; const items = req.result;
                     for (let t of items) {
                         t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); t.playlists = t.playlists || [];
                         if(t.coverHash) t.cover = await getCoverFromDB(t.coverHash);
@@ -803,8 +789,8 @@
         const savePreampToStorage = debounce((v) => localStorage.setItem('webPlayerPreamp', v), 500);
         const savePlaylistOrder = debounce(() => { if(currentSortMode === 'manual') localStorage.setItem('webPlayerOrder', JSON.stringify(playlist.map(t => t.id))); }, 500);
 
-        // --- STREAMING_CHUNK:Theme & Aesthetics Engine... ---
-        const oledToggle = document.getElementById('oled-toggle'); const oledBg = document.querySelector('.oled-bg'); let cachedAccentColor = '#10b981';
+        // --- STREAMING_CHUNK:Theme & Battery Saver... ---
+        const oledToggle = document.getElementById('oled-toggle'); const oledBg = document.querySelector('.oled-bg');
         function applyTheme(hex, hover, light) {
             document.documentElement.style.setProperty('--accent', hex); document.documentElement.style.setProperty('--accent-hover', hover); document.documentElement.style.setProperty('--accent-light', light);
             localStorage.setItem('webPlayerTheme', `${hex},${hover},${light}`);
@@ -896,7 +882,7 @@
         document.getElementById('cover-container').addEventListener('click', () => DOM.toggleVis.click()); 
 
         function drawVisualizer() {
-            if(!isPageVisible) return; // Smart Battery Saver
+            if(!isPageVisible) return;
             requestAnimationFrame(drawVisualizer);
             if (isGameActive) return; 
             if (!isPlaying && !settingAtmosphere) { if(settingPulse && DOM.coverContainer) { DOM.coverContainer.style.transform = 'scale(1)'; DOM.coverContainer.style.boxShadow = '0 0 60px var(--accent-light)'; } return; }
@@ -931,7 +917,7 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Context & Playlists Setup... ---
+        // --- STREAMING_CHUNK:Playlists & Filters Setup... ---
         function savePlaylists() { localStorage.setItem('webPlayerPlaylists', JSON.stringify(customPlaylists)); updatePlaylistContexts(); }
         
         function updatePlaylistContexts() {
@@ -1009,10 +995,7 @@
             if(playlist.length===0) return;
             if(index < 0) index = playlist.length-1; if(index >= playlist.length) index = 0;
             currentTrackIndex = index; const t = playlist[currentTrackIndex];
-            
-            let finalSrc = t.src;
-            if (t.file) finalSrc = URL.createObjectURL(t.file);
-
+            let finalSrc = t.src; if (t.file) finalSrc = URL.createObjectURL(t.file);
             if(t.isLocal) audio.removeAttribute('crossorigin'); else audio.setAttribute('crossorigin', 'anonymous'); 
             audio.src = finalSrc; 
 
@@ -1031,10 +1014,7 @@
                 else fadeGainNode.gain.value = 1;
             }
 
-            if (isPlaying) { 
-                const p = audio.play(); 
-                if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); }).catch((err)=>console.warn(err)); 
-            }
+            if (isPlaying) { const p = audio.play(); if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); }).catch((err)=>console.warn(err)); }
         }
 
         function togglePlay() {
@@ -1085,7 +1065,6 @@
             if(isNaN(audio.duration) || isDraggingProgress || isGameActive) return; 
             const currentTime = audio.currentTime;
             
-            // CROSSFADE OUT
             if (settingCrossfade && !isFadingOut && audio.duration - currentTime <= 3 && fadeGainNode && audioCtx) {
                 isFadingOut = true;
                 fadeGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
@@ -1108,31 +1087,23 @@
         DOM.mute.addEventListener('click', () => { const m = !audio.muted; audio.muted = m; if(m){ DOM.volBar.value=0; DOM.volFill.style.width='0%'; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = '0%'; } else { const restoredVol = parseFloat(localStorage.getItem('webPlayerVol'))||0.5; DOM.volBar.value=restoredVol; DOM.volFill.style.width=restoredVol*100+'%'; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(restoredVol*100)+'%'; } });
 
         // --- STREAMING_CHUNK:Virtual Scrolling & Swipe Gestures... ---
-        const ITEM_HEIGHT = 60; // px
-        let visualListCache = [];
+        const ITEM_HEIGHT = 60; let visualListCache = [];
         
         function renderVirtualList() {
-            const scrollTop = DOM.listContainer.scrollTop;
-            const containerHeight = DOM.listContainer.clientHeight;
-            const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - 3);
-            const endIndex = Math.min(visualListCache.length - 1, startIndex + Math.ceil(containerHeight / ITEM_HEIGHT) + 6);
-
+            const scrollTop = DOM.listContainer.scrollTop; const containerHeight = DOM.listContainer.clientHeight;
+            const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - 3); const endIndex = Math.min(visualListCache.length - 1, startIndex + Math.ceil(containerHeight / ITEM_HEIGHT) + 6);
             DOM.virtualSpacer.style.height = `${visualListCache.length * ITEM_HEIGHT}px`;
             
             let html = '';
             for (let i = startIndex; i <= endIndex; i++) {
-                const track = visualListCache[i];
-                const originalIndex = playlist.findIndex(t => t.id === track.id);
-                const isActive = originalIndex === currentTrackIndex;
+                const track = visualListCache[i]; const originalIndex = playlist.findIndex(t => t.id === track.id); const isActive = originalIndex === currentTrackIndex;
                 const playingBars = isActive && isPlaying ? `<div class="flex items-end gap-0.5 h-3 w-3 sm:h-4 sm:w-4 ml-1 mr-1 flex-shrink-0"><div class="w-[3px] sm:w-1 bg-accent animate-[bounce_1s_infinite_0ms] h-full"></div><div class="w-[3px] sm:w-1 bg-accent animate-[bounce_1s_infinite_200ms] h-2/3"></div><div class="w-[3px] sm:w-1 bg-accent animate-[bounce_1s_infinite_400ms] h-4/5"></div></div>` : ``;
                 
-                // Track HTML com estrutura para Swipes
                 html += `
                 <div class="relative w-full h-[60px]" style="position: absolute; top: ${i * ITEM_HEIGHT}px; left: 0;">
                     <div class="swipe-action-bg swipe-left-bg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Eliminar</div>
                     <div class="swipe-action-bg swipe-right-bg">Adicionar Playlist <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></div>
-                    
-                    <div class="playlist-item swipe-item flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl cursor-pointer transition mb-2 border ${isActive ? 'bg-accentLight border-accent/30' : 'border-transparent bg-gray-900'}" data-visual="${i}" data-original="${originalIndex}" data-id="${track.id}">
+                    <div class="playlist-item swipe-item flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl cursor-pointer transition mb-2 border ${isActive ? 'bg-accentLight border-accent/30' : 'border-transparent bg-gray-900'}" data-visual="${i}" data-original="${originalIndex}" data-id="${track.id}" draggable="true">
                         <img src="${track.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'}" crossorigin="anonymous" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover shadow-md pointer-events-none flex-shrink-0 bg-gray-800">
                         <div class="flex-1 overflow-hidden pointer-events-none"><h4 class="text-xs sm:text-sm font-semibold truncate ${isActive?'text-accent':'text-gray-200'}">${track.title}</h4><p class="text-[10px] sm:text-xs text-gray-500 truncate">${track.artist}</p></div>
                         ${playingBars}
@@ -1146,41 +1117,94 @@
             DOM.virtualContent.innerHTML = html;
         }
 
-        function triggerListUpdate() {
-            visualListCache = getVisualPlaylist();
-            if(DOM.trackCount) DOM.trackCount.textContent = `(${visualListCache.length})`;
-            renderVirtualList();
-        }
-
+        function triggerListUpdate() { visualListCache = getVisualPlaylist(); if(DOM.trackCount) DOM.trackCount.textContent = `(${visualListCache.length})`; renderVirtualList(); }
         DOM.listContainer.addEventListener('scroll', renderVirtualList);
         DOM.sortSel.addEventListener('change', (e) => { currentSortMode = e.target.value; localStorage.setItem('webPlayerSortMode', currentSortMode); if(currentSortMode === 'manual') savePlaylistOrder(); triggerListUpdate(); });
         DOM.search.addEventListener('input', triggerListUpdate);
 
-        // Event Delegation for Clicks & Swipes
-        let swipeState = { active: false, startX: 0, startY: 0, currentX: 0, item: null, initialTransform: 0, triggerZone: 80 };
+        // NATIVE DRAG AND DROP REORDERING via Event Delegation
+        let dragSourceIndex = null;
+        DOM.virtualContent.addEventListener('dragstart', (e) => {
+            const item = e.target.closest('.playlist-item');
+            if(!item) return;
+            dragSourceIndex = parseInt(item.dataset.original);
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', dragSourceIndex);
+            setTimeout(() => item.classList.add('opacity-50'), 0);
+            swipeState.active = false; // Cancela qualquer swipe que possa ter iniciado
+        });
+        
+        DOM.virtualContent.addEventListener('dragend', (e) => {
+            const item = e.target.closest('.playlist-item');
+            if(item) item.classList.remove('opacity-50');
+            document.querySelectorAll('.playlist-item').forEach(el => el.classList.remove('drag-over'));
+        });
+        
+        DOM.virtualContent.addEventListener('dragover', (e) => {
+            e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+        });
+        
+        DOM.virtualContent.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            const item = e.target.closest('.playlist-item');
+            if(item && parseInt(item.dataset.original) !== dragSourceIndex) item.classList.add('drag-over');
+        });
+        
+        DOM.virtualContent.addEventListener('dragleave', (e) => {
+            const item = e.target.closest('.playlist-item');
+            if(item) item.classList.remove('drag-over');
+        });
+        
+        DOM.virtualContent.addEventListener('drop', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const item = e.target.closest('.playlist-item');
+            if(!item) return;
+            item.classList.remove('drag-over');
+            const targetOriginalIndex = parseInt(item.dataset.original);
+            
+            if (dragSourceIndex !== null && dragSourceIndex !== targetOriginalIndex) {
+                currentSortMode = 'manual'; DOM.sortSel.value = 'manual'; localStorage.setItem('webPlayerSortMode', 'manual');
+                const draggedTrack = playlist.splice(dragSourceIndex, 1)[0];
+                let insertIndex = targetOriginalIndex;
+                if (dragSourceIndex < targetOriginalIndex) insertIndex--;
+                
+                playlist.splice(insertIndex, 0, draggedTrack);
+                
+                if (currentTrackIndex === dragSourceIndex) { 
+                    currentTrackIndex = insertIndex; 
+                } else {
+                    if (dragSourceIndex < currentTrackIndex && insertIndex >= currentTrackIndex) currentTrackIndex--;
+                    else if (dragSourceIndex > currentTrackIndex && insertIndex <= currentTrackIndex) currentTrackIndex++;
+                }
+                DOM.search.value = ''; savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); 
+            }
+        });
+
+        // SWIPE GESTURES
+        let swipeState = { active: false, isSwiping: false, startX: 0, startY: 0, currentX: 0, item: null, triggerZone: 80 };
         
         DOM.virtualContent.addEventListener('pointerdown', e => {
+            if(e.target.closest('button, input, select, label')) return;
             const item = e.target.closest('.swipe-item');
-            if(!item || e.target.closest('button')) return;
-            swipeState.active = true; swipeState.startX = e.clientX; swipeState.startY = e.clientY; swipeState.currentX = 0; swipeState.item = item;
-            item.style.transition = 'none'; item.setPointerCapture(e.pointerId);
+            if(!item) return;
+            swipeState.active = true; swipeState.isSwiping = false; swipeState.startX = e.clientX; swipeState.startY = e.clientY; swipeState.currentX = 0; swipeState.item = item; item.style.transition = 'none';
         });
 
         DOM.virtualContent.addEventListener('pointermove', e => {
             if(!swipeState.active || !swipeState.item) return;
             const diffX = e.clientX - swipeState.startX; const diffY = e.clientY - swipeState.startY;
-            if(Math.abs(diffY) > Math.abs(diffX) && Math.abs(swipeState.currentX) < 10) return; // Permite Scroll Vertical
             
-            swipeState.currentX = diffX;
-            // Resistência elástica
-            let visualX = diffX;
+            if(!swipeState.isSwiping) {
+                if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 5) { swipeState.active = false; return; }
+                if (Math.abs(diffX) > 10) { swipeState.isSwiping = true; try { swipeState.item.setPointerCapture(e.pointerId); } catch(err){} } else { return; }
+            }
+            
+            swipeState.currentX = diffX; let visualX = diffX;
             if(visualX > swipeState.triggerZone + 20) visualX = swipeState.triggerZone + 20 + (visualX - (swipeState.triggerZone + 20)) * 0.2;
             if(visualX < -swipeState.triggerZone - 20) visualX = -swipeState.triggerZone - 20 + (visualX - (-swipeState.triggerZone - 20)) * 0.2;
-            
             swipeState.item.style.transform = `translateX(${visualX}px)`;
             
-            const parent = swipeState.item.parentElement;
-            const leftBg = parent.querySelector('.swipe-left-bg'); const rightBg = parent.querySelector('.swipe-right-bg');
+            const parent = swipeState.item.parentElement; const leftBg = parent.querySelector('.swipe-left-bg'); const rightBg = parent.querySelector('.swipe-right-bg');
             if(visualX > 0) { rightBg.style.opacity = Math.min(1, visualX / swipeState.triggerZone); leftBg.style.opacity = 0; }
             else { leftBg.style.opacity = Math.min(1, Math.abs(visualX) / swipeState.triggerZone); rightBg.style.opacity = 0; }
         });
@@ -1188,40 +1212,25 @@
         DOM.virtualContent.addEventListener('pointerup', e => {
             if(!swipeState.active || !swipeState.item) return;
             swipeState.active = false; const item = swipeState.item; item.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
-            item.releasePointerCapture(e.pointerId);
-            
+            try{ item.releasePointerCapture(e.pointerId); }catch(err){}
             const trackId = item.dataset.id; const originalIndex = parseInt(item.dataset.original);
             
             if(swipeState.currentX > swipeState.triggerZone) {
-                // Adicionar a Playlist
-                item.style.transform = `translateX(0px)`;
-                openSelectPlaylistModal(trackId);
+                item.style.transform = `translateX(0px)`; openSelectPlaylistModal(trackId);
             } else if (swipeState.currentX < -swipeState.triggerZone) {
-                // Eliminar
                 item.style.transform = `translateX(-100%)`;
-                setTimeout(() => {
-                    const t = playlist[originalIndex]; if(t.isLocal && t.id) deleteTrackFromDB(t.id);
-                    playlist.splice(originalIndex, 1); savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); showToast("Faixa Eliminada");
-                }, 300);
+                setTimeout(() => { const t = playlist[originalIndex]; if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(originalIndex, 1); savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); showToast("Faixa Eliminada"); }, 300);
             } else {
-                // Clique simples ou Cancelar Swipe
-                item.style.transform = `translateX(0px)`;
-                if(Math.abs(swipeState.currentX) < 5) {
-                    loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play();
-                }
+                item.style.transform = `translateX(0px)`; if(Math.abs(swipeState.currentX) < 5) { loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play(); }
             }
-            
-            const parent = item.parentElement;
-            if(parent) { parent.querySelector('.swipe-left-bg').style.opacity = 0; parent.querySelector('.swipe-right-bg').style.opacity = 0; }
+            const parent = item.parentElement; if(parent) { parent.querySelector('.swipe-left-bg').style.opacity = 0; parent.querySelector('.swipe-right-bg').style.opacity = 0; }
             swipeState.item = null;
         });
-        
         DOM.virtualContent.addEventListener('pointercancel', e => { if(swipeState.item) { swipeState.item.style.transition = 'transform 0.3s'; swipeState.item.style.transform = 'translateX(0px)'; } swipeState.active = false; swipeState.item = null; });
 
         DOM.virtualContent.addEventListener('click', e => {
             const btn = e.target.closest('button'); if(!btn) return; e.stopPropagation();
             const originalIndex = parseInt(btn.dataset.original); const t = playlist[originalIndex];
-            
             if(btn.classList.contains('del-btn')) {
                 if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(originalIndex, 1);
                 savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); showToast("Eliminado");
@@ -1233,8 +1242,28 @@
             }
         });
 
-        // --- STREAMING_CHUNK:UI Interactions & Settings... ---
-        const tModal = (m, s, hash) => { if(s) { m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(()=>m.classList.remove('opacity-0'),10); if (hash && location.hash !== '#' + hash) history.pushState(null, '', '#' + hash); } else { m.classList.add('opacity-0'); setTimeout(()=>{ m.classList.add('hidden'); m.classList.remove('flex'); },300); if (hash && location.hash === '#' + hash) history.back(); } if(m === DOM.eqModal) eqModalVisible = s; };
+        // --- STREAMING_CHUNK:Settings, Backup & Misc... ---
+        document.getElementById('export-backup-btn').addEventListener('click', () => {
+            if(playlist.length===0) return showToast("A playlist está vazia."); showToast("A preparar backup...");
+            setTimeout(() => {
+                const b = playlist.map(t => { const ct = {...t}; delete ct.file; delete ct.src; return ct; });
+                const blob = new Blob([JSON.stringify(b)], {type: "application/json"}); const u = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = u; a.download = `emera_backup_${new Date().toISOString().split('T')[0]}.emera`;
+                a.click(); URL.revokeObjectURL(u); showToast("Backup transferido!");
+            }, 100);
+        });
+
+        document.getElementById('import-backup-input').addEventListener('change', e => {
+            const f = e.target.files[0]; if(!f) return; const r = new FileReader(); showToast("A importar...");
+            r.onload = ev => {
+                try {
+                    const data = JSON.parse(ev.target.result); let added = 0;
+                    data.forEach(t => { if(!playlist.find(x=>x.id===t.id)){ playlist.push(t); saveTrackToDB(t); added++; } });
+                    savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); showToast(`${added} músicas importadas do backup.`);
+                } catch(err) { showToast("Erro: Backup inválido."); }
+            }; r.readAsText(f);
+        });
+
         document.getElementById('eq-btn').addEventListener('click', () => tModal(DOM.eqModal, true, 'eq')); document.getElementById('close-eq-btn').addEventListener('click', () => tModal(DOM.eqModal, false, 'eq'));
         document.getElementById('settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), true, 'settings')); document.getElementById('close-settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), false, 'settings'));
 
@@ -1292,23 +1321,55 @@
             updatePlaylistContexts(); triggerListUpdate(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
         });
 
-        // --- STREAMING_CHUNK:File Import via Web Worker... ---
+        // --- STREAMING_CHUNK:Chunked File Import... ---
         function handleFiles(files) {
             if(files.length === 0) return;
             const existingIds = new Set(playlist.map(t => t.file ? t.file.name + '_' + t.file.size : t.title));
             const validFiles = files.filter(f => { const isAudio = f.type.startsWith('audio/') || f.name.endsWith('.mp3') || f.name.endsWith('.wav') || f.name.endsWith('.ogg'); return isAudio && !existingIds.has(f.name + '_' + f.size); });
             if(validFiles.length === 0) { showToast("Nenhuma música nova (Duplicados ignorados)."); return; }
 
-            validFiles.forEach((file, idx) => {
-                const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000)+idx;
-                let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", file: file, src: null, cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + idx };
-                playlist.unshift(nT); saveTrackToDB(nT);
-                workerQueue.push({ file: file, id: trackId });
-            });
+            showToast(`A preparar importação de ${validFiles.length} ficheiros...`);
 
-            savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); showToast(`${validFiles.length} músicas importadas! (A ler tags...)`);
-            if(!isPlaying && playlist.length === validFiles.length) loadTrack(0);
-            if(!isWorkerBusy) processWorkerQueue();
+            let startIndex = 0;
+            const CHUNK_SIZE = 50; 
+
+            function processImportChunk() {
+                const endIndex = Math.min(startIndex + CHUNK_SIZE, validFiles.length);
+                const chunk = validFiles.slice(startIndex, endIndex);
+
+                if (chunk.length === 0) {
+                    savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); showToast(`${validFiles.length} músicas importadas! (A ler tags em fundo...)`);
+                    if(!isPlaying && playlist.length === validFiles.length) loadTrack(0);
+                    if(!isWorkerBusy) processWorkerQueue();
+                    return;
+                }
+
+                const tx = db ? db.transaction("local_tracks", "readwrite") : null;
+                const store = tx ? tx.objectStore("local_tracks") : null;
+                const newTracks = [];
+
+                chunk.forEach((file, idx) => {
+                    const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000)+(startIndex+idx);
+                    let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", file: file, src: null, cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + startIndex + idx };
+                    newTracks.push(nT);
+                    
+                    if(store) {
+                        const tToSave = {...nT}; delete tToSave.src; delete tToSave.file; delete tToSave.cover;
+                        store.put(tToSave);
+                    }
+                    workerQueue.push({ file: file, id: trackId });
+                });
+
+                if (playlist.length > 0 && currentTrackIndex >= 0) {
+                    currentTrackIndex += newTracks.length;
+                }
+                
+                playlist = [...newTracks, ...playlist];
+                startIndex += CHUNK_SIZE;
+                requestAnimationFrame(processImportChunk);
+            }
+
+            processImportChunk();
         }
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files))); DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
 
