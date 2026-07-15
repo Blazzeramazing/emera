@@ -1182,6 +1182,18 @@
             
             if(isGameActive) resetGameForNewTrack();
 
+            // Atualizar Metadados para Ecrã de Bloqueio e Bluetooth
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: t.title,
+                    artist: t.artist || 'Desconhecido',
+                    album: 'Emera Player',
+                    artwork: [
+                        { src: t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop', sizes: '512x512', type: 'image/jpeg' }
+                    ]
+                });
+            }
+
             if (isPlaying) { 
                 const p = audio.play(); 
                 if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); }).catch((err)=>{ 
@@ -1269,12 +1281,14 @@
             DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); 
             DOM.miniPlay.classList.add('hidden'); DOM.miniPause.classList.remove('hidden'); 
             DOM.cover.classList.remove('spin-paused'); isPlaying = true; renderList(); 
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
         });
 
         audio.addEventListener('pause', () => {
             DOM.playIcon.classList.remove('hidden'); DOM.pauseIcon.classList.add('hidden'); 
             DOM.miniPlay.classList.remove('hidden'); DOM.miniPause.classList.add('hidden'); 
             DOM.cover.classList.add('spin-paused'); isPlaying = false; renderList(); 
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
         });
 
         audio.addEventListener('ended', () => { 
@@ -1285,6 +1299,18 @@
             const fT = s => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; 
             DOM.totTime.textContent = fT(audio.duration);
         });
+
+        // Configuração dos Controlos Bluetooth / Hardware
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', () => {
+                if (playlist.length === 0) return;
+                initWebAudio(); if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+                audio.play();
+            });
+            navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+            navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
+            navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
+        }
 
         let isDraggingProgress = false;
         DOM.progBar.addEventListener('mousedown', () => isDraggingProgress = true);
@@ -1589,68 +1615,130 @@
             updatePlaylistContexts(); renderList(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
         });
 
-        // UPLOAD SIMPLIFICADO E EXTRAÇÃO DE LETRAS (Bug 3 Corrigido + Anti Duplicação)
+        // --- SISTEMA DE IMPORTAÇÃO EM MASSA OTIMIZADO (BACKGROUND PROCESSING) ---
         function handleFiles(files) {
-            if(files.length === 0) return; 
-            let loadedCount = 0; let added = 0; let skipped = 0; 
-            showToast(`A ler ficheiros...`);
+            if(files.length === 0) return;
+            
+            // 1. Verificação Anti-Duplicação O(1) de Alta Velocidade
+            const existingSet = new Set(playlist.map(t => t.file ? `${t.file.name}_${t.file.size}` : ''));
+            const validFiles = files.filter(f => 
+                (f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|ogg|m4a)$/i)) && 
+                !existingSet.has(`${f.name}_${f.size}`)
+            );
 
-            const checkFinish = () => {
-                if(loadedCount === files.length) {
-                    if (added > 0) {
-                        savePlaylistOrder(); updatePlaylistContexts(); renderList();
-                        if(!isPlaying && added === playlist.length) loadTrack(0);
-                        showToast(`${added} adicionadas. ${skipped > 0 ? skipped + ' repetidas ignoradas.' : ''}`);
-                    } else if (skipped > 0) {
-                        showToast(`Nenhuma nova adicionada. ${skipped} ficheiros repetidos ignorados.`);
-                    }
-                }
-            };
+            if (validFiles.length === 0) {
+                showToast("Nenhuma música nova para adicionar (já existem ou inválidas).");
+                return;
+            }
 
-            files.forEach(file => {
-                if (file.type.startsWith('audio/') || file.name.endsWith('.mp3')) {
-                    
-                    // Mecânica Anti-Duplicação: Verifica NOME e TAMANHO
-                    const isDuplicate = playlist.some(t => t.file && t.file.name === file.name && t.file.size === file.size);
-                    if (isDuplicate) {
-                        skipped++; loadedCount++; checkFinish(); return;
-                    }
+            const total = validFiles.length;
+            showToast(`A preparar importação de ${total} ficheiros...`);
 
+            let added = 0;
+            const chunkSize = 50; // Processa em lotes para não travar a interface
+            
+            function processChunk(startIndex) {
+                const endIndex = Math.min(startIndex + chunkSize, total);
+                let newTracks = [];
+                
+                for (let i = startIndex; i < endIndex; i++) {
+                    const file = validFiles[i];
                     const cleanTitle = file.name.replace(/\.[^/.]+$/, ""); 
-                    const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*1000);
-                    let nT = { id: trackId, title: cleanTitle, artist: "Desconhecido", file: file, src: null, cover: null, lyrics: "", isLocal: true, addedAt: Date.now() };
+                    const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*1000000) + i;
                     
-                    const finishTrack = () => { 
-                        nT.src = URL.createObjectURL(file); 
-                        playlist.unshift(nT); saveTrackToDB(nT); 
-                        loadedCount++; added++; checkFinish();
-                    };
-
-                    if (window.jsmediatags) {
-                        window.jsmediatags.read(file, { 
-                            onSuccess: tag => { 
-                                if(tag.tags.title) nT.title = tag.tags.title; 
-                                if(tag.tags.artist) nT.artist = tag.tags.artist; 
-                                
-                                // Extração Nativa de Letras
-                                if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics;
-                                else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics;
-                                
-                                if(tag.tags.picture) { 
-                                    let b64 = ""; for (let i=0; i<tag.tags.picture.data.length; i++) b64 += String.fromCharCode(tag.tags.picture.data[i]); 
-                                    nT.cover = `data:${tag.tags.picture.format};base64,${window.btoa(b64)}`; 
-                                } 
-                                finishTrack(); 
-                            }, 
-                            onError: () => finishTrack() 
-                        });
-                    } else finishTrack();
-                } else { 
-                    loadedCount++; checkFinish();
+                    let nT = { id: trackId, title: cleanTitle, artist: "A processar...", file: file, src: null, cover: null, lyrics: "", isLocal: true, addedAt: Date.now() };
+                    nT.src = URL.createObjectURL(file);
+                    
+                    playlist.unshift(nT);
+                    newTracks.push(nT);
+                    added++;
                 }
-            });
+                
+                // Salva no DB num único bloco de transação (Extremamente mais rápido)
+                if (db) {
+                    const tx = db.transaction(STORE_NAME, "readwrite");
+                    const store = tx.objectStore(STORE_NAME);
+                    newTracks.forEach(t => { const ct = {...t}; delete ct.src; store.put(ct); });
+                }
+
+                if (endIndex < total) {
+                    if (endIndex % 100 === 0 || endIndex === total) showToast(`Adicionadas ${endIndex} de ${total}...`);
+                    requestAnimationFrame(() => setTimeout(() => processChunk(endIndex), 5)); // Cede espaço à main thread
+                } else {
+                    savePlaylistOrder(); 
+                    updatePlaylistContexts(); 
+                    renderList();
+                    if(!isPlaying && added === playlist.length) loadTrack(0);
+                    showToast(`${added} músicas prontas! A ler detalhes em segundo plano...`);
+                    
+                    // 2. Extração de Metadados em Segundo Plano (Lazy Load)
+                    extractMetadataInBackground(validFiles.slice(), playlist.slice(0, added));
+                }
+            }
+            
+            // Inicia o processamento no próximo frame
+            requestAnimationFrame(() => processChunk(0));
         }
-        
+
+        // Função Background para não travar o leitor enquanto extrai tags (jsmediatags)
+        function extractMetadataInBackground(files, tracksRefs) {
+            if (!window.jsmediatags) return;
+            
+            let i = 0;
+            function processNext() {
+                if (i >= files.length) {
+                    updatePlaylistContexts(); 
+                    renderList(); // Atualização final
+                    showToast("Leitura de detalhes (Capas e Letras) concluída!");
+                    return;
+                }
+                
+                const file = files[i];
+                const track = tracksRefs[i];
+                
+                window.jsmediatags.read(file, { 
+                    onSuccess: tag => { 
+                        let updated = false;
+                        if(tag.tags.title && tag.tags.title !== track.title) { track.title = tag.tags.title; updated = true; }
+                        if(tag.tags.artist && tag.tags.artist !== track.artist) { track.artist = tag.tags.artist; updated = true; }
+                        
+                        if(tag.tags.lyrics && tag.tags.lyrics.lyrics) { track.lyrics = tag.tags.lyrics.lyrics; updated = true; }
+                        else if(tag.tags.USLT && tag.tags.USLT.lyrics) { track.lyrics = tag.tags.USLT.lyrics; updated = true; }
+                        
+                        if(tag.tags.picture && !track.cover) { 
+                            let b64 = ""; 
+                            for (let j=0; j<tag.tags.picture.data.length; j++) b64 += String.fromCharCode(tag.tags.picture.data[j]); 
+                            track.cover = `data:${tag.tags.picture.format};base64,${window.btoa(b64)}`; 
+                            updated = true;
+                        } 
+                        
+                        if(updated) {
+                            saveTrackToDB(track);
+                            // Atualiza os visuais imediatamente caso esta música esteja a tocar agora
+                            if (track.id === playlist[currentTrackIndex]?.id) {
+                                DOM.title.textContent = track.title; 
+                                DOM.artist.textContent = track.artist; 
+                                DOM.cover.src = track.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; 
+                                updateMiniPlayer();
+                                if ('mediaSession' in navigator) {
+                                    navigator.mediaSession.metadata = new MediaMetadata({
+                                        title: track.title, artist: track.artist,
+                                        artwork: [{ src: track.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop', sizes: '512x512', type: 'image/jpeg' }]
+                                    });
+                                }
+                            }
+                        }
+                        
+                        i++;
+                        if (updated && i % 25 === 0) renderList(); // Atualiza a UI visual a cada 25 tags lidas
+                        setTimeout(processNext, 15); // Pausa de 15ms para o browser respirar
+                    }, 
+                    onError: () => { i++; setTimeout(processNext, 5); } 
+                });
+            }
+            processNext();
+        }
+
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
         DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
 
