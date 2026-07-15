@@ -2395,7 +2395,9 @@
             
             // Tenta sincronizar nuvem automaticamente e silenciosamente no boot se o ficheiro existir
             try { 
-                fetch('./catalog.json', {method: 'HEAD'}).then(r => { if(r.ok) document.getElementById('sync-cloud-btn').click(); });
+                fetch('./catalog.json', {method: 'HEAD'})
+                    .then(r => { if(r.ok) document.getElementById('sync-cloud-btn').click(); })
+                    .catch(e => { /* Ignora erros de URL em ambientes blob/iframe como o Canvas */ });
             } catch(e) {}
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
