@@ -242,7 +242,7 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg><span>CONTINUAR (<span id="next-mult-text">2X</span>)</span>
                             </button>
                             <button id="victory-next-btn" class="w-full bg-accent text-white py-3 rounded-xl font-bold hover:scale-105 transition shadow-lg flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7-7"></path></svg> PRÓXIMA MÚSICA
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg> PRÓXIMA MÚSICA
                             </button>
                             <button id="victory-exit-btn" class="w-full bg-gray-800 text-gray-300 hover:text-white py-3 rounded-xl font-bold hover:bg-gray-700 transition flex items-center justify-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg> SAIR DO JOGO
@@ -342,7 +342,6 @@
                 </div>
             </div>
 
-            <!-- Virtual Scroller Container -->
             <div class="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 pb-12 relative" id="list-container">
                 <div id="virtual-spacer" style="height: 0px; position: relative; width: 100%;">
                     <div id="virtual-content" style="position: absolute; top: 0; left: 0; width: 100%;"></div>
@@ -527,7 +526,6 @@
         function debounce(func, wait) {
             let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); };
         }
-        const runIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
 
         MobileDragDrop.polyfill({ holdToDrag: 300 }); 
         window.addEventListener('touchmove', function() {}, {passive: false});
@@ -707,25 +705,54 @@
         }
 
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
-        function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 1); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
+        
+        function initDB() { 
+            return new Promise(r => { 
+                const req = indexedDB.open(DB_NAME, 1); 
+                req.onerror=()=>r(null); 
+                req.onsuccess=e=>{db=e.target.result; r(db);}; 
+                req.onupgradeneeded=e=>{
+                    if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});
+                }; 
+            }); 
+        }
         
         function saveTrackToDB(track) { 
-            if(db){ runIdle(() => { const t={...track}; delete t.src; db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); }); } 
+            if(db){ 
+                try {
+                    const t={...track}; delete t.src; 
+                    db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); 
+                } catch(err) {
+                    console.warn("Erro a gravar faixa:", err);
+                }
+            } 
         }
+        
         function deleteTrackFromDB(id) { if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).delete(id); }
+        
         function loadTracksFromDB() {
             if(!db) return Promise.resolve();
             return new Promise(r => { 
                 const req = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll(); 
                 req.onsuccess = () => { 
                     playlist = [];
-                    req.result.forEach(t => { t.src = URL.createObjectURL(t.file); t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); }); 
+                    req.result.forEach(t => { 
+                        try {
+                            if(t.file) t.src = URL.createObjectURL(t.file); 
+                            t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); 
+                            playlist.push(t); 
+                        } catch(err) {
+                            console.warn("Erro ao ler faixa:", err);
+                        }
+                    }); 
+                    
                     try {
                         const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder'));
                         if (savedOrder && Array.isArray(savedOrder)) {
                             playlist.sort((a, b) => { let indexA = savedOrder.indexOf(a.id); let indexB = savedOrder.indexOf(b.id); if (indexA === -1) indexA = 999999; if (indexB === -1) indexB = 999999; return indexA - indexB; });
                         }
                     } catch(e) {}
+                    
                     r(); 
                 }; 
                 req.onerror = () => r(); 
@@ -794,7 +821,7 @@
 
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
-            if (!isPageVisible) return; // Smart Canvas Battery Saver
+            if (!isPageVisible) return; 
             if (isGameActive) return; 
             if (!isPlaying && !settingAtmosphere) {
                 if(settingPulse && DOM.coverContainer) { DOM.coverContainer.style.transform = 'scale(1)'; DOM.coverContainer.style.boxShadow = '0 0 60px var(--accent-light)'; }
