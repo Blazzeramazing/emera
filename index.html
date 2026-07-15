@@ -66,6 +66,11 @@
         
         #player-bg { transition: background 1s ease-in-out; }
         
+        /* Dropdown customizado (Animações) */
+        #context-dropdown { transform-origin: top; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .dropdown-open { opacity: 1 !important; transform: scaleY(1) !important; pointer-events: auto !important; }
+        .dropdown-closed { opacity: 0; transform: scaleY(0.95); pointer-events: none; }
+        
         /* MODO OLED */
         body.theme-oled, body.theme-oled .bg-gray-900, body.theme-oled .bg-gray-950 { background-color: #000000 !important; }
         body.theme-oled #player-bg { background: linear-gradient(to bottom, #000000 0%, #000000 100%) !important; }
@@ -159,7 +164,6 @@
             <!-- Controles de Mídia -->
             <div class="flex items-center justify-center gap-5 sm:gap-8 md:gap-10 flex-shrink-0 pb-2 md:pb-0 z-10 w-full px-4">
                 
-                <!-- Botão de Modo (Repetir/Aleatório) -->
                 <button id="mode-btn" class="text-gray-300 hover:text-accent transition flex justify-center items-center w-8 sm:w-10" title="Modo de Reprodução">
                     <svg id="icon-repeat" class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <svg id="icon-shuffle" class="w-5 h-5 md:w-6 md:h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
@@ -174,7 +178,6 @@
                 
                 <button id="next-btn" class="text-white hover:text-accentHover transition transform hover:scale-110"><svg class="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M5 4l10 8-10 8V4zm14 1h-2v14h2V5z"></path></svg></button>
                 
-                <!-- Botão Equalizador -->
                 <button id="eq-btn" class="text-gray-300 hover:text-accent transition flex justify-center items-center w-8 sm:w-10" title="Equalizador">
                     <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                 </button>
@@ -196,7 +199,6 @@
                     </div>
                     
                     <div class="flex gap-4 items-center justify-end min-w-[120px]">
-                        <!-- Contador de Bónus de Vida -->
                         <div class="flex flex-col items-center justify-center text-yellow-500 transform transition-transform hover:scale-110" title="Bónus (Vidas Extras)">
                             <svg class="w-5 h-5 md:w-6 md:h-6 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                             <span id="game-bonus-count" class="text-xs md:text-sm font-black leading-none mt-1">0</span>
@@ -242,7 +244,6 @@
                         <div class="text-5xl md:text-6xl font-black text-white mb-8" id="final-score-display">0</div>
                         
                         <div class="flex flex-col gap-3 w-full max-w-xs">
-                            <!-- Botão de Segunda Chance (Revive) -->
                             <button id="revive-game-btn" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black py-3 rounded-xl font-bold transition shadow-[0_0_15px_rgba(234,179,8,0.4)] flex items-center justify-center gap-2 hidden hover:scale-105">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                                 USAR 2ª CHANCE (-1 Vida)
@@ -325,36 +326,37 @@
                     <div class="progress-fill" id="vol-fill" style="width: 100%;"></div>
                     <input type="range" id="volume-bar" min="0" max="1" step="0.01" value="1" class="standard-slider z-10 relative">
                 </div>
+                <span id="vol-value-display" class="text-[10px] md:text-xs text-gray-400 font-medium w-8 text-right flex-shrink-0">100%</span>
             </div>
 
             <!-- Cabeçalho Dinâmico da Lista -->
             <div class="p-4 md:p-6 pb-2 md:pb-2 flex flex-col gap-3 flex-shrink-0 border-b border-gray-800/50 cursor-pointer md:cursor-default" id="list-header">
                 <div class="flex justify-between items-end gap-2">
-                    <div class="flex flex-col gap-1 max-w-[60%]">
-                        <div class="flex items-center gap-1.5 md:gap-2">
-                            <div class="relative w-full" id="custom-context-wrapper">
-                                <button id="context-trigger" class="flex items-center gap-1.5 md:gap-2 bg-transparent text-base md:text-lg font-semibold text-white outline-none hover:text-accent transition cursor-pointer p-0 border-0 w-full text-left truncate" onclick="event.stopPropagation()">
-                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-accent flex-shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
-                                    <span id="context-trigger-text" class="truncate">Sua Playlist (Todas)</span>
-                                    <svg class="w-3 h-3 text-gray-400 pointer-events-none flex-shrink-0 transition-transform duration-300" id="context-trigger-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <div class="flex flex-col gap-1 w-full relative">
+                        <div class="relative w-full" id="custom-context-wrapper">
+                            <button id="context-trigger" class="flex items-center gap-1.5 md:gap-2 bg-transparent text-base md:text-lg font-semibold text-white outline-none hover:text-accent transition cursor-pointer p-0 border-0 w-full text-left truncate" onclick="event.stopPropagation()">
+                                <svg class="w-4 h-4 md:w-5 md:h-5 text-accent flex-shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                                <span id="context-trigger-text" class="truncate">Sua Playlist (Todas)</span>
+                                <span id="track-count" class="text-[10px] md:text-xs text-gray-500 font-normal ml-1 flex-shrink-0 pb-0.5">0</span>
+                                <svg class="w-3 h-3 text-gray-400 pointer-events-none flex-shrink-0 transition-transform duration-300" id="context-trigger-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            
+                            <!-- Custom Dropdown Menu -->
+                            <div id="context-dropdown" class="absolute left-0 top-full mt-2 w-full max-w-[250px] bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 dropdown-closed custom-scrollbar overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+                                <button class="context-option w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-accentHover hover:text-white transition flex items-center gap-2" data-value="all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg> Sua Playlist (Todas)
                                 </button>
-                                
-                                <!-- Custom Dropdown Menu -->
-                                <div id="context-dropdown" class="absolute left-0 top-full mt-2 w-56 sm:w-64 bg-gray-900 border border-gray-700 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-[100] opacity-0 invisible transition-all duration-200 transform -translate-y-2 max-h-64 overflow-y-auto custom-scrollbar flex flex-col py-2" onclick="event.stopPropagation()">
-                                    <div class="context-option px-4 py-2 hover:bg-gray-800 cursor-pointer text-sm text-gray-200 transition-colors flex items-center gap-2" data-value="all" data-text="Sua Playlist (Todas)">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-accent opacity-0 indicator transition-opacity"></div>
-                                        <span>Sua Playlist (Todas)</span>
-                                    </div>
-                                    <div class="context-option px-4 py-2 hover:bg-gray-800 cursor-pointer text-sm text-gray-200 transition-colors flex items-center gap-2" data-value="favorites" data-text="Favoritas ❤️">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-accent opacity-0 indicator transition-opacity"></div>
-                                        <span>Favoritas ❤️</span>
-                                    </div>
-                                    <div class="px-4 py-1 mt-1 mb-1 text-[10px] uppercase font-bold text-gray-500 tracking-wider border-b border-gray-800 pb-2">Artistas</div>
-                                    <div id="custom-artist-list" class="flex flex-col"></div>
+                                <button class="context-option w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-accentHover hover:text-white transition flex items-center gap-2 border-b border-gray-700" data-value="favorites">
+                                    <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> Favoritas ❤️
+                                </button>
+                                <div class="px-4 py-2 text-[10px] uppercase font-bold text-gray-500 tracking-wider bg-gray-900/50">Por Artista</div>
+                                <div id="custom-artist-list" class="max-h-48 overflow-y-auto custom-scrollbar">
+                                    <!-- Options injected via JS -->
                                 </div>
                             </div>
                         </div>
-                        <select id="sort-select" class="bg-transparent text-[10px] md:text-xs text-gray-400 outline-none hover:text-accent transition cursor-pointer p-0 border-0 appearance-none w-fit" onclick="event.stopPropagation()">
+
+                        <select id="sort-select" class="bg-transparent text-[10px] md:text-xs text-gray-400 outline-none hover:text-accent transition cursor-pointer p-0 border-0 mt-1 w-max" onclick="event.stopPropagation()">
                             <option value="manual" class="bg-gray-800 text-white">Ordem Manual</option>
                             <option value="recent" class="bg-gray-800 text-white">Adicionadas Recentemente</option>
                             <option value="most_played" class="bg-gray-800 text-white">Mais Tocadas</option>
@@ -364,13 +366,13 @@
                     <div id="local-actions" class="flex items-center gap-1.5 sm:gap-2">
                         <input type="file" id="folder-upload" webkitdirectory directory multiple class="sr-only">
                         <label for="folder-upload" class="cursor-pointer text-[10px] md:text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 py-1.5 px-2 md:px-3 rounded-lg border border-gray-700 transition flex items-center gap-1 shadow-sm" title="Importar Pasta Inteira" onclick="event.stopPropagation()">
-                            <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                            <svg class="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
                             <span class="hidden sm:inline">Pasta</span>
                         </label>
 
                         <input type="file" id="file-upload" accept="audio/*,audio/mp3,audio/wav,audio/mpeg,audio/ogg,.mp3,.wav,.ogg" multiple class="sr-only">
                         <label for="file-upload" class="cursor-pointer text-[10px] md:text-xs bg-accentLight hover:bg-accent text-white py-1.5 px-2 md:px-3 rounded-lg border border-accent transition flex items-center gap-1 shadow-sm" onclick="event.stopPropagation()">
-                            <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <svg class="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             <span class="hidden sm:inline">Ficheiros</span>
                         </label>
                     </div>
@@ -386,7 +388,7 @@
             </div>
 
             <!-- Lista Renderizada -->
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 pb-12" id="list-container"></div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 pb-12 relative" id="list-container"></div>
         </div>
     </div>
 
@@ -409,7 +411,6 @@
             </div>
             <div class="relative w-full">
                 <canvas id="eq-canvas-bg" class="absolute inset-0 w-full h-full opacity-30 pointer-events-none rounded-lg z-10"></canvas>
-                <!-- AS BARRAS SERÃO GERADAS AQUI POR JAVASCRIPT -->
                 <div class="flex justify-between h-32 sm:h-40 px-1 sm:px-4 relative z-20" id="eq-bands-container"></div>
             </div>
             <div class="mt-6 sm:mt-8 flex justify-center relative z-20">
@@ -430,7 +431,6 @@
             </div>
             <div class="flex flex-col gap-5 overflow-y-auto max-h-[60vh] custom-scrollbar pr-2 pb-4">
                 
-                <!-- Cores do Tema -->
                 <div>
                     <label class="text-xs text-gray-400 font-semibold uppercase mb-2 flex justify-between">
                         Cores do Tema
@@ -453,7 +453,6 @@
                 </div>
                 <hr class="border-gray-800 my-1">
 
-                <!-- Efeitos Sincronizados -->
                 <div>
                     <label class="text-xs text-gray-400 font-semibold uppercase mb-2 block">Efeitos Sincronizados (Áudio)</label>
                     <div class="flex flex-col gap-3">
@@ -491,7 +490,7 @@
                 <div>
                     <label class="text-xs text-gray-400 font-semibold uppercase mb-1 flex justify-between">
                         <span>Ganho de Volume (Pre-amp)</span>
-                        <span id="preamp-value-display" class="text-accent">100%</span>
+                        <span id="preamp-value-display" class="text-accent font-bold">100%</span>
                     </label>
                     <input type="range" id="preamp-slider" min="1" max="5" step="0.1" value="1" class="standard-slider mt-2">
                     <p class="text-[9px] text-gray-500 mt-2 leading-tight">Aumenta drasticamente o ganho base. Um limitador automático previne distorções.</p>
@@ -516,7 +515,6 @@
                 </div>
                 <hr class="border-gray-800 my-1">
                 
-                <!-- Backup e Restore -->
                 <div>
                     <label class="text-xs text-gray-400 font-semibold uppercase mb-2 block">Backup de Biblioteca</label>
                     <div class="flex gap-2">
@@ -527,8 +525,7 @@
                     <p class="text-[9px] text-gray-500 mt-2">Exportar pode demorar dependendo da quantidade de músicas (usa Base64).</p>
                 </div>
                 <hr class="border-gray-800 my-1">
-                
-                <button id="clear-db-btn" data-confirm="false" class="w-full text-sm bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-3 px-4 rounded-lg border border-red-600/30 transition flex justify-center items-center gap-2">
+                <button id="clear-db-btn" class="w-full text-sm bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-3 px-4 rounded-lg border border-red-600/30 transition flex justify-center items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     Eliminar Biblioteca
                 </button>
@@ -628,10 +625,10 @@
             title: document.getElementById('track-title'), artist: document.getElementById('track-artist'), cover: document.getElementById('cover-art'),
             mainFav: document.getElementById('main-favorite-btn'), mainFavIcon: document.getElementById('main-fav-icon'), shareBtn: document.getElementById('share-btn'), lyricsBtn: document.getElementById('lyrics-btn'),
             progWrap: document.getElementById('progress-wrapper'), progBar: document.getElementById('progress-bar'), progFill: document.getElementById('progress-fill'), curTime: document.getElementById('current-time'), totTime: document.getElementById('total-time'),
-            volBar: document.getElementById('volume-bar'), volFill: document.getElementById('vol-fill'), mute: document.getElementById('mute-btn'),
+            volBar: document.getElementById('volume-bar'), volFill: document.getElementById('vol-fill'), mute: document.getElementById('mute-btn'), volValueDisplay: document.getElementById('vol-value-display'),
             container: document.getElementById('list-container'), fileUpload: document.getElementById('file-upload'), folderUpload: document.getElementById('folder-upload'),
             sortSel: document.getElementById('sort-select'), localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
-            contextTrigger: document.getElementById('context-trigger'), contextTriggerText: document.getElementById('context-trigger-text'), contextTriggerIcon: document.getElementById('context-trigger-icon'), contextDropdown: document.getElementById('context-dropdown'), customArtistList: document.getElementById('custom-artist-list'),
+            contextTrigger: document.getElementById('context-trigger'), contextTriggerText: document.getElementById('context-trigger-text'), contextTriggerIcon: document.getElementById('context-trigger-icon'), trackCount: document.getElementById('track-count'), contextDropdown: document.getElementById('context-dropdown'), customArtistList: document.getElementById('custom-artist-list'),
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
             preampSlider: document.getElementById('preamp-slider'), preampDisp: document.getElementById('preamp-value-display'),
             rightPanel: document.getElementById('right-panel'), drawerHandle: document.getElementById('drawer-handle'), listHeader: document.getElementById('list-header'),
@@ -640,7 +637,7 @@
         };
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
 
-        // --- GESTÃO MESTRE DE NAVEGAÇÃO E HISTÓRICO ---
+        // --- STREAMING_CHUNK:Navigation & History Core ---
         if (location.hash === '') history.pushState(null, '', '#main');
         
         let exitClicks = 0; let exitTimer = null;
@@ -661,6 +658,7 @@
             }
             forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal'));
             forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal'));
+            closeContextDropdown();
         }
 
         window.addEventListener('popstate', (e) => {
@@ -705,7 +703,7 @@
         const savePreampToStorage = debounce((v) => localStorage.setItem('webPlayerPreamp', v), 500);
         const savePlaylistOrder = debounce(() => { if(currentSortMode === 'manual') localStorage.setItem('webPlayerOrder', JSON.stringify(playlist.map(t => t.id))); }, 500);
 
-        // --- TEMAS & MODO OLED ---
+        // --- STREAMING_CHUNK:Theme & Aesthetics Engine ---
         const oledToggle = document.getElementById('oled-toggle');
         const oledBg = document.querySelector('.oled-bg');
         let cachedAccentColor = '#10b981';
@@ -716,6 +714,7 @@
             document.getElementById('dynamic-favicon').href = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${hex.replace('#','%23')}'><path d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'/></svg>`;
             cachedAccentColor = hex; 
             cachedThemeArgs = [hex, hover, light];
+            updateMediaSession();
         }
         
         function applyOled(isActive) {
@@ -765,7 +764,6 @@
 
         async function initOfflineMode() {
             try {
-                // Service Worker em formato Blob para forçar o cache de todas as bibliotecas no telemóvel
                 const swCode = `
                     const CACHE = 'emera-offline-v1';
                     const urls = [
@@ -800,11 +798,10 @@
             setTimeout(() => { toast.classList.replace('toast-enter-active', 'toast-exit-active'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        // --- BANCO DE DADOS (INDEXED DB OTIMIZADO) ---
+        // --- STREAMING_CHUNK:Database & File Management ---
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
         function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 1); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
         
-        // Agora o salvamento é deferido. O browser vai fazer isso no fundo sem bloquear a UI.
         function saveTrackToDB(track) { 
             if(db){ 
                 runIdle(() => {
@@ -842,7 +839,7 @@
             });
         }
 
-        // --- WEB AUDIO E EQUALIZADOR ---
+        // --- STREAMING_CHUNK:Web Audio API & EQ ---
         function initWebAudio() {
             if(audioCtx) return;
             try {
@@ -969,7 +966,7 @@
             }
         };
 
-        // --- EFEITOS VISUAIS ---
+        // --- STREAMING_CHUNK:Visualizer Render Loop ---
         const visualizerNames = ["Radial", "Barras Clássicas", "Osciloscópio", "Pulso de Graves", "Partículas", "Desligado"];
         DOM.toggleVis.addEventListener('click', (e) => { e.stopPropagation(); visualizerMode = (visualizerMode + 1) % visualizerNames.length; if(visualizerMode===5) canvasCtx.clearRect(0,0,DOM.canvas.width,DOM.canvas.height); showToast(`Efeito: ${visualizerNames[visualizerMode]}`); });
         document.getElementById('cover-container').addEventListener('click', () => DOM.toggleVis.click()); 
@@ -993,7 +990,6 @@
             const bufferL = 128; const dataFreq = new Uint8Array(bufferL); const dataTime = new Uint8Array(bufferL);
             if (analyser) { if(visualizerMode === 2) analyser.getByteTimeDomainData(dataTime); else analyser.getByteFrequencyData(dataFreq); }
 
-            // Análise de Áudio para Efeitos Avançados
             let bass = 0, mid = 0, treble = 0;
             if (analyser && isPlaying) {
                 for(let i=0; i<4; i++) bass += dataFreq[i]; bass /= 4;
@@ -1071,74 +1067,31 @@
             }
         }
 
-        // --- FUNÇÃO DE AJUDA PARA LÓGICA VISUAL DA PLAYLIST E CONTEXTOS ---
+        // --- STREAMING_CHUNK:Context & Playlist Logic ---
         function updatePlaylistContexts() {
             if(!DOM.customArtistList) return;
             const artists = [...new Set(playlist.map(t => t.artist))].filter(a => a && a !== "Desconhecido" && a.trim() !== "").sort();
             DOM.customArtistList.innerHTML = '';
             
             artists.forEach(a => {
-                const div = document.createElement('div');
-                div.className = 'context-option px-4 py-2 hover:bg-gray-800 cursor-pointer text-sm text-gray-200 transition-colors flex items-center gap-2';
-                div.dataset.value = 'artist:' + a;
-                div.dataset.text = a;
-                div.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-accent opacity-0 indicator transition-opacity"></div><span class="truncate">${a}</span>`;
-                
-                div.addEventListener('click', (e) => { e.stopPropagation(); selectContext('artist:' + a, a); });
-                DOM.customArtistList.appendChild(div);
+                const btn = document.createElement('button');
+                btn.className = 'context-option w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-accentHover hover:text-white transition truncate';
+                btn.dataset.value = 'artist:' + a;
+                btn.textContent = a;
+                DOM.customArtistList.appendChild(btn);
             });
-            
+
             // Restaura seleção se for válida
             if (currentContext.startsWith('artist:') && !artists.includes(currentContext.split('artist:')[1])) {
-                selectContext('all', 'Sua Playlist (Todas)');
+                setContext('all', 'Sua Playlist (Todas)');
             } else {
-                let text = currentContext === 'all' ? 'Sua Playlist (Todas)' : (currentContext === 'favorites' ? 'Favoritas ❤️' : currentContext.split('artist:')[1]);
-                updateContextUI(currentContext, text);
+                // Atualiza o texto do trigger baseado no context atual
+                let text = 'Sua Playlist (Todas)';
+                if(currentContext === 'favorites') text = 'Favoritas ❤️';
+                else if(currentContext.startsWith('artist:')) text = currentContext.split('artist:')[1];
+                DOM.contextTriggerText.textContent = text;
             }
         }
-
-        // --- SISTEMA CUSTOMIZADO DE DROPDOWN (UI) ---
-        function selectContext(value, text) {
-            currentContext = value;
-            localStorage.setItem('webPlayerContext', currentContext);
-            updateContextUI(value, text);
-            renderList();
-            closeContextDropdown();
-        }
-
-        function updateContextUI(value, text) {
-            DOM.contextTriggerText.textContent = text;
-            document.querySelectorAll('.context-option .indicator').forEach(ind => ind.classList.replace('opacity-100', 'opacity-0'));
-            const activeOpt = document.querySelector(`.context-option[data-value="${value}"] .indicator`);
-            if(activeOpt) activeOpt.classList.replace('opacity-0', 'opacity-100');
-        }
-
-        function closeContextDropdown() {
-            DOM.contextDropdown.classList.replace('opacity-100', 'opacity-0');
-            DOM.contextDropdown.classList.replace('visible', 'invisible');
-            DOM.contextDropdown.classList.replace('translate-y-0', '-translate-y-2');
-            DOM.contextTriggerIcon.classList.remove('rotate-180');
-        }
-
-        function toggleContextDropdown(e) {
-            e.stopPropagation();
-            const isOpen = DOM.contextDropdown.classList.contains('visible');
-            if (isOpen) { closeContextDropdown(); } 
-            else {
-                DOM.contextDropdown.classList.replace('opacity-0', 'opacity-100');
-                DOM.contextDropdown.classList.replace('invisible', 'visible');
-                DOM.contextDropdown.classList.replace('-translate-y-2', 'translate-y-0');
-                DOM.contextTriggerIcon.classList.add('rotate-180');
-            }
-        }
-
-        DOM.contextTrigger.addEventListener('click', toggleContextDropdown);
-        document.addEventListener('click', closeContextDropdown); // Fecha ao clicar fora
-
-        // Inicializa cliques nas opções estáticas
-        document.querySelectorAll('.context-option[data-value="all"], .context-option[data-value="favorites"]').forEach(opt => {
-            opt.addEventListener('click', (e) => { e.stopPropagation(); selectContext(opt.dataset.value, opt.dataset.text); });
-        });
 
         function getVisualPlaylist() {
             const term = DOM.search.value.toLowerCase();
@@ -1161,7 +1114,66 @@
             return pToRender;
         }
 
-        // --- LÓGICA DO PLAYER ---
+        // Lógica do Custom Dropdown
+        function toggleContextDropdown() {
+            const isClosed = DOM.contextDropdown.classList.contains('dropdown-closed');
+            if(isClosed) {
+                DOM.contextDropdown.classList.remove('dropdown-closed');
+                DOM.contextDropdown.classList.add('dropdown-open');
+                DOM.contextTriggerIcon.style.transform = 'rotate(180deg)';
+            } else {
+                closeContextDropdown();
+            }
+        }
+        function closeContextDropdown() {
+            if(!DOM.contextDropdown) return;
+            DOM.contextDropdown.classList.remove('dropdown-open');
+            DOM.contextDropdown.classList.add('dropdown-closed');
+            DOM.contextTriggerIcon.style.transform = 'rotate(0deg)';
+        }
+
+        DOM.contextTrigger.addEventListener('click', toggleContextDropdown);
+        document.addEventListener('click', closeContextDropdown);
+
+        function setContext(val, text) {
+            currentContext = val;
+            DOM.contextTriggerText.textContent = text;
+            localStorage.setItem('webPlayerContext', currentContext);
+            closeContextDropdown();
+            renderList();
+        }
+
+        DOM.contextDropdown.addEventListener('click', (e) => {
+            const btn = e.target.closest('.context-option');
+            if(!btn) return;
+            e.stopPropagation();
+            setContext(btn.dataset.value, btn.textContent.trim());
+        });
+
+        // --- STREAMING_CHUNK:Media Session Integration ---
+        function updateMediaSession() {
+            if ('mediaSession' in navigator && playlist.length > 0) {
+                const t = playlist[currentTrackIndex];
+                if (!t) return;
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: t.title,
+                    artist: t.artist || t.genre,
+                    album: 'Emera Player',
+                    artwork: [
+                        { src: t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=512&h=512&fit=crop', sizes: '512x512', type: 'image/jpeg' }
+                    ]
+                });
+            }
+        }
+
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', () => togglePlay());
+            navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+            navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
+            navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
+        }
+
+        // --- STREAMING_CHUNK:Player Core Engine ---
         function updateMainFavoriteIcon() {
             if(playlist.length===0){ DOM.mainFav.classList.add('hidden'); return; }
             DOM.mainFav.classList.remove('hidden'); const isFav = playlist[currentTrackIndex]?.favorite || false;
@@ -1179,20 +1191,9 @@
             DOM.lyricsBtn.classList.remove('hidden'); DOM.shareBtn.classList.remove('hidden');
             
             updateMainFavoriteIcon(); updateMiniPlayer(); renderList();
+            updateMediaSession();
             
             if(isGameActive) resetGameForNewTrack();
-
-            // Atualizar Metadados para Ecrã de Bloqueio e Bluetooth
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: t.title,
-                    artist: t.artist || 'Desconhecido',
-                    album: 'Emera Player',
-                    artwork: [
-                        { src: t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop', sizes: '512x512', type: 'image/jpeg' }
-                    ]
-                });
-            }
 
             if (isPlaying) { 
                 const p = audio.play(); 
@@ -1212,7 +1213,6 @@
             }
         }
 
-        // Correção de Lógica: Agora a Próxima/Anterior navega no que o utilizador está atualmente a ver!
         function nextTrack() {
             if(playlist.length===0) return;
             const vis = getVisualPlaylist();
@@ -1281,14 +1281,14 @@
             DOM.playIcon.classList.add('hidden'); DOM.pauseIcon.classList.remove('hidden'); 
             DOM.miniPlay.classList.add('hidden'); DOM.miniPause.classList.remove('hidden'); 
             DOM.cover.classList.remove('spin-paused'); isPlaying = true; renderList(); 
-            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
         });
 
         audio.addEventListener('pause', () => {
             DOM.playIcon.classList.remove('hidden'); DOM.pauseIcon.classList.add('hidden'); 
             DOM.miniPlay.classList.remove('hidden'); DOM.miniPause.classList.add('hidden'); 
             DOM.cover.classList.add('spin-paused'); isPlaying = false; renderList(); 
-            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
         });
 
         audio.addEventListener('ended', () => { 
@@ -1299,18 +1299,6 @@
             const fT = s => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; 
             DOM.totTime.textContent = fT(audio.duration);
         });
-
-        // Configuração dos Controlos Bluetooth / Hardware
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.setActionHandler('play', () => {
-                if (playlist.length === 0) return;
-                initWebAudio(); if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
-                audio.play();
-            });
-            navigator.mediaSession.setActionHandler('pause', () => audio.pause());
-            navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
-            navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
-        }
 
         let isDraggingProgress = false;
         DOM.progBar.addEventListener('mousedown', () => isDraggingProgress = true);
@@ -1333,7 +1321,6 @@
 
         let lastRenderedSecond = -1; 
         audio.addEventListener('timeupdate', () => {
-            // OTIMIZAÇÃO: Não gasta CPU a atualizar a UI de fundo se o jogo estiver a cobrir o ecrã
             if(isNaN(audio.duration) || isDraggingProgress || isGameActive) return; 
             
             const currentTime = audio.currentTime;
@@ -1352,14 +1339,22 @@
         DOM.volBar.addEventListener('input', e => { 
             const v = e.target.value; audio.volume = v; DOM.volFill.style.width = v*100+'%'; 
             const m = (v==0); audio.muted = m; 
+            if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(v*100)+'%';
             saveVolToStorage(v); 
         });
         DOM.mute.addEventListener('click', () => { 
             const m = !audio.muted; audio.muted = m; 
-            if(m){ DOM.volBar.value=0; DOM.volFill.style.width='0%'; } else { DOM.volBar.value=parseFloat(localStorage.getItem('webPlayerVol'))||0.5; DOM.volFill.style.width=DOM.volBar.value*100+'%'; } 
+            if(m){ 
+                DOM.volBar.value=0; DOM.volFill.style.width='0%'; 
+                if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = '0%';
+            } else { 
+                const restoredVol = parseFloat(localStorage.getItem('webPlayerVol'))||0.5;
+                DOM.volBar.value=restoredVol; DOM.volFill.style.width=restoredVol*100+'%'; 
+                if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(restoredVol*100)+'%';
+            } 
         });
 
-        // --- UI E MENUS ---
+        // --- STREAMING_CHUNK:UI Interactions & Render List ---
         const tModal = (m, s, hash) => { 
             if(s) { 
                 m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(()=>m.classList.remove('opacity-0'),10);
@@ -1426,6 +1421,9 @@
 
         function renderList() {
             const pToRender = getVisualPlaylist(); 
+            
+            // Atualiza o contador de músicas de forma subtil
+            if(DOM.trackCount) DOM.trackCount.textContent = `(${pToRender.length})`;
 
             const fragment = document.createDocumentFragment();
 
@@ -1444,13 +1442,12 @@
                     <div class="flex-1 overflow-hidden pointer-events-none"><h4 class="text-xs sm:text-sm font-semibold truncate ${isActive?'text-accent':'text-gray-200'}">${track.title}</h4><p class="text-[10px] sm:text-xs text-gray-500 truncate">${track.artist}</p></div>
                     ${playingBars}
                     <div class="actions flex items-center gap-0 sm:gap-1 flex-shrink-0">
-                        <button class="edit-btn p-1.5 sm:p-2 text-gray-400 hover:text-accent transition rounded-full hover:bg-gray-700" data-index="${originalIndex}" title="Editar Info"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002-2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                        <button class="edit-btn p-1.5 sm:p-2 text-gray-400 hover:text-accent transition rounded-full hover:bg-gray-700" data-index="${originalIndex}" title="Editar Info"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
                         <button class="del-btn p-1.5 sm:p-2 text-gray-400 hover:text-red-500 transition rounded-full hover:bg-gray-700" data-index="${originalIndex}" title="Eliminar"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                     </div>
                 `;
                 item.addEventListener('click', e => { if(e.target.closest('.actions')) return; loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play(); });
                 
-                // Correção Lógica (Bug 2): Otimização Matemática de Drag And Drop
                 item.addEventListener('dragstart', (e) => {
                     dragSourceIndex = originalIndex;
                     e.dataTransfer.effectAllowed = 'move';
@@ -1467,7 +1464,6 @@
                         currentSortMode = 'manual'; DOM.sortSel.value = 'manual'; localStorage.setItem('webPlayerSortMode', 'manual');
                         const draggedTrack = playlist.splice(dragSourceIndex, 1)[0];
                         
-                        // Compensa a posição matemática da array que encolheu se o alvo for depois do inicio
                         let insertIndex = originalIndex;
                         if (dragSourceIndex < originalIndex) insertIndex--;
                         
@@ -1494,7 +1490,8 @@
             document.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', e => {
                 e.stopPropagation(); const idx=parseInt(btn.dataset.index); const t=playlist[idx];
                 if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(idx,1); showToast("Eliminado");
-                savePlaylistOrder(); updatePlaylistContexts();
+                savePlaylistOrder();
+                updatePlaylistContexts();
                 renderList();
             }));
 
@@ -1539,25 +1536,39 @@
 
         document.getElementById('speed-select').addEventListener('change', e => { audio.playbackRate = parseFloat(e.target.value); showToast(`Velocidade: ${e.target.value}x`); });
 
-        // SISTEMA ANTI-POPUP UI DELETE
-        document.getElementById('clear-db-btn').addEventListener('click', function() {
-            if (this.dataset.confirm === "true") {
+        // --- STREAMING_CHUNK:Double Click Clear DB & File IO ---
+        let clearDbClicks = 0; let clearDbTimer = null;
+        document.getElementById('clear-db-btn').addEventListener('click', (e) => {
+            clearDbClicks++;
+            const btn = e.target.closest('button');
+            
+            if (clearDbClicks === 1) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> CLIQUE NOVAMENTE PARA ELIMINAR`;
+                btn.classList.add('bg-red-600', 'text-white', 'animate-pulse');
+                btn.classList.remove('bg-red-600/10', 'text-red-500');
+                
+                clearDbTimer = setTimeout(() => {
+                    clearDbClicks = 0;
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('bg-red-600', 'text-white', 'animate-pulse');
+                    btn.classList.add('bg-red-600/10', 'text-red-500');
+                }, 3000);
+            } else if (clearDbClicks === 2) {
+                clearTimeout(clearDbTimer);
                 if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear();
                 playlist=[]; audio.pause(); audio.src=""; 
                 localStorage.removeItem('webPlayerOrder');
-                updatePlaylistContexts(); renderList();
+                updatePlaylistContexts();
+                renderList();
                 DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar';
-                showToast("Biblioteca eliminada");
+                showToast("Biblioteca eliminada com sucesso.");
                 
-                this.dataset.confirm = "false";
-                this.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Eliminar Biblioteca`;
-            } else {
-                this.dataset.confirm = "true";
-                this.textContent = "Tem a certeza? Clique novamente.";
-                setTimeout(() => {
-                    this.dataset.confirm = "false";
-                    this.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Eliminar Biblioteca`;
-                }, 3000);
+                // Reset Button visual
+                clearDbClicks = 0;
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Eliminar Biblioteca`;
+                btn.classList.remove('bg-red-600', 'text-white', 'animate-pulse');
+                btn.classList.add('bg-red-600/10', 'text-red-500');
             }
         });
 
@@ -1577,7 +1588,9 @@
                 try {
                     const data = JSON.parse(ev.target.result); let added = 0;
                     data.forEach(t => { if(!playlist.find(x=>x.id===t.id)){ playlist.push(t); saveTrackToDB(t); added++; } });
-                    savePlaylistOrder(); updatePlaylistContexts(); renderList(); showToast(`${added} músicas importadas do backup.`);
+                    savePlaylistOrder();
+                    updatePlaylistContexts();
+                    renderList(); showToast(`${added} músicas importadas do backup.`);
                 } catch(err) { showToast("Erro: Backup inválido."); }
             }; r.readAsText(f);
         });
@@ -1612,131 +1625,104 @@
             t.lyrics = document.getElementById('edit-lyrics-input').value; t.cover = editCoverBase64;
             if(t.isLocal) saveTrackToDB(t);
             if(trackToEditIndex === currentTrackIndex) { DOM.title.textContent = t.title; DOM.artist.textContent = t.artist; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; updateMiniPlayer(); }
-            updatePlaylistContexts(); renderList(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
+            updatePlaylistContexts();
+            renderList(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
         });
 
-        // --- SISTEMA DE IMPORTAÇÃO EM MASSA OTIMIZADO (BACKGROUND PROCESSING) ---
+        // --- STREAMING_CHUNK:Optimized Chunking Upload ---
         function handleFiles(files) {
             if(files.length === 0) return;
             
-            // 1. Verificação Anti-Duplicação O(1) de Alta Velocidade
-            const existingSet = new Set(playlist.map(t => t.file ? `${t.file.name}_${t.file.size}` : ''));
-            const validFiles = files.filter(f => 
-                (f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|ogg|m4a)$/i)) && 
-                !existingSet.has(`${f.name}_${f.size}`)
-            );
+            showToast(`A analisar ${files.length} ficheiro(s)...`);
+            
+            // Cria um Set O(1) com os nomes+tamanhos dos ficheiros já existentes para barrar duplicados instantly
+            const existingIds = new Set(playlist.map(t => t.file ? t.file.name + '_' + t.file.size : t.title));
+            
+            // Filtra os arquivos válidos (Áudio) e que não existem no Set (Anti-Duplicação)
+            const validFiles = files.filter(f => {
+                const isAudio = f.type.startsWith('audio/') || f.name.endsWith('.mp3') || f.name.endsWith('.wav') || f.name.endsWith('.ogg');
+                const fileId = f.name + '_' + f.size;
+                return isAudio && !existingIds.has(fileId);
+            });
 
-            if (validFiles.length === 0) {
-                showToast("Nenhuma música nova para adicionar (já existem ou inválidas).");
+            if(validFiles.length === 0) {
+                showToast("Nenhuma música nova encontrada (Duplicados ignorados).");
                 return;
             }
 
-            const total = validFiles.length;
-            showToast(`A preparar importação de ${total} ficheiros...`);
-
-            let added = 0;
-            const chunkSize = 50; // Processa em lotes para não travar a interface
+            let loadedCount = 0;
+            const CHUNK_SIZE = 50; 
             
+            // Processamento em Background para não congelar o browser (Thread Yielding)
             function processChunk(startIndex) {
-                const endIndex = Math.min(startIndex + chunkSize, total);
-                let newTracks = [];
+                const endIndex = Math.min(startIndex + CHUNK_SIZE, validFiles.length);
+                const chunk = validFiles.slice(startIndex, endIndex);
                 
-                for (let i = startIndex; i < endIndex; i++) {
-                    const file = validFiles[i];
+                chunk.forEach(file => {
                     const cleanTitle = file.name.replace(/\.[^/.]+$/, ""); 
-                    const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*1000000) + i;
+                    const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
                     
-                    let nT = { id: trackId, title: cleanTitle, artist: "A processar...", file: file, src: null, cover: null, lyrics: "", isLocal: true, addedAt: Date.now() };
-                    nT.src = URL.createObjectURL(file);
+                    let nT = { 
+                        id: trackId, 
+                        title: cleanTitle, 
+                        artist: "Desconhecido", 
+                        file: file, 
+                        src: URL.createObjectURL(file), 
+                        cover: null, 
+                        lyrics: "", 
+                        isLocal: true,
+                        addedAt: Date.now() + loadedCount // Força ordem de adição correta
+                    };
                     
                     playlist.unshift(nT);
-                    newTracks.push(nT);
-                    added++;
-                }
-                
-                // Salva no DB num único bloco de transação (Extremamente mais rápido)
-                if (db) {
-                    const tx = db.transaction(STORE_NAME, "readwrite");
-                    const store = tx.objectStore(STORE_NAME);
-                    newTracks.forEach(t => { const ct = {...t}; delete ct.src; store.put(ct); });
-                }
+                    saveTrackToDB(nT);
+                    loadedCount++;
 
-                if (endIndex < total) {
-                    if (endIndex % 100 === 0 || endIndex === total) showToast(`Adicionadas ${endIndex} de ${total}...`);
-                    requestAnimationFrame(() => setTimeout(() => processChunk(endIndex), 5)); // Cede espaço à main thread
-                } else {
-                    savePlaylistOrder(); 
-                    updatePlaylistContexts(); 
-                    renderList();
-                    if(!isPlaying && added === playlist.length) loadTrack(0);
-                    showToast(`${added} músicas prontas! A ler detalhes em segundo plano...`);
-                    
-                    // 2. Extração de Metadados em Segundo Plano (Lazy Load)
-                    extractMetadataInBackground(validFiles.slice(), playlist.slice(0, added));
-                }
-            }
-            
-            // Inicia o processamento no próximo frame
-            requestAnimationFrame(() => processChunk(0));
-        }
-
-        // Função Background para não travar o leitor enquanto extrai tags (jsmediatags)
-        function extractMetadataInBackground(files, tracksRefs) {
-            if (!window.jsmediatags) return;
-            
-            let i = 0;
-            function processNext() {
-                if (i >= files.length) {
-                    updatePlaylistContexts(); 
-                    renderList(); // Atualização final
-                    showToast("Leitura de detalhes (Capas e Letras) concluída!");
-                    return;
-                }
-                
-                const file = files[i];
-                const track = tracksRefs[i];
-                
-                window.jsmediatags.read(file, { 
-                    onSuccess: tag => { 
-                        let updated = false;
-                        if(tag.tags.title && tag.tags.title !== track.title) { track.title = tag.tags.title; updated = true; }
-                        if(tag.tags.artist && tag.tags.artist !== track.artist) { track.artist = tag.tags.artist; updated = true; }
-                        
-                        if(tag.tags.lyrics && tag.tags.lyrics.lyrics) { track.lyrics = tag.tags.lyrics.lyrics; updated = true; }
-                        else if(tag.tags.USLT && tag.tags.USLT.lyrics) { track.lyrics = tag.tags.USLT.lyrics; updated = true; }
-                        
-                        if(tag.tags.picture && !track.cover) { 
-                            let b64 = ""; 
-                            for (let j=0; j<tag.tags.picture.data.length; j++) b64 += String.fromCharCode(tag.tags.picture.data[j]); 
-                            track.cover = `data:${tag.tags.picture.format};base64,${window.btoa(b64)}`; 
-                            updated = true;
-                        } 
-                        
-                        if(updated) {
-                            saveTrackToDB(track);
-                            // Atualiza os visuais imediatamente caso esta música esteja a tocar agora
-                            if (track.id === playlist[currentTrackIndex]?.id) {
-                                DOM.title.textContent = track.title; 
-                                DOM.artist.textContent = track.artist; 
-                                DOM.cover.src = track.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; 
-                                updateMiniPlayer();
-                                if ('mediaSession' in navigator) {
-                                    navigator.mediaSession.metadata = new MediaMetadata({
-                                        title: track.title, artist: track.artist,
-                                        artwork: [{ src: track.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop', sizes: '512x512', type: 'image/jpeg' }]
-                                    });
-                                }
-                            }
-                        }
-                        
-                        i++;
-                        if (updated && i % 25 === 0) renderList(); // Atualiza a UI visual a cada 25 tags lidas
-                        setTimeout(processNext, 15); // Pausa de 15ms para o browser respirar
-                    }, 
-                    onError: () => { i++; setTimeout(processNext, 5); } 
+                    // LAZY LOADING METADATA: O jsmediatags corre no background e atualiza o objeto depois
+                    if (window.jsmediatags) {
+                        setTimeout(() => {
+                            window.jsmediatags.read(file, { 
+                                onSuccess: tag => { 
+                                    let needsUpdate = false;
+                                    if(tag.tags.title) { nT.title = tag.tags.title; needsUpdate = true; }
+                                    if(tag.tags.artist) { nT.artist = tag.tags.artist; needsUpdate = true; }
+                                    
+                                    if(tag.tags.lyrics && tag.tags.lyrics.lyrics) { nT.lyrics = tag.tags.lyrics.lyrics; needsUpdate = true; }
+                                    else if(tag.tags.USLT && tag.tags.USLT.lyrics) { nT.lyrics = tag.tags.USLT.lyrics; needsUpdate = true; }
+                                    
+                                    if(tag.tags.picture) { 
+                                        let b64 = ""; for (let i=0; i<tag.tags.picture.data.length; i++) b64 += String.fromCharCode(tag.tags.picture.data[i]); 
+                                        nT.cover = `data:${tag.tags.picture.format};base64,${window.btoa(b64)}`; 
+                                        needsUpdate = true;
+                                    } 
+                                    if(needsUpdate) {
+                                        saveTrackToDB(nT);
+                                        // Update the current playing UI if this is the track
+                                        if(playlist[currentTrackIndex] && playlist[currentTrackIndex].id === nT.id) {
+                                            DOM.title.textContent = nT.title; DOM.artist.textContent = nT.artist; 
+                                            if(nT.cover) DOM.cover.src = nT.cover;
+                                        }
+                                    }
+                                }, 
+                                onError: () => {} 
+                            });
+                        }, loadedCount * 20); // Espalha as tarefas pesadas no tempo
+                    }
                 });
+
+                if (endIndex < validFiles.length) {
+                    showToast(`A importar ${endIndex} de ${validFiles.length}...`);
+                    requestAnimationFrame(() => setTimeout(() => processChunk(endIndex), 50));
+                } else {
+                    savePlaylistOrder();
+                    updatePlaylistContexts();
+                    renderList();
+                    showToast(`${validFiles.length} músicas importadas com sucesso!`);
+                    if(!isPlaying) loadTrack(0);
+                }
             }
-            processNext();
+
+            processChunk(0);
         }
 
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
@@ -1748,6 +1734,7 @@
         document.getElementById('mini-prev-btn').addEventListener('click', () => DOM.prev.click());
         document.getElementById('mini-next-btn').addEventListener('click', () => DOM.next.click());
 
+        // --- STREAMING_CHUNK:Emera Tiles Game Logic ---
         // --- LÓGICA DO JOGO (EMERA TILES) ---
         const gamePanel = document.getElementById('game-panel');
         const gameOverlay = document.getElementById('game-overlay');
@@ -2332,6 +2319,7 @@
         });
         document.addEventListener('keyup', e => { if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { handleGameInputUp(keyMappings[e.code]); } });
 
+        // --- STREAMING_CHUNK:App Initialization ---
         // Init App
         initDB().then(async () => {
             await loadTracksFromDB(); 
@@ -2341,7 +2329,13 @@
             if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; }
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
-        if(!isNaN(initVol)){ audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); } else { audio.volume=1; }
+        if(!isNaN(initVol)){ 
+            audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); 
+            if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(initVol*100)+'%';
+        } else { 
+            audio.volume=1; 
+            if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = '100%';
+        }
 
     </script>
 </body>
