@@ -1211,22 +1211,45 @@
             const validFiles = files.filter(f => f.type.startsWith('audio/') || f.name.endsWith('.mp3') || f.name.endsWith('.wav') || f.name.endsWith('.ogg'));
             if(validFiles.length === 0) { window.showToast("Nenhuma música válida."); return; }
 
-            window.showToast(`A enviar ${validFiles.length} música(s) para a Cloud...`);
+            window.showToast(`A preparar envio de ${validFiles.length} música(s). Por favor, aguarde...`);
+
+            // Transforma a UI do Leitor num Monitor de Progresso
+            DOM.cover.src = 'https://placehold.co/500x500/1f2937/10b981?text=A+Sincronizar\nNuvem';
+            DOM.cover.classList.add('animate-pulse');
+            DOM.title.textContent = `A Iniciar Upload...`;
+            DOM.artist.textContent = `0 de ${validFiles.length} concluídos (0%)`;
+            
+            let successCount = 0;
+            let failCount = 0;
 
             for (let i = 0; i < validFiles.length; i++) {
                 const file = validFiles[i];
                 const cleanTitle = file.name.replace(/\.[^/.]+$/, "");
                 const trackId = 'cloud_' + Date.now() + '_' + Math.floor(Math.random()*10000);
 
-                window.showToast(`A ler informações de Áudio... (${i+1}/${validFiles.length})`);
+                // Atualiza a interface (sem criar notificações em massa)
+                DOM.title.textContent = `A enviar: ${cleanTitle.length > 25 ? cleanTitle.substring(0,25) + '...' : cleanTitle}`;
+                DOM.artist.textContent = `${i + 1} de ${validFiles.length} (${Math.round(((i+1)/validFiles.length)*100)}%) | Falhas: ${failCount}`;
 
-                // 1. Extração Síncrona das Tags
+                // 1. Extração Síncrona com Timeout Aumentado (5.5s)
                 let tags = { title: cleanTitle, artist: "Desconhecido", coverData: null, coverFormat: null, lyrics: "" };
                 if (window.jsmediatags) {
                     try {
                         tags = await new Promise((resolve) => {
+                            let isResolved = false;
+                            
+                            const timeoutId = setTimeout(() => {
+                                if(!isResolved) {
+                                    isResolved = true;
+                                    resolve(tags);
+                                }
+                            }, 5500); // 5.5s para lidar com processador sob carga massiva
+
                             window.jsmediatags.read(file, {
                                 onSuccess: tag => {
+                                    if(isResolved) return;
+                                    isResolved = true;
+                                    clearTimeout(timeoutId);
                                     let t = cleanTitle, a = "Desconhecido", l = "";
                                     if(tag.tags.title && tag.tags.title.trim()) t = tag.tags.title.trim();
                                     if(tag.tags.artist && tag.tags.artist.trim()) a = tag.tags.artist.trim();
@@ -1240,16 +1263,19 @@
                                     }
                                     resolve({ title: t, artist: a, coverData: cData, coverFormat: cFormat, lyrics: l });
                                 },
-                                onError: () => resolve(tags)
+                                onError: () => {
+                                    if(isResolved) return;
+                                    isResolved = true;
+                                    clearTimeout(timeoutId);
+                                    resolve(tags);
+                                }
                             });
                         });
                     } catch(e) {}
                 }
 
-                window.showToast(`A gravar no Firebase Storage: ${tags.title}...`);
-
                 try {
-                    // 2. Upload Capa (Se existir)
+                    // 2. Upload Capa
                     let coverUrl = null;
                     if (tags.coverData) {
                         try {
@@ -1257,10 +1283,10 @@
                             const coverBlob = new Blob([new Uint8Array(tags.coverData)], { type: tags.coverFormat });
                             await uploadBytes(coverRef, coverBlob);
                             coverUrl = await getDownloadURL(coverRef);
-                        } catch(e) { console.warn("Erro ao fazer upload de Capa."); }
+                        } catch(e) { console.warn("Erro ao fazer upload da capa.", e); }
                     }
 
-                    // 3. Upload Ficheiro Áudio
+                    // 3. Upload Ficheiro Áudio (Sem limite de tempo)
                     const audioRef = ref(storage, `artifacts/emera-player/public/data/audio/${trackId}`);
                     await uploadBytes(audioRef, file);
                     const audioUrl = await getDownloadURL(audioRef);
@@ -1282,17 +1308,37 @@
                     await setDoc(doc(db, 'artifacts', 'emera-player', 'public', 'data', 'tracks', trackId), newTrack);
 
                     playlist.unshift(newTrack);
-                    savePlaylistOrder();
-                    updatePlaylistContexts();
-                    triggerListUpdate();
+                    successCount++;
+                    
+                    // Atualiza a lista lateral a cada 5 músicas para não bloquear a interface
+                    if (successCount % 5 === 0) {
+                        savePlaylistOrder();
+                        updatePlaylistContexts();
+                        triggerListUpdate();
+                    }
+
                 } catch (err) {
-                    console.error("Erro no upload", err);
-                    window.showToast(`Falha em ${tags.title}. As regras do seu Firebase podem estar fechadas.`);
+                    console.error("Erro no upload da faixa:", cleanTitle, err);
+                    failCount++;
                 }
+                
+                // Pausa crucial de 50ms para permitir ao browser limpar a memória RAM
+                await new Promise(r => setTimeout(r, 50));
             }
             
-            window.showToast("Processo Cloud Concluído!");
-            if(!isPlaying && playlist.length > 0) loadTrack(0);
+            // Fim do Processo
+            DOM.cover.classList.remove('animate-pulse');
+            savePlaylistOrder();
+            updatePlaylistContexts();
+            triggerListUpdate();
+            
+            DOM.title.textContent = `Upload Concluído!`;
+            DOM.artist.textContent = `${successCount} Enviadas | ${failCount} Falhas`;
+            window.showToast(`Processo da Nuvem Concluído! (${successCount} sucessos)`);
+            
+            setTimeout(() => {
+                if(!isPlaying && playlist.length > 0) loadTrack(0);
+            }, 3000);
         }
 
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files))); DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
