@@ -588,6 +588,8 @@
                 }
             } catch(e) {
                 console.error("Falha a ler Base de Dados", e);
+                DOM.title.textContent = 'Acesso Bloqueado';
+                DOM.artist.textContent = 'Verifique as Regras do Firebase';
                 if (e.code === 'permission-denied') {
                     window.showToast("Permissão Negada: Por favor atualize as Regras do seu Firestore para permitir acesso.");
                 } else {
