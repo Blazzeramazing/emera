@@ -394,14 +394,15 @@
         import { getFirestore, doc, setDoc, getDocs, collection, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
-        // As novas credenciais aplicadas
+        // Credenciais Corrigidas (storageBucket atualizado para appspot.com)
         const firebaseConfig = {
             apiKey: "AIzaSyAFJRjlqQzBAlGqBLHKsz0XZw5fdHYvtbA",
             authDomain: "emera-4ff30.firebaseapp.com",
             projectId: "emera-4ff30",
-            storageBucket: "emera-4ff30.firebasestorage.app",
+            storageBucket: "emera-4ff30.appspot.com",
             messagingSenderId: "617412005928",
-            appId: "1:617412005928:web:fa8e520b05c0c13c61a51d"
+            appId: "1:617412005928:web:fa8e520b05c0c13c61a51d",
+            measurementId: "G-1M69MGY6DK"
         };
 
         const app = initializeApp(firebaseConfig);
