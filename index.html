@@ -1211,27 +1211,33 @@
             const validFiles = files.filter(f => f.type.startsWith('audio/') || f.name.endsWith('.mp3') || f.name.endsWith('.wav') || f.name.endsWith('.ogg'));
             if(validFiles.length === 0) { window.showToast("Nenhuma música válida."); return; }
 
-            window.showToast(`A preparar envio de ${validFiles.length} música(s). Por favor, aguarde...`);
+            window.showToast(`A preparar envio de ${validFiles.length} música(s). Mantenha a janela aberta!`);
 
             // Transforma a UI do Leitor num Monitor de Progresso
             DOM.cover.src = 'https://placehold.co/500x500/1f2937/10b981?text=A+Sincronizar\nNuvem';
             DOM.cover.classList.add('animate-pulse');
             DOM.title.textContent = `A Iniciar Upload...`;
-            DOM.artist.textContent = `0 de ${validFiles.length} concluídos (0%)`;
+            DOM.artist.textContent = `A preparar fila de envio...`;
             
             let successCount = 0;
             let failCount = 0;
+            let consecutiveFails = 0; // Previne que fique horas a falhar
 
             for (let i = 0; i < validFiles.length; i++) {
+                // Se 5 falharem seguidas, abortamos para poupar tempo. Provavelmente é um erro de credenciais.
+                if (consecutiveFails >= 5) {
+                    window.showToast("Abortado! Muitas falhas seguidas. Verifique as Regras do Storage e se o seu 'storageBucket' está correto.");
+                    break; 
+                }
+
                 const file = validFiles[i];
                 const cleanTitle = file.name.replace(/\.[^/.]+$/, "");
                 const trackId = 'cloud_' + Date.now() + '_' + Math.floor(Math.random()*10000);
 
-                // Atualiza a interface (sem criar notificações em massa)
-                DOM.title.textContent = `A enviar: ${cleanTitle.length > 25 ? cleanTitle.substring(0,25) + '...' : cleanTitle}`;
-                DOM.artist.textContent = `${i + 1} de ${validFiles.length} (${Math.round(((i+1)/validFiles.length)*100)}%) | Falhas: ${failCount}`;
+                DOM.title.textContent = `${cleanTitle.length > 25 ? cleanTitle.substring(0,25) + '...' : cleanTitle}`;
+                DOM.artist.textContent = `(Passo 1/3) A ler dados... | ${i + 1}/${validFiles.length}`;
 
-                // 1. Extração Síncrona com Timeout Aumentado (5.5s)
+                // 1. Extração Síncrona com Timeout (Máximo 3.5 segundos)
                 let tags = { title: cleanTitle, artist: "Desconhecido", coverData: null, coverFormat: null, lyrics: "" };
                 if (window.jsmediatags) {
                     try {
@@ -1239,17 +1245,13 @@
                             let isResolved = false;
                             
                             const timeoutId = setTimeout(() => {
-                                if(!isResolved) {
-                                    isResolved = true;
-                                    resolve(tags);
-                                }
-                            }, 5500); // 5.5s para lidar com processador sob carga massiva
+                                if(!isResolved) { isResolved = true; resolve(tags); }
+                            }, 3500); 
 
                             window.jsmediatags.read(file, {
                                 onSuccess: tag => {
                                     if(isResolved) return;
-                                    isResolved = true;
-                                    clearTimeout(timeoutId);
+                                    isResolved = true; clearTimeout(timeoutId);
                                     let t = cleanTitle, a = "Desconhecido", l = "";
                                     if(tag.tags.title && tag.tags.title.trim()) t = tag.tags.title.trim();
                                     if(tag.tags.artist && tag.tags.artist.trim()) a = tag.tags.artist.trim();
@@ -1257,17 +1259,12 @@
                                     else if(tag.tags.USLT && tag.tags.USLT.lyrics) l = tag.tags.USLT.lyrics;
                                     
                                     let cData = null, cFormat = null;
-                                    if(tag.tags.picture) {
-                                        cData = tag.tags.picture.data;
-                                        cFormat = tag.tags.picture.format;
-                                    }
+                                    if(tag.tags.picture) { cData = tag.tags.picture.data; cFormat = tag.tags.picture.format; }
                                     resolve({ title: t, artist: a, coverData: cData, coverFormat: cFormat, lyrics: l });
                                 },
                                 onError: () => {
                                     if(isResolved) return;
-                                    isResolved = true;
-                                    clearTimeout(timeoutId);
-                                    resolve(tags);
+                                    isResolved = true; clearTimeout(timeoutId); resolve(tags);
                                 }
                             });
                         });
@@ -1275,23 +1272,32 @@
                 }
 
                 try {
-                    // 2. Upload Capa
+                    // 2. Upload Capa (Com limite máximo de 15 segundos para não travar)
                     let coverUrl = null;
                     if (tags.coverData) {
-                        try {
-                            const coverRef = ref(storage, `artifacts/emera-player/public/data/covers/${trackId}`);
-                            const coverBlob = new Blob([new Uint8Array(tags.coverData)], { type: tags.coverFormat });
-                            await uploadBytes(coverRef, coverBlob);
-                            coverUrl = await getDownloadURL(coverRef);
-                        } catch(e) { console.warn("Erro ao fazer upload da capa.", e); }
+                        DOM.artist.textContent = `(Passo 2/3) A gravar Capa... | ${i + 1}/${validFiles.length}`;
+                        const coverRef = ref(storage, `artifacts/emera-player/public/data/covers/${trackId}`);
+                        const coverBlob = new Blob([new Uint8Array(tags.coverData)], { type: tags.coverFormat });
+                        
+                        await Promise.race([
+                            uploadBytes(coverRef, coverBlob),
+                            new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout Capa")), 15000))
+                        ]);
+                        coverUrl = await getDownloadURL(coverRef);
                     }
 
-                    // 3. Upload Ficheiro Áudio (Sem limite de tempo)
+                    // 3. Upload Ficheiro Áudio (Com limite máximo de 90 segundos por música)
+                    DOM.artist.textContent = `(Passo 3/3) A gravar Áudio... | ${i + 1}/${validFiles.length}`;
                     const audioRef = ref(storage, `artifacts/emera-player/public/data/audio/${trackId}`);
-                    await uploadBytes(audioRef, file);
+                    
+                    await Promise.race([
+                        uploadBytes(audioRef, file),
+                        new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout Áudio")), 90000))
+                    ]);
+                    
                     const audioUrl = await getDownloadURL(audioRef);
 
-                    // 4. Criar Metadados
+                    // 4. Criar Metadados e Guardar no Firestore DB
                     const newTrack = {
                         id: trackId,
                         title: tags.title,
@@ -1304,22 +1310,21 @@
                         favorite: false
                     };
 
-                    // 5. Guardar Registo no Firestore DB
                     await setDoc(doc(db, 'artifacts', 'emera-player', 'public', 'data', 'tracks', trackId), newTrack);
 
                     playlist.unshift(newTrack);
                     successCount++;
+                    consecutiveFails = 0; // Reset às falhas após sucesso
                     
                     // Atualiza a lista lateral a cada 5 músicas para não bloquear a interface
                     if (successCount % 5 === 0) {
-                        savePlaylistOrder();
-                        updatePlaylistContexts();
-                        triggerListUpdate();
+                        savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate();
                     }
 
                 } catch (err) {
                     console.error("Erro no upload da faixa:", cleanTitle, err);
                     failCount++;
+                    consecutiveFails++;
                 }
                 
                 // Pausa crucial de 50ms para permitir ao browser limpar a memória RAM
@@ -1328,17 +1333,13 @@
             
             // Fim do Processo
             DOM.cover.classList.remove('animate-pulse');
-            savePlaylistOrder();
-            updatePlaylistContexts();
-            triggerListUpdate();
+            savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate();
             
             DOM.title.textContent = `Upload Concluído!`;
             DOM.artist.textContent = `${successCount} Enviadas | ${failCount} Falhas`;
             window.showToast(`Processo da Nuvem Concluído! (${successCount} sucessos)`);
             
-            setTimeout(() => {
-                if(!isPlaying && playlist.length > 0) loadTrack(0);
-            }, 3000);
+            setTimeout(() => { if(!isPlaying && playlist.length > 0) loadTrack(0); }, 3000);
         }
 
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files))); DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
