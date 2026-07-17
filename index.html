@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#111827">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Emera Player - Cloud Edition</title>
+    <title>Emera Player - Nuvem Pública</title>
     
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
@@ -150,7 +150,6 @@
                 <button id="eq-btn" class="text-gray-300 hover:text-accent transition flex justify-center items-center w-8 sm:w-10"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
             </div>
 
-            <!-- Jogo -->
             <div id="game-panel" class="absolute inset-0 bg-gray-950 z-[60] hidden flex flex-col overflow-hidden transition-opacity duration-300 opacity-0">
                 <div class="w-full p-4 md:p-6 flex justify-between items-center bg-gray-900 border-b border-gray-800 z-10 shadow-lg flex-shrink-0">
                     <button id="close-game-btn" class="text-gray-400 hover:text-white transition p-2 bg-gray-800 hover:bg-red-600/50 rounded-full flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -199,7 +198,6 @@
             </div>
         </div>
 
-        <!-- Painel Lateral -->
         <div id="right-panel" class="w-full md:w-2/5 bg-gray-900 md:border-t-0 md:border-l border-gray-800 flex flex-col flex-1 min-h-[35%] md:min-h-0 overflow-hidden shadow-[0_-10px_20px_rgba(0,0,0,0.5)] md:shadow-none rounded-t-[2rem] md:rounded-none relative z-20">
             
             <div class="drawer-puller cursor-pointer" id="drawer-handle"></div>
@@ -227,14 +225,14 @@
                         <div class="relative w-full" id="custom-context-wrapper">
                             <button id="context-trigger" class="flex items-center gap-1.5 md:gap-2 bg-transparent text-base md:text-lg font-semibold text-white outline-none hover:text-accent transition cursor-pointer p-0 border-0 w-full text-left truncate" onclick="event.stopPropagation()">
                                 <svg class="w-4 h-4 md:w-5 md:h-5 text-accent flex-shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
-                                <span id="context-trigger-text" class="truncate">Sua Playlist (Todas)</span>
+                                <span id="context-trigger-text" class="truncate">A Nuvem (Todas)</span>
                                 <span id="track-count" class="text-[10px] md:text-xs text-gray-500 font-normal ml-1 flex-shrink-0 pb-0.5">0</span>
                                 <svg class="w-3 h-3 text-gray-400 pointer-events-none flex-shrink-0 transition-transform duration-300" id="context-trigger-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             <div id="context-dropdown" class="absolute left-0 top-full mt-2 w-full max-w-[250px] bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 dropdown-closed custom-scrollbar overflow-hidden flex flex-col" onclick="event.stopPropagation()">
-                                <button class="context-option w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-accentHover hover:text-white transition flex items-center gap-2" data-value="all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg> Sua Playlist (Todas)</button>
+                                <button class="context-option w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-accentHover hover:text-white transition flex items-center gap-2" data-value="all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg> A Nuvem (Todas)</button>
                                 <button class="context-option w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-accentHover hover:text-white transition flex items-center gap-2 border-b border-gray-700" data-value="favorites"><svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> Favoritas ❤️</button>
-                                <div class="px-4 py-2 flex justify-between items-center text-[10px] uppercase font-bold text-gray-500 tracking-wider bg-gray-900/50"><span>As Suas Playlists</span><button id="create-playlist-btn" class="hover:text-accent transition">+ Nova</button></div>
+                                <div class="px-4 py-2 flex justify-between items-center text-[10px] uppercase font-bold text-gray-500 tracking-wider bg-gray-900/50"><span>Playlists Locais</span><button id="create-playlist-btn" class="hover:text-accent transition">+ Nova</button></div>
                                 <div id="custom-playlists-list" class="max-h-32 overflow-y-auto custom-scrollbar border-b border-gray-700"></div>
                                 <div class="px-4 py-2 text-[10px] uppercase font-bold text-gray-500 tracking-wider bg-gray-900/50">Por Artista</div>
                                 <div id="custom-artist-list" class="max-h-48 overflow-y-auto custom-scrollbar"></div>
@@ -259,17 +257,17 @@
                 
                 <div id="local-search-container" class="relative w-full mt-2" onclick="event.stopPropagation()">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><svg class="w-3 h-3 md:w-4 md:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
-                    <input type="text" id="search-input" placeholder="Procurar..." class="w-full bg-gray-800/50 text-xs sm:text-sm text-gray-200 rounded-lg pl-9 pr-3 py-2 outline-none border border-gray-700 focus:border-accent focus:bg-gray-800 transition">
+                    <input type="text" id="search-input" placeholder="Procurar na Nuvem..." class="w-full bg-gray-800/50 text-xs sm:text-sm text-gray-200 rounded-lg pl-9 pr-3 py-2 outline-none border border-gray-700 focus:border-accent focus:bg-gray-800 transition">
                 </div>
             </div>
 
+            <!-- Virtual Scroller Container (Performance Máxima) -->
             <div class="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 pb-12 relative" id="list-container">
                 <div id="virtual-spacer" style="height: 0px; position: relative; width: 100%;"><div id="virtual-content" style="position: absolute; top: 0; left: 0; width: 100%;"></div></div>
             </div>
         </div>
     </div>
 
-    <!-- Modais -->
     <div id="eq-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-gray-900 p-5 sm:p-8 rounded-[1.5rem] border border-gray-800 w-full sm:w-[90%] max-w-md shadow-2xl relative overflow-hidden">
             <div class="flex justify-between items-center mb-4 sm:mb-6 relative z-20">
@@ -335,14 +333,7 @@
                 <hr class="border-gray-800 my-1">
                 <div><label class="text-xs text-gray-400 font-semibold uppercase mb-1 block">Velocidade</label><select id="speed-select" class="w-full bg-gray-800 text-sm text-gray-200 rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-accent"><option value="0.5">0.5x (Lento)</option><option value="1" selected>1.0x (Normal)</option><option value="1.25">1.25x</option><option value="1.5">1.5x (Rápido)</option><option value="2">2.0x (Muito Rápido)</option></select></div>
                 <hr class="border-gray-800 my-1">
-                <div>
-                    <label class="text-xs text-gray-400 font-semibold uppercase mb-2 block">Backup de Biblioteca</label>
-                    <div class="flex gap-2">
-                        <button id="export-backup-btn" class="w-full text-xs bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg border border-gray-700 transition">Exportar Backup Cloud (.emera)</button>
-                    </div>
-                </div>
-                <hr class="border-gray-800 my-1">
-                <button id="clear-db-btn" class="w-full text-sm bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-3 px-4 rounded-lg border border-red-600/30 transition flex justify-center items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Eliminar Tudo (Nuvem)</button>
+                <button id="clear-db-btn" class="w-full text-sm bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-3 px-4 rounded-lg border border-red-600/30 transition flex justify-center items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Apagar Biblioteca da Nuvem</button>
             </div>
         </div>
     </div>
@@ -403,6 +394,7 @@
         import { getFirestore, doc, setDoc, getDocs, collection, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
+        // As novas credenciais aplicadas
         const firebaseConfig = {
             apiKey: "AIzaSyAFJRjlqQzBAlGqBLHKsz0XZw5fdHYvtbA",
             authDomain: "emera-4ff30.firebaseapp.com",
@@ -418,11 +410,13 @@
         const storage = getStorage(app);
         let currentUser = null;
 
-        // PWA Setup Mobile
         window.MobileDragDrop.polyfill({ holdToDrag: 300 }); 
         window.addEventListener('touchmove', function() {}, {passive: false});
 
         const audio = document.getElementById('audio-player');
+        // Adiciona isto por predefinição para que funcione com o Storage sem problemas de CORS
+        audio.crossOrigin = "anonymous"; 
+
         let isPlaying = false, currentTrackIndex = 0, playlist = [];
         let currentSortMode = localStorage.getItem('webPlayerSortMode') || 'manual';
         let currentContext = localStorage.getItem('webPlayerContext') || 'all';
@@ -587,11 +581,18 @@
                 DOM.sortSel.value = currentSortMode;
                 updatePlaylistContexts(); triggerListUpdate();
                 
-                if(playlist.length > 0) { loadTrack(0); audio.pause(); }
-                else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione ficheiros para enviar para a Nuvem'; }
+                if(playlist.length > 0) { 
+                    loadTrack(0); audio.pause(); 
+                } else { 
+                    DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione ficheiros para enviar para a Nuvem'; 
+                }
             } catch(e) {
                 console.error("Falha a ler Base de Dados", e);
-                window.showToast("Falha ao ler nuvem. Verifique regras do Firebase Firestore.");
+                if (e.code === 'permission-denied') {
+                    window.showToast("Permissão Negada: Por favor atualize as Regras do seu Firestore para permitir acesso.");
+                } else {
+                    window.showToast("A nuvem está vazia ou não tem as regras de acesso corretas.");
+                }
             }
         }
 
@@ -727,13 +728,13 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Context & Scroller ---
+        // --- STREAMING_CHUNK:Context & Smart Scroller ---
         function updatePlaylistContexts() {
             if(!DOM.customArtistList) return;
             let artistSet = new Set();
             playlist.forEach(t => {
                 if(t.artist && t.artist !== "Desconhecido") {
-                    // Smart Split Engine for multiple artists
+                    // Smart Split Engine - separa João feat. Maria
                     const parts = t.artist.split(/,|\s+&\s+|\s+ft\.?\s+|\s+feat\.?\s+|\s+e\s+/i);
                     parts.forEach(p => { const clean = p.trim(); if(clean) artistSet.add(clean); });
                 }
@@ -763,10 +764,10 @@
                 }
             }
 
-            if (currentContext.startsWith('artist:') && !artists.includes(currentContext.split('artist:')[1])) { setContext('all', 'Sua Playlist (Todas)'); } 
-            else if (currentContext.startsWith('playlist:') && !customPlaylists.find(p => p.id === currentContext.split('playlist:')[1])) { setContext('all', 'Sua Playlist (Todas)'); } 
+            if (currentContext.startsWith('artist:') && !artists.includes(currentContext.split('artist:')[1])) { setContext('all', 'A Nuvem (Todas)'); } 
+            else if (currentContext.startsWith('playlist:') && !customPlaylists.find(p => p.id === currentContext.split('playlist:')[1])) { setContext('all', 'A Nuvem (Todas)'); } 
             else {
-                let text = 'Sua Playlist (Todas)';
+                let text = 'A Nuvem (Todas)';
                 if(currentContext === 'favorites') text = 'Favoritas ❤️';
                 else if(currentContext.startsWith('artist:')) text = currentContext.split('artist:')[1];
                 else if(currentContext.startsWith('playlist:')) {
@@ -856,14 +857,17 @@
 
             if (isPlaying) { 
                 const p = audio.play(); 
-                if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; updateTrackInFirebase(t); }).catch((err)=>{ console.warn(err); window.showToast("Certifique-se que o CORS está ativo no seu Firebase Storage."); }); 
+                if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; updateTrackInFirebase(t); }).catch((err)=>{ 
+                    console.warn(err); 
+                    window.showToast("Falha de CORS: Para que o visualizador/jogo funcione a 100%, permita CORS no Storage.");
+                }); 
             }
         }
 
         function togglePlay() {
             if(playlist.length===0) return; 
             initWebAudio(); if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); 
-            if(isPlaying) { audio.pause(); } else { const p = audio.play(); if(p!==undefined) p.catch((err)=>{ console.warn(err); window.showToast("CORS do Firebase não suportado."); }); }
+            if(isPlaying) { audio.pause(); } else { const p = audio.play(); if(p!==undefined) p.catch((err)=>{ console.warn(err); window.showToast("CORS do Firebase não configurado no Storage."); }); }
         }
 
         function nextTrack() {
@@ -1095,7 +1099,7 @@
             clearDbClicks++; const btn = e.target.closest('button');
             if (clearDbClicks === 1) {
                 const originalText = btn.innerHTML;
-                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> CLIQUE NOVAMENTE PARA ELIMINAR`;
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> CLIQUE NOVAMENTE PARA APAGAR TUDO`;
                 btn.classList.add('bg-red-600', 'text-white', 'animate-pulse'); btn.classList.remove('bg-red-600/10', 'text-red-500');
                 clearDbTimer = setTimeout(() => { clearDbClicks = 0; btn.innerHTML = originalText; btn.classList.remove('bg-red-600', 'text-white', 'animate-pulse'); btn.classList.add('bg-red-600/10', 'text-red-500'); }, 3000);
             } else if (clearDbClicks === 2) {
@@ -1108,18 +1112,9 @@
                 updatePlaylistContexts(); triggerListUpdate();
                 DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar';
                 window.showToast("Biblioteca eliminada com sucesso da nuvem."); clearDbClicks = 0;
-                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Eliminar Tudo (Nuvem)`;
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Apagar Biblioteca da Nuvem`;
                 btn.classList.remove('bg-red-600', 'text-white', 'animate-pulse'); btn.classList.add('bg-red-600/10', 'text-red-500');
             }
-        });
-
-        document.getElementById('export-backup-btn')?.addEventListener('click', () => {
-            if(playlist.length===0) return window.showToast("A playlist está vazia."); window.showToast("A preparar backup...");
-            setTimeout(() => {
-                const blob = new Blob([JSON.stringify(playlist)], {type: "application/json"}); const u = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = u; a.download = `emera_cloud_backup_${new Date().toISOString().split('T')[0]}.emera`;
-                a.click(); URL.revokeObjectURL(u); window.showToast("Backup transferido!");
-            }, 100);
         });
 
         DOM.mainFav.addEventListener('click', () => {
@@ -1206,7 +1201,7 @@
             });
         }
 
-        // --- STREAMING_CHUNK:Firebase Sync Engine (The FIX) ---
+        // --- STREAMING_CHUNK:Firebase Sync Engine ---
         async function handleFiles(files) {
             if(files.length === 0) return;
             if(!currentUser) { window.showToast("Erro: Nuvem não ligada."); return; }
@@ -1223,7 +1218,7 @@
 
                 window.showToast(`A ler informações de Áudio... (${i+1}/${validFiles.length})`);
 
-                // 1. Extração Síncrona das Tags (MUITO mais robusto que o C11)
+                // 1. Extração Síncrona das Tags
                 let tags = { title: cleanTitle, artist: "Desconhecido", coverData: null, coverFormat: null, lyrics: "" };
                 if (window.jsmediatags) {
                     try {
@@ -1252,7 +1247,7 @@
                 window.showToast(`A gravar no Firebase Storage: ${tags.title}...`);
 
                 try {
-                    // 2. Upload Capa (Se existir, guarda na Cloud para sempre)
+                    // 2. Upload Capa (Se existir)
                     let coverUrl = null;
                     if (tags.coverData) {
                         try {
@@ -1305,7 +1300,7 @@
         DOM.miniPlay.parentElement.addEventListener('click', () => { DOM.playPause.click(); });
         document.getElementById('mini-prev-btn').addEventListener('click', () => DOM.prev.click()); document.getElementById('mini-next-btn').addEventListener('click', () => DOM.next.click());
 
-        // --- LÓGICA DO JOGO (EMERA TILES) ---
+        // --- STREAMING_CHUNK:Jogo Emera Tiles ---
         const gamePanel = document.getElementById('game-panel'); const gameOverlay = document.getElementById('game-overlay'); const gameOverOverlay = document.getElementById('game-over-overlay'); const victoryOverlay = document.getElementById('victory-overlay'); const countdownOverlay = document.getElementById('countdown-overlay'); 
         const gameCanvas = document.getElementById('game-canvas'); const gCtx = gameCanvas.getContext('2d'); const gameScoreEl = document.getElementById('game-score'); const gameComboEl = document.getElementById('game-combo'); const gameSpeedDisplay = document.getElementById('game-speed-display'); const gameBonusCount = document.getElementById('game-bonus-count'); 
         
@@ -1574,7 +1569,7 @@
             if (error.code === 'auth/configuration-not-found') {
                 window.showToast("ERRO CRÍTICO: Ative o provedor 'Anónimo' no menu Authentication do Firebase!");
             } else {
-                window.showToast("Falha na ligação à Firebase. Verifique se ativou o modo Anónimo.");
+                window.showToast("Falha na ligação à Nuvem.");
             }
         }
 
