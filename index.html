@@ -8,14 +8,20 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Emera Player - Nuvem Pública</title>
     
+    <!-- Otimização de Conexões Externas -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    
     <link id="dynamic-favicon" rel="icon" type="image/svg+xml" href="">
     
+    <!-- Biblioteca de Extração de Capas e Letras -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    
+    <!-- Drag and Drop Polyfill Mobile -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -85,6 +91,7 @@
         .game-miss-flash { animation: missFlash 0.3s ease-out forwards; }
         @keyframes missFlash { 0% { background-color: rgba(239, 68, 68, 0.3); } 100% { background-color: transparent; } }
 
+        /* Otimização de Renderização da Lista (C11) */
         #list-container { position: relative; overflow-y: auto; overflow-x: hidden; will-change: transform; }
         .playlist-item-virtual { position: relative; height: 64px; }
     </style>
@@ -93,7 +100,7 @@
 
     <div id="main-app-container" class="w-full max-w-5xl bg-gray-900 md:rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden border-0 md:border border-gray-800 h-[100dvh] md:h-[85vh] md:min-h-[600px] md:max-h-[800px] relative transition-all duration-500">
         
-        <!-- Player Central -->
+        <!-- --- Lado Esquerdo: Player Principal --- -->
         <div class="w-full md:w-3/5 p-4 sm:p-6 md:p-8 flex flex-col relative h-[100dvh] md:h-full overflow-hidden flex-shrink-0 md:flex-shrink pb-40 md:pb-8" id="player-bg" style="background: linear-gradient(to bottom, #1f2937 0%, #111827 100%);">
             
             <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
@@ -112,6 +119,7 @@
                 </div>
             </div>
 
+            <!-- Capa do Álbum / Disco -->
             <div class="flex-1 min-h-0 flex items-center justify-center mb-4 sm:mb-6 md:mb-8 relative z-10">
                 <div id="cover-container" class="relative w-auto h-full aspect-square max-h-[30vh] sm:max-h-48 md:max-h-72 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)] md:shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden border-4 border-gray-800 flex items-center justify-center group cursor-pointer active:scale-[0.98] transition-transform" title="Clique para mudar o Visualizador">
                     <img id="cover-art" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop" alt="Capa da Música" class="w-full h-full object-cover spin-slow spin-paused transition-all duration-500 relative z-10 bg-gray-800 pointer-events-none">
@@ -121,6 +129,7 @@
                 </div>
             </div>
 
+            <!-- Informações da Música -->
             <div class="text-center mb-4 sm:mb-6 md:mb-8 relative flex-shrink-0 z-10 flex flex-col items-center">
                 <div class="absolute right-0 top-0 flex gap-2">
                     <button id="lyrics-btn" class="text-gray-300 hover:text-accent transition hidden" title="Ver Letra"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg></button>
@@ -131,6 +140,7 @@
                 <p id="track-artist" class="text-gray-300 mt-1 md:mt-2 text-xs sm:text-sm md:text-base">Aguarde</p>
             </div>
 
+            <!-- Controles de Progresso -->
             <div id="progress-wrapper" class="mb-4 sm:mb-6 md:mb-8 w-full px-1 sm:px-4 md:px-8 flex-shrink-0 z-10">
                 <div class="progress-bar-container group">
                     <div class="progress-fill group-hover:bg-accentHover" id="progress-fill"></div>
@@ -142,6 +152,7 @@
                 </div>
             </div>
 
+            <!-- Controles de Mídia -->
             <div class="flex items-center justify-center gap-5 sm:gap-8 md:gap-10 flex-shrink-0 pb-2 md:pb-0 z-10 w-full px-4">
                 <button id="mode-btn" class="text-gray-300 hover:text-accent transition flex justify-center items-center w-8 sm:w-10"><svg id="icon-repeat" class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><svg id="icon-shuffle" class="w-5 h-5 md:w-6 md:h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg></button>
                 <button id="prev-btn" class="text-white hover:text-accentHover transition transform hover:scale-110"><svg class="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M19 20L9 12l10-8v16zM5 19h2V5H5v14z"></path></svg></button>
@@ -150,6 +161,7 @@
                 <button id="eq-btn" class="text-gray-300 hover:text-accent transition flex justify-center items-center w-8 sm:w-10"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
             </div>
 
+            <!-- --- SECÇÃO DO JOGO EMERA TILES --- -->
             <div id="game-panel" class="absolute inset-0 bg-gray-950 z-[60] hidden flex flex-col overflow-hidden transition-opacity duration-300 opacity-0">
                 <div class="w-full p-4 md:p-6 flex justify-between items-center bg-gray-900 border-b border-gray-800 z-10 shadow-lg flex-shrink-0">
                     <button id="close-game-btn" class="text-gray-400 hover:text-white transition p-2 bg-gray-800 hover:bg-red-600/50 rounded-full flex-shrink-0"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -196,8 +208,11 @@
                     </div>
                 </div>
             </div>
+            <!-- --- FIM DA SECÇÃO DO JOGO --- -->
+
         </div>
 
+        <!-- --- Lado Direito: Listas e Gestão --- -->
         <div id="right-panel" class="w-full md:w-2/5 bg-gray-900 md:border-t-0 md:border-l border-gray-800 flex flex-col flex-1 min-h-[35%] md:min-h-0 overflow-hidden shadow-[0_-10px_20px_rgba(0,0,0,0.5)] md:shadow-none rounded-t-[2rem] md:rounded-none relative z-20">
             
             <div class="drawer-puller cursor-pointer" id="drawer-handle"></div>
@@ -250,7 +265,7 @@
                         </label>
                         <input type="file" id="file-upload" accept="audio/*,audio/mp3,audio/wav,audio/mpeg,audio/ogg,.mp3,.wav,.ogg" multiple class="sr-only">
                         <label for="file-upload" class="cursor-pointer text-[10px] md:text-xs bg-accentLight hover:bg-accent text-white py-1.5 px-2 md:px-3 rounded-lg border border-accent transition flex items-center gap-1 shadow-sm" onclick="event.stopPropagation()">
-                            <svg class="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Ficheiros (Nuvem)</span>
+                            <svg class="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Ficheiros</span>
                         </label>
                     </div>
                 </div>
@@ -261,13 +276,14 @@
                 </div>
             </div>
 
-            <!-- Virtual Scroller Container (Performance Máxima) -->
+            <!-- Virtual Scroller Container (Performance Máxima para +1000 músicas) -->
             <div class="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 pb-12 relative" id="list-container">
                 <div id="virtual-spacer" style="height: 0px; position: relative; width: 100%;"><div id="virtual-content" style="position: absolute; top: 0; left: 0; width: 100%;"></div></div>
             </div>
         </div>
     </div>
 
+    <!-- --- MODAIS (Janelas de Opções) --- -->
     <div id="eq-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-gray-900 p-5 sm:p-8 rounded-[1.5rem] border border-gray-800 w-full sm:w-[90%] max-w-md shadow-2xl relative overflow-hidden">
             <div class="flex justify-between items-center mb-4 sm:mb-6 relative z-20">
@@ -394,12 +410,11 @@
         import { getFirestore, doc, setDoc, getDocs, collection, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
-        // Credenciais Corrigidas (storageBucket atualizado para appspot.com)
         const firebaseConfig = {
             apiKey: "AIzaSyAFJRjlqQzBAlGqBLHKsz0XZw5fdHYvtbA",
             authDomain: "emera-4ff30.firebaseapp.com",
             projectId: "emera-4ff30",
-            storageBucket: "emera-4ff30.appspot.com",
+            storageBucket: "emera-4ff30.firebasestorage.app", // Endereço reposto conforme painel original!
             messagingSenderId: "617412005928",
             appId: "1:617412005928:web:fa8e520b05c0c13c61a51d",
             measurementId: "G-1M69MGY6DK"
@@ -415,7 +430,6 @@
         window.addEventListener('touchmove', function() {}, {passive: false});
 
         const audio = document.getElementById('audio-player');
-        // Adiciona isto por predefinição para que funcione com o Storage sem problemas de CORS
         audio.crossOrigin = "anonymous"; 
 
         let isPlaying = false, currentTrackIndex = 0, playlist = [];
@@ -495,7 +509,7 @@
                 exitClicks++;
                 if (exitClicks >= 3) { history.back(); } 
                 else {
-                    history.pushState(null, '', '#main'); showToast(`Pressione voltar mais ${3 - exitClicks} vezes para sair.`);
+                    history.pushState(null, '', '#main'); window.showToast(`Pressione voltar mais ${3 - exitClicks} vezes para sair.`);
                     clearTimeout(exitTimer); exitTimer = setTimeout(() => { exitClicks = 0; }, 2000);
                 }
                 return;
@@ -549,7 +563,7 @@
         if (savedTheme) applyTheme(...savedTheme.split(',')); else applyTheme('#10b981', '#059669', 'rgba(16,185,129,0.2)');
         
         const isOled = JSON.parse(localStorage.getItem('webPlayerOled')) || false;
-        oledToggle.checked = isOled; applyOled(isOled); oledToggle.addEventListener('change', (e) => applyOled(e.target.checked));
+        if(oledToggle) { oledToggle.checked = isOled; applyOled(isOled); oledToggle.addEventListener('change', (e) => applyOled(e.target.checked)); }
         document.querySelectorAll('.theme-btn').forEach(btn => btn.addEventListener('click', (e) => { const c = e.target.dataset.theme.split(','); applyTheme(c[0], c[1], c[2]); }));
 
         window.showToast = function(message) {
@@ -561,7 +575,6 @@
             setTimeout(() => { toast.classList.replace('toast-enter-active', 'toast-exit-active'); setTimeout(() => toast.remove(), 300); }, 3000);
         };
 
-        // --- STREAMING_CHUNK:Firebase Operations ---
         async function loadTracksFromFirebase() {
             if(!currentUser) return;
             try {
@@ -592,9 +605,9 @@
                 DOM.title.textContent = 'Acesso Bloqueado';
                 DOM.artist.textContent = 'Verifique as Regras do Firebase';
                 if (e.code === 'permission-denied') {
-                    window.showToast("Permissão Negada: Por favor atualize as Regras do seu Firestore para permitir acesso.");
+                    window.showToast("Permissão Negada: Mude as Regras do seu Firestore e Storage para 'allow read, write: if true;'");
                 } else {
-                    window.showToast("A nuvem está vazia ou não tem as regras de acesso corretas.");
+                    window.showToast("A nuvem não tem acesso.");
                 }
             }
         }
@@ -615,7 +628,6 @@
             try { if(coverUrl && coverUrl.startsWith('http')) await deleteObject(ref(storage, coverUrl)); } catch(e){}
         }
 
-        // --- STREAMING_CHUNK:Web Audio API & EQ ---
         function initWebAudio() {
             if(audioCtx) return;
             try {
@@ -673,8 +685,8 @@
         };
 
         const visualizerNames = ["Radial", "Barras Clássicas", "Osciloscópio", "Pulso de Graves", "Partículas", "Desligado"];
-        DOM.toggleVis.addEventListener('click', (e) => { e.stopPropagation(); visualizerMode = (visualizerMode + 1) % visualizerNames.length; if(visualizerMode===5) canvasCtx.clearRect(0,0,DOM.canvas.width,DOM.canvas.height); window.showToast(`Efeito: ${visualizerNames[visualizerMode]}`); });
-        document.getElementById('cover-container').addEventListener('click', () => DOM.toggleVis.click()); 
+        if(DOM.toggleVis) DOM.toggleVis.addEventListener('click', (e) => { e.stopPropagation(); visualizerMode = (visualizerMode + 1) % visualizerNames.length; if(visualizerMode===5) canvasCtx.clearRect(0,0,DOM.canvas.width,DOM.canvas.height); window.showToast(`Efeito: ${visualizerNames[visualizerMode]}`); });
+        if(document.getElementById('cover-container')) document.getElementById('cover-container').addEventListener('click', () => DOM.toggleVis.click()); 
 
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
@@ -731,13 +743,11 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Context & Smart Scroller ---
         function updatePlaylistContexts() {
             if(!DOM.customArtistList) return;
             let artistSet = new Set();
             playlist.forEach(t => {
                 if(t.artist && t.artist !== "Desconhecido") {
-                    // Smart Split Engine - separa João feat. Maria
                     const parts = t.artist.split(/,|\s+&\s+|\s+ft\.?\s+|\s+feat\.?\s+|\s+e\s+/i);
                     parts.forEach(p => { const clean = p.trim(); if(clean) artistSet.add(clean); });
                 }
@@ -862,7 +872,7 @@
                 const p = audio.play(); 
                 if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; updateTrackInFirebase(t); }).catch((err)=>{ 
                     console.warn(err); 
-                    window.showToast("Falha de CORS: Para que o visualizador/jogo funcione a 100%, permita CORS no Storage.");
+                    window.showToast("Falha de CORS: Para que o visualizador/jogo funcione, defina CORS no Storage Google.");
                 }); 
             }
         }
@@ -870,7 +880,7 @@
         function togglePlay() {
             if(playlist.length===0) return; 
             initWebAudio(); if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); 
-            if(isPlaying) { audio.pause(); } else { const p = audio.play(); if(p!==undefined) p.catch((err)=>{ console.warn(err); window.showToast("CORS do Firebase não configurado no Storage."); }); }
+            if(isPlaying) { audio.pause(); } else { const p = audio.play(); if(p!==undefined) p.catch((err)=>{ console.warn(err); window.showToast("CORS não configurado na nuvem."); }); }
         }
 
         function nextTrack() {
@@ -965,7 +975,6 @@
         document.getElementById('eq-btn').addEventListener('click', () => tModal(DOM.eqModal, true, 'eq')); document.getElementById('close-eq-btn').addEventListener('click', () => tModal(DOM.eqModal, false, 'eq'));
         document.getElementById('settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), true, 'settings')); document.getElementById('close-settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), false, 'settings'));
 
-        // --- STREAMING_CHUNK:Virtual Scroller UI ---
         const ITEM_HEIGHT = 64; 
         let visualPlaylist = [];
         
@@ -1085,8 +1094,10 @@
 
         function updateMiniPlayer() { const t = playlist[currentTrackIndex]; if(!t) return; DOM.miniTitle.textContent = t.title; DOM.miniArtist.textContent = t.artist; DOM.miniCover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'; }
 
-        DOM.preampSlider.addEventListener('input', e => { const v = parseFloat(e.target.value); if(preampNode) preampNode.gain.value = v; DOM.preampDisp.textContent = Math.round(v*100)+'%'; savedPreamp = v; savePreampToStorage(v); });
-        DOM.preampSlider.value = savedPreamp; DOM.preampDisp.textContent = Math.round(savedPreamp*100)+'%';
+        if(DOM.preampSlider) {
+            DOM.preampSlider.addEventListener('input', e => { const v = parseFloat(e.target.value); if(preampNode) preampNode.gain.value = v; DOM.preampDisp.textContent = Math.round(v*100)+'%'; savedPreamp = v; savePreampToStorage(v); });
+            DOM.preampSlider.value = savedPreamp; DOM.preampDisp.textContent = Math.round(savedPreamp*100)+'%';
+        }
 
         document.getElementById('start-timer-btn')?.addEventListener('click', () => {
             const m = parseInt(document.getElementById('sleep-timer-input').value); if(isNaN(m) || m<=0) return;
@@ -1108,9 +1119,7 @@
             } else if (clearDbClicks === 2) {
                 clearTimeout(clearDbTimer); 
                 window.showToast("A eliminar toda a biblioteca da nuvem...");
-                for(let t of playlist) {
-                    await deleteTrackFromFirebase(t.id, t.src, t.cover);
-                }
+                for(let t of playlist) { await deleteTrackFromFirebase(t.id, t.src, t.cover); }
                 playlist=[]; audio.pause(); audio.src=""; localStorage.removeItem('webPlayerOrder');
                 updatePlaylistContexts(); triggerListUpdate();
                 DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar';
@@ -1204,7 +1213,6 @@
             });
         }
 
-        // --- STREAMING_CHUNK:Firebase Sync Engine ---
         async function handleFiles(files) {
             if(files.length === 0) return;
             if(!currentUser) { window.showToast("Erro: Nuvem não ligada."); return; }
@@ -1214,7 +1222,6 @@
 
             window.showToast(`A preparar envio de ${validFiles.length} música(s). Mantenha a janela aberta!`);
 
-            // Transforma a UI do Leitor num Monitor de Progresso
             DOM.cover.src = 'https://placehold.co/500x500/1f2937/10b981?text=A+Sincronizar\nNuvem';
             DOM.cover.classList.add('animate-pulse');
             DOM.title.textContent = `A Iniciar Upload...`;
@@ -1222,12 +1229,12 @@
             
             let successCount = 0;
             let failCount = 0;
-            let consecutiveFails = 0; // Previne que fique horas a falhar
+            let consecutiveFails = 0;
+            let lastErrorMsg = "";
 
             for (let i = 0; i < validFiles.length; i++) {
-                // Se 5 falharem seguidas, abortamos para poupar tempo. Provavelmente é um erro de credenciais.
                 if (consecutiveFails >= 5) {
-                    window.showToast("Abortado! Muitas falhas seguidas. Verifique as Regras do Storage e se o seu 'storageBucket' está correto.");
+                    window.showToast(`Abortado automaticamente! Causa do bloqueio: ${lastErrorMsg}`);
                     break; 
                 }
 
@@ -1238,7 +1245,7 @@
                 DOM.title.textContent = `${cleanTitle.length > 25 ? cleanTitle.substring(0,25) + '...' : cleanTitle}`;
                 DOM.artist.textContent = `(Passo 1/3) A ler dados... | ${i + 1}/${validFiles.length}`;
 
-                // 1. Extração Síncrona com Timeout (Máximo 3.5 segundos)
+                // 1. Extração de Metadados (Timeout: 5 Segundos)
                 let tags = { title: cleanTitle, artist: "Desconhecido", coverData: null, coverFormat: null, lyrics: "" };
                 if (window.jsmediatags) {
                     try {
@@ -1247,7 +1254,7 @@
                             
                             const timeoutId = setTimeout(() => {
                                 if(!isResolved) { isResolved = true; resolve(tags); }
-                            }, 3500); 
+                            }, 5000); 
 
                             window.jsmediatags.read(file, {
                                 onSuccess: tag => {
@@ -1273,7 +1280,7 @@
                 }
 
                 try {
-                    // 2. Upload Capa (Com limite máximo de 15 segundos para não travar)
+                    // 2. Gravar Capa (Timeout: 30 Segundos)
                     let coverUrl = null;
                     if (tags.coverData) {
                         DOM.artist.textContent = `(Passo 2/3) A gravar Capa... | ${i + 1}/${validFiles.length}`;
@@ -1282,23 +1289,23 @@
                         
                         await Promise.race([
                             uploadBytes(coverRef, coverBlob),
-                            new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout Capa")), 15000))
+                            new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout ao enviar capa (Mais de 30s)")), 30000))
                         ]);
                         coverUrl = await getDownloadURL(coverRef);
                     }
 
-                    // 3. Upload Ficheiro Áudio (Com limite máximo de 90 segundos por música)
+                    // 3. Gravar Áudio (Timeout: 90 Segundos)
                     DOM.artist.textContent = `(Passo 3/3) A gravar Áudio... | ${i + 1}/${validFiles.length}`;
                     const audioRef = ref(storage, `artifacts/emera-player/public/data/audio/${trackId}`);
                     
                     await Promise.race([
                         uploadBytes(audioRef, file),
-                        new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout Áudio")), 90000))
+                        new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout ao enviar áudio (Mais de 90s)")), 90000))
                     ]);
                     
                     const audioUrl = await getDownloadURL(audioRef);
 
-                    // 4. Criar Metadados e Guardar no Firestore DB
+                    // 4. Gravar no Banco de Dados
                     const newTrack = {
                         id: trackId,
                         title: tags.title,
@@ -1315,24 +1322,23 @@
 
                     playlist.unshift(newTrack);
                     successCount++;
-                    consecutiveFails = 0; // Reset às falhas após sucesso
+                    consecutiveFails = 0; 
                     
-                    // Atualiza a lista lateral a cada 5 músicas para não bloquear a interface
                     if (successCount % 5 === 0) {
                         savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate();
                     }
 
                 } catch (err) {
-                    console.error("Erro no upload da faixa:", cleanTitle, err);
+                    console.error("Erro técnico no upload:", err);
+                    lastErrorMsg = err.message; // Guarda a mensagem exata para exibir
                     failCount++;
                     consecutiveFails++;
                 }
                 
-                // Pausa crucial de 50ms para permitir ao browser limpar a memória RAM
+                // Micro-pausa para não sobrecarregar a RAM (Memory Leak Prevention)
                 await new Promise(r => setTimeout(r, 50));
             }
             
-            // Fim do Processo
             DOM.cover.classList.remove('animate-pulse');
             savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate();
             
@@ -1350,7 +1356,6 @@
         DOM.miniPlay.parentElement.addEventListener('click', () => { DOM.playPause.click(); });
         document.getElementById('mini-prev-btn').addEventListener('click', () => DOM.prev.click()); document.getElementById('mini-next-btn').addEventListener('click', () => DOM.next.click());
 
-        // --- STREAMING_CHUNK:Jogo Emera Tiles ---
         const gamePanel = document.getElementById('game-panel'); const gameOverlay = document.getElementById('game-overlay'); const gameOverOverlay = document.getElementById('game-over-overlay'); const victoryOverlay = document.getElementById('victory-overlay'); const countdownOverlay = document.getElementById('countdown-overlay'); 
         const gameCanvas = document.getElementById('game-canvas'); const gCtx = gameCanvas.getContext('2d'); const gameScoreEl = document.getElementById('game-score'); const gameComboEl = document.getElementById('game-combo'); const gameSpeedDisplay = document.getElementById('game-speed-display'); const gameBonusCount = document.getElementById('game-bonus-count'); 
         
@@ -1607,17 +1612,15 @@
         });
         document.addEventListener('keyup', e => { if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { handleGameInputUp(keyMappings[e.code]); } });
 
-        // --- STREAMING_CHUNK:App Initialization ---
-        // Boot da Aplicação Firebase
         try {
-            window.showToast("A conectar à Nuvem...");
+            window.showToast("A conectar à Nuvem Pública...");
             const userCredential = await signInAnonymously(auth);
             currentUser = userCredential.user;
             await loadTracksFromFirebase();
         } catch(error) {
             console.error("Auth error", error);
             if (error.code === 'auth/configuration-not-found') {
-                window.showToast("ERRO CRÍTICO: Ative o provedor 'Anónimo' no menu Authentication do Firebase!");
+                window.showToast("ERRO: Ative o provedor 'Anónimo' no menu Authentication do Firebase!");
             } else {
                 window.showToast("Falha na ligação à Nuvem.");
             }
