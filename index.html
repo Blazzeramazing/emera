@@ -91,7 +91,6 @@
         .game-miss-flash { animation: missFlash 0.3s ease-out forwards; }
         @keyframes missFlash { 0% { background-color: rgba(239, 68, 68, 0.3); } 100% { background-color: transparent; } }
 
-        /* Otimização de Renderização da Lista (C11) */
         #list-container { position: relative; overflow-y: auto; overflow-x: hidden; will-change: transform; }
         .playlist-item-virtual { position: relative; height: 64px; }
     </style>
@@ -276,7 +275,7 @@
                 </div>
             </div>
 
-            <!-- Virtual Scroller Container (Performance Máxima para +1000 músicas) -->
+            <!-- Virtual Scroller Container -->
             <div class="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 pb-12 relative" id="list-container">
                 <div id="virtual-spacer" style="height: 0px; position: relative; width: 100%;"><div id="virtual-content" style="position: absolute; top: 0; left: 0; width: 100%;"></div></div>
             </div>
@@ -410,11 +409,12 @@
         import { getFirestore, doc, setDoc, getDocs, collection, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
+        // As suas credenciais
         const firebaseConfig = {
             apiKey: "AIzaSyAFJRjlqQzBAlGqBLHKsz0XZw5fdHYvtbA",
             authDomain: "emera-4ff30.firebaseapp.com",
             projectId: "emera-4ff30",
-            storageBucket: "emera-4ff30.firebasestorage.app", // Endereço reposto conforme painel original!
+            storageBucket: "emera-4ff30.firebasestorage.app", 
             messagingSenderId: "617412005928",
             appId: "1:617412005928:web:fa8e520b05c0c13c61a51d",
             measurementId: "G-1M69MGY6DK"
@@ -430,6 +430,7 @@
         window.addEventListener('touchmove', function() {}, {passive: false});
 
         const audio = document.getElementById('audio-player');
+        // Essencial para o Equalizador/Visualizador e o Firebase
         audio.crossOrigin = "anonymous"; 
 
         let isPlaying = false, currentTrackIndex = 0, playlist = [];
@@ -605,7 +606,7 @@
                 DOM.title.textContent = 'Acesso Bloqueado';
                 DOM.artist.textContent = 'Verifique as Regras do Firebase';
                 if (e.code === 'permission-denied') {
-                    window.showToast("Permissão Negada: Mude as Regras do seu Firestore e Storage para 'allow read, write: if true;'");
+                    window.showToast("Permissão Negada: Mude as Regras do seu Firestore e Storage!");
                 } else {
                     window.showToast("A nuvem não tem acesso.");
                 }
@@ -872,7 +873,7 @@
                 const p = audio.play(); 
                 if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; updateTrackInFirebase(t); }).catch((err)=>{ 
                     console.warn(err); 
-                    window.showToast("Falha de CORS: Para que o visualizador/jogo funcione, defina CORS no Storage Google.");
+                    window.showToast("Alerta CORS: Aplique a configuração de CORS no seu bucket Firebase!");
                 }); 
             }
         }
@@ -1215,7 +1216,7 @@
 
         async function handleFiles(files) {
             if(files.length === 0) return;
-            if(!currentUser) { window.showToast("Erro: Nuvem não ligada."); return; }
+            if(!currentUser) { window.showToast("Erro: Nuvem não ligada. Recarregue a página."); return; }
 
             const validFiles = files.filter(f => f.type.startsWith('audio/') || f.name.endsWith('.mp3') || f.name.endsWith('.wav') || f.name.endsWith('.ogg'));
             if(validFiles.length === 0) { window.showToast("Nenhuma música válida."); return; }
@@ -1294,13 +1295,13 @@
                         coverUrl = await getDownloadURL(coverRef);
                     }
 
-                    // 3. Gravar Áudio (Timeout: 90 Segundos)
+                    // 3. Gravar Áudio (Timeout: Aumentado para 180 Segundos - 3 min para ficheiros pesados)
                     DOM.artist.textContent = `(Passo 3/3) A gravar Áudio... | ${i + 1}/${validFiles.length}`;
                     const audioRef = ref(storage, `artifacts/emera-player/public/data/audio/${trackId}`);
                     
                     await Promise.race([
                         uploadBytes(audioRef, file),
-                        new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout ao enviar áudio (Mais de 90s)")), 90000))
+                        new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout ao enviar áudio (Atraso na Rede)")), 180000))
                     ]);
                     
                     const audioUrl = await getDownloadURL(audioRef);
@@ -1330,7 +1331,7 @@
 
                 } catch (err) {
                     console.error("Erro técnico no upload:", err);
-                    lastErrorMsg = err.message; // Guarda a mensagem exata para exibir
+                    lastErrorMsg = err.message; 
                     failCount++;
                     consecutiveFails++;
                 }
