@@ -342,7 +342,6 @@
                 </div>
             </div>
 
-            <!-- Virtual Scroller Container -->
             <div class="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 pb-12 relative" id="list-container">
                 <div id="virtual-spacer" style="height: 0px; position: relative; width: 100%;">
                     <div id="virtual-content" style="position: absolute; top: 0; left: 0; width: 100%;"></div>
@@ -552,7 +551,7 @@
         let settingChroma = JSON.parse(localStorage.getItem('webPlayerChroma')) || false;
         let settingPulse = JSON.parse(localStorage.getItem('webPlayerPulse')) || true;
         let settingAtmosphere = JSON.parse(localStorage.getItem('webPlayerAtmosphere')) || false;
-        let chromaHue = 0; let cachedThemeArgs = ['#10b981', '#059669', 'rgba(16,185,129,0.2)'];
+        let chromaHue = 0; let cachedAccentColor = '#10b981'; let cachedThemeArgs = ['#10b981', '#059669', 'rgba(16,185,129,0.2)'];
 
         const DOM = {
             installAppBtn: document.getElementById('install-app-btn'),
@@ -684,16 +683,13 @@
 
         async function initOfflineMode() {
             try {
-                const swCode = `
-                    const CACHE = 'emera-offline-v1';
-                    const urls = [ location.href.split('#')[0], 'https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js', 'https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css', 'https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js', 'https://cdn.tailwindcss.com' ];
-                    self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(urls))); });
-                    self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-                    self.addEventListener('fetch', e => { e.respondWith(caches.match(e.request).then(res => res || fetch(e.request).catch(() => new Response('Offline')))); });
-                `;
-                const swBlob = new Blob([swCode], {type: 'application/javascript'});
-                if ('serviceWorker' in navigator) { await navigator.serviceWorker.register(URL.createObjectURL(swBlob)); console.log("Sistema de Cache Offline Ativado!"); }
-            } catch(e) { console.log("SW offline bloqueado localmente."); }
+                if ('serviceWorker' in navigator) { 
+                    await navigator.serviceWorker.register('./sw.js'); 
+                    console.log("Sistema de Cache Offline Ativado via sw.js!"); 
+                }
+            } catch(e) { 
+                console.log("Falha ao registrar o Service Worker.", e); 
+            }
         }
         window.addEventListener('load', initOfflineMode);
 
