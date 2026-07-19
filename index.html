@@ -1603,7 +1603,7 @@
             triggerListUpdate(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
         });
 
-        function handleFiles(files) {
+        async function handleFiles(files) {
             if(files.length === 0) return;
             
             showToast(`A analisar ${files.length} ficheiro(s)...`);
@@ -1621,58 +1621,61 @@
                 return;
             }
 
-            let loadedCount = 0;
-            const CHUNK_SIZE = 50; 
-            
-            function processChunk(startIndex) {
-                const endIndex = Math.min(startIndex + CHUNK_SIZE, validFiles.length);
-                const chunk = validFiles.slice(startIndex, endIndex);
-                let newTracks = []; 
+            showToast(`A guardar ${validFiles.length} músicas. Aguarde...`);
+            let added = 0;
+            let newTracks = [];
+
+            // Função isolada e segura para forçar a gravação de 1 ficheiro de cada vez no disco
+            const saveTrackAsync = (track) => new Promise((resolve) => {
+                if(!db) { resolve(); return; }
+                const tx = db.transaction(STORE_NAME, "readwrite");
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => resolve(); // Se o limite do telefone for atingido, ignora e segue sem crashar
+                tx.onabort = () => resolve();
+                const ct = {...track}; delete ct.src;
+                tx.objectStore(STORE_NAME).put(ct);
+            });
+
+            // Processamento Sequencial Assíncrono (Resolve o sumiço no telemóvel/celular)
+            for (let i = 0; i < validFiles.length; i++) {
+                const file = validFiles[i];
+                const cleanTitle = file.name.replace(/\.[^/.]+$/, ""); 
+                const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
                 
-                chunk.forEach(file => {
-                    const cleanTitle = file.name.replace(/\.[^/.]+$/, ""); 
-                    const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
-                    
-                    let nT = { 
-                        id: trackId, 
-                        title: cleanTitle, 
-                        artist: "Desconhecido", 
-                        file: file, 
-                        src: URL.createObjectURL(file), 
-                        cover: null, 
-                        lyrics: "", 
-                        isLocal: true,
-                        addedAt: Date.now() + loadedCount
-                    };
-                    
-                    playlist.unshift(nT);
-                    newTracks.push(nT);
-                    loadedCount++;
-                });
+                let nT = { 
+                    id: trackId, 
+                    title: cleanTitle, 
+                    artist: "Desconhecido", 
+                    file: file, 
+                    src: URL.createObjectURL(file), 
+                    cover: null, 
+                    lyrics: "", 
+                    isLocal: true,
+                    addedAt: Date.now() + i // Mantém a ordenação temporal exata
+                };
+                
+                playlist.unshift(nT);
+                newTracks.push(nT);
+                added++;
 
-                // NOVO: Restauro do salvamento em Bulk (Massa) para máxima performance
-                if (db && newTracks.length > 0) {
-                    const tx = db.transaction(STORE_NAME, "readwrite");
-                    const store = tx.objectStore(STORE_NAME);
-                    newTracks.forEach(t => { const ct = {...t}; delete ct.src; store.put(ct); });
-                }
+                // O AWAIT é a chave de tudo: Pausa o loop até o browser confirmar que o ficheiro está seguro no disco
+                await saveTrackAsync(nT);
 
-                if (endIndex < validFiles.length) {
-                    showToast(`A importar ${endIndex} de ${validFiles.length}...`);
-                    requestAnimationFrame(() => setTimeout(() => processChunk(endIndex), 50));
-                } else {
-                    savePlaylistOrder();
-                    updatePlaylistContexts();
+                // Feedback visual progressivo a cada 10 músicas (Não bloqueia a app)
+                if ((i + 1) % 10 === 0 || i === validFiles.length - 1) {
+                    showToast(`Guardadas ${i + 1} de ${validFiles.length}...`);
                     triggerListUpdate();
-                    showToast(`${validFiles.length} músicas importadas! A ler detalhes...`);
-                    if(!isPlaying) loadTrack(0);
-                    
-                    // Lazy Loading no final do chunking
-                    extractMetadataInBackground(validFiles.slice(), playlist.slice(0, validFiles.length));
                 }
             }
 
-            processChunk(0);
+            savePlaylistOrder();
+            updatePlaylistContexts();
+            triggerListUpdate();
+            showToast(`${added} músicas importadas com sucesso!`);
+            if(!isPlaying) loadTrack(0);
+            
+            // Lança a extração de Capas e Tags de forma independente no final
+            extractMetadataInBackground(validFiles, newTracks);
         }
 
         function extractMetadataInBackground(files, tracksRefs) {
