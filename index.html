@@ -39,14 +39,12 @@
     </script>
     
     <style>
-        /* CSS Variables */
         :root { --accent: #1db954; --accent-hover: #1ed760; --accent-light: rgba(29, 185, 84, 0.2); }
         * { transition: background-color 0.2s, border-color 0.2s; }
 
         body { -webkit-touch-callout: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; background-color: #000000; }
-        input, textarea, #lyrics-inner { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
+        input, textarea, #lyrics-text { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
 
-        /* Estilo de Slider Spotify */
         .standard-slider { -webkit-appearance: none; width: 100%; background: transparent; }
         .standard-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; cursor: pointer; margin-top: -4px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.2s; }
         .progress-bar-container:hover .standard-slider::-webkit-slider-thumb { opacity: 1; }
@@ -61,7 +59,6 @@
         .spin-paused { animation-play-state: paused; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Scrollbar estilo Spotify */
         .custom-scrollbar::-webkit-scrollbar { width: 12px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); border-radius: 0px; border: 3px solid transparent; background-clip: padding-box; }
@@ -70,18 +67,12 @@
         input[type=range][orient=vertical] { writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 8px; height: 100%; padding: 0 5px; cursor: pointer; }
         .drag-over { border: 1px dashed var(--accent) !important; background-color: var(--accent-light) !important; }
         
-        /* Ocultar actions da lista até ao hover (Desktop) */
         @media (min-width: 768px) { .playlist-item .actions, .playlist-item .play-indicator-icon { opacity: 0; transition: opacity 0.2s; } .playlist-item:hover .actions, .playlist-item:hover .play-indicator-icon { opacity: 1; } .playlist-item:hover .track-number { opacity: 0; } }
 
         .toast-enter { transform: translateY(100%); opacity: 0; }
         .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .toast-exit-active { transform: translateY(100%); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        #context-dropdown { transform-origin: top left; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .dropdown-open { opacity: 1 !important; transform: scaleY(1) !important; pointer-events: auto !important; }
-        .dropdown-closed { opacity: 0; transform: scaleY(0.95); pointer-events: none; }
-        
-        /* Mobile adjustments */
         @media (max-width: 767px) {
             #right-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: absolute; top: 10%; bottom: 0; left: 0; right: 0; height: auto; transform: translateY(100%); z-index: 40; border-radius: 16px 16px 0 0; background-color: #121212; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); }
             #right-panel.expanded { transform: translateY(0); }
@@ -102,20 +93,18 @@
         @keyframes missFlash { 0% { background-color: rgba(239, 68, 68, 0.3); } 100% { background-color: transparent; } }
 
         #list-container { position: relative; overflow-y: auto; overflow-x: hidden; will-change: transform; }
-        .playlist-item-virtual { position: relative; height: 56px; } 
-
-        /* Lyrics Custom Styles */
-        .lyric-line { transition: all 0.3s ease; }
-        .lyric-line.active { opacity: 1 !important; transform: scale(1.05); }
+        .playlist-item-virtual { position: relative; height: 56px; }
     </style>
 </head>
 <body class="text-spTextMain font-sans selection:bg-accent selection:text-white h-[100dvh] flex flex-col overflow-hidden">
 
+    <!-- Sidebar Overlay Mobile -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
 
+    <!-- App Container -->
     <div id="main-app-container" class="flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
         
-        <!-- SIDEBAR -->
+        <!-- SIDEBAR (Bibliotecas e Filtros) -->
         <aside id="sidebar" class="w-72 md:w-64 bg-spBase md:rounded-lg flex-col fixed inset-y-0 left-0 z-[100] transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 flex overflow-hidden">
             <div class="p-4 sm:p-6 flex flex-col gap-4">
                 <div class="flex items-center justify-between">
@@ -139,22 +128,24 @@
             <!-- Library Header -->
             <div id="list-header" class="flex-1 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar relative md:cursor-default bg-spBase">
                 <div class="px-4 py-2 flex justify-between items-center text-spTextSub">
-                    <div class="flex items-center gap-2 font-bold hover:text-white transition cursor-pointer" id="context-trigger">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                    <!-- Novo Botão para Modal Nativo da Biblioteca -->
+                    <div class="flex items-center gap-2 font-bold hover:text-white transition cursor-pointer group" id="open-context-modal-btn">
+                        <svg class="w-6 h-6 group-hover:scale-105 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
                         <span id="context-trigger-text" class="truncate max-w-[120px]">Sua Biblioteca</span>
-                        <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                     <button id="create-playlist-btn" class="hover:text-white transition rounded-full p-1 hover:bg-spElevated" title="Criar Playlist"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
                 </div>
 
+                <!-- Filtros e Upload -->
                 <div class="px-4 py-2 flex flex-wrap gap-2">
-                    <button id="sort-trigger-btn" class="bg-spHighlight text-xs text-white rounded-full px-3 py-1.5 outline-none hover:bg-white/10 transition flex items-center gap-1 cursor-pointer">
-                        <span id="sort-trigger-text">Personalizado</span>
+                    <!-- Novo Botão para Modal Nativo de Ordenação -->
+                    <button id="open-sort-modal-btn" class="bg-spHighlight text-xs text-white rounded-full px-3 py-1 outline-none hover:bg-white/10 transition cursor-pointer flex items-center gap-1.5">
+                        <span id="current-sort-text">Personalizado</span>
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                 </div>
 
-                <div class="px-4 mt-2 mb-4 flex flex-col gap-2">
+                <div class="px-4 mt-4 mb-4 flex flex-col gap-2">
                      <span class="text-xs text-spTextSub font-bold uppercase tracking-wider">Adicionar Arquivos</span>
                      <div id="local-actions" class="flex gap-2">
                         <input type="file" id="folder-upload" webkitdirectory directory multiple class="sr-only">
@@ -192,7 +183,7 @@
             </div>
         </aside>
 
-        <!-- MAIN VIEW -->
+        <!-- MAIN VIEW (Visualizador + Lista) -->
         <main class="flex-1 bg-spBase md:rounded-lg overflow-hidden flex flex-col relative w-full h-full">
             
             <div class="h-16 flex justify-between items-center px-4 bg-gradient-to-b from-black/60 to-transparent absolute top-0 w-full z-20 pointer-events-none">
@@ -239,7 +230,6 @@
 
             <div id="right-panel" class="flex-1 w-full bg-spBase relative z-20">
                 <div class="drawer-puller cursor-pointer absolute top-0 left-0 right-0 z-30" id="drawer-handle"></div>
-                <!-- O Virtual Scroller habita aqui -->
                 <div class="h-full w-full overflow-y-auto custom-scrollbar p-2 pb-4 relative" id="list-container">
                     <div id="virtual-spacer" style="height: 0px; position: relative; width: 100%;">
                         <div id="virtual-content" style="position: absolute; top: 0; left: 0; width: 100%;"></div>
@@ -328,6 +318,7 @@
         </main>
     </div>
 
+    <!-- BOTTOM BAR (Controlos Estilo Spotify) -->
     <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-50 fixed bottom-0">
         
         <div class="w-[40%] md:w-[30%] max-w-[140px] md:max-w-none min-w-[100px] flex items-center gap-2 md:gap-3 order-1 cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir/Ocultar Playlist">
@@ -382,7 +373,7 @@
         </div>
 
         <div class="w-[30%] min-w-[150px] items-center justify-end gap-2 md:gap-4 pr-2 hidden md:flex order-3" id="volume-section">
-            <button id="eq-btn" class="text-spTextSub hover:text-white transition" title="Equalizador"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
+            <button id="eq-btn" class="text-spTextSub hover:text-white transition" title="Equalizador"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
             <button id="settings-btn" class="text-spTextSub hover:text-white transition" title="Definições"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg></button>
             <button id="share-btn" class="hidden"></button>
             
@@ -395,7 +386,6 @@
         </div>
     </footer>
 
-    <!-- EQ Modal -->
     <div id="eq-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full sm:w-[90%] max-w-md shadow-2xl relative overflow-hidden">
             <div class="flex justify-between items-center mb-6 relative z-20">
@@ -419,7 +409,6 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full sm:w-[90%] max-w-sm shadow-2xl">
             <div class="flex justify-between items-center mb-6">
@@ -495,7 +484,6 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
     <div id="edit-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
             <h3 class="text-lg font-bold text-white mb-4">Editar Detalhes</h3>
@@ -518,66 +506,56 @@
         </div>
     </div>
 
-    <!-- Context Modal (Substitui o Dropdown) -->
-    <div id="context-modal" class="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 sm:p-4">
-        <div class="bg-spElevated w-full sm:max-w-md shadow-2xl rounded-t-2xl sm:rounded-xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div class="p-5 border-b border-white/5 flex justify-between items-center flex-shrink-0">
-                <h3 class="text-xl font-bold text-white">Mostrar</h3>
-                <button id="close-context-btn" class="text-spTextSub hover:text-white transition bg-white/5 hover:bg-white/10 rounded-full p-1.5"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            <div class="overflow-y-auto custom-scrollbar flex-1 p-3 flex flex-col gap-1">
-                <button class="context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition flex items-center gap-4" data-value="all">
-                    <div class="w-10 h-10 rounded-full bg-spHighlight flex items-center justify-center shadow"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> <span class="font-bold">Tudo</span>
-                </button>
-                <button class="context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition flex items-center gap-4" data-value="favorites">
-                    <div class="w-10 h-10 rounded-full bg-spHighlight flex items-center justify-center shadow"><span class="text-red-500 text-lg">❤️</span></div> <span class="font-bold">Favoritas</span>
-                </button>
-                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-4">Suas Playlists</div>
-                <div id="custom-playlists-list" class="flex flex-col gap-1"></div>
-                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-4 border-t border-white/5 pt-4">Artistas</div>
-                <div id="custom-artist-list" class="flex flex-col gap-1 pb-4"></div>
+    <!-- Modal de Letras Corrigido: Estilo dark/simples com m-auto para nunca cortar a primeira linha! -->
+    <div id="lyrics-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
+        <div class="bg-[#121212] border border-[#282828] text-white w-full max-w-lg h-[70vh] rounded-xl p-6 flex flex-col shadow-2xl relative overflow-hidden">
+            <button id="close-lyrics-btn" class="absolute top-4 right-4 text-spTextSub hover:text-white transition bg-black/20 hover:bg-black/40 rounded-full p-2 z-10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            <div class="flex-1 overflow-y-auto custom-scrollbar flex">
+                <div id="lyrics-text" class="m-auto whitespace-pre-wrap text-center text-lg sm:text-xl font-bold leading-relaxed px-4 py-8"></div>
             </div>
         </div>
     </div>
 
-    <!-- Sort Modal (Substitui a Select Nativa) -->
-    <div id="sort-modal" class="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 sm:p-4">
-        <div class="bg-spElevated w-full sm:max-w-sm shadow-2xl rounded-t-2xl sm:rounded-xl overflow-hidden flex flex-col">
-            <div class="p-5 border-b border-white/5 flex justify-between items-center">
-                <h3 class="text-xl font-bold text-white">Ordenar por</h3>
-                <button id="close-sort-btn" class="text-spTextSub hover:text-white transition bg-white/5 hover:bg-white/10 rounded-full p-1.5"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+    <!-- NOVO: Modal Nativo de Ordenação (Bottom Sheet) -->
+    <div id="sort-modal" class="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-spElevated md:border border-spHighlight w-full md:w-[90%] md:max-w-xs md:rounded-lg rounded-t-2xl shadow-2xl overflow-hidden translate-y-full md:translate-y-0 transition-transform duration-300" id="sort-modal-panel">
+            <div class="p-4 border-b border-white/5 flex justify-between items-center md:hidden">
+                <h3 class="font-bold text-white">Ordenar Por</h3>
+                <button id="close-sort-btn" class="text-spTextSub hover:text-white p-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
-            <div class="p-3 flex flex-col gap-1">
-                <button class="sort-option w-full text-left px-4 py-4 text-sm text-white hover:bg-white/10 rounded-lg transition flex justify-between items-center font-bold" data-value="manual">
-                    Personalizado <svg class="w-5 h-5 text-accent hidden check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                </button>
-                <button class="sort-option w-full text-left px-4 py-4 text-sm text-white hover:bg-white/10 rounded-lg transition flex justify-between items-center font-bold" data-value="recent">
-                    Adicionadas Recentemente <svg class="w-5 h-5 text-accent hidden check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                </button>
-                <button class="sort-option w-full text-left px-4 py-4 text-sm text-white hover:bg-white/10 rounded-lg transition flex justify-between items-center font-bold" data-value="most_played">
-                    Mais Tocadas <svg class="w-5 h-5 text-accent hidden check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                </button>
+            <div class="p-2 md:p-4 flex flex-col gap-1">
+                <button class="sort-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm" data-value="manual">Personalizado</button>
+                <button class="sort-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm" data-value="recent">Adicionadas Recentemente</button>
+                <button class="sort-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm" data-value="most_played">Mais Tocadas</button>
             </div>
         </div>
     </div>
 
-    <!-- Janela de Letras (Limpa e Estável) -->
-    <div id="lyrics-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4 sm:p-6">
-        <div id="lyrics-container" class="bg-[#181818] text-white w-full max-w-2xl h-[85vh] rounded-2xl flex flex-col shadow-2xl relative overflow-hidden transition-colors duration-500">
-            <div id="lyrics-header" class="flex justify-between items-center p-3 sm:p-4 border-b border-white/10 transition-colors duration-500 flex-shrink-0">
-                <div class="flex gap-2 text-sm font-bold text-white/50 px-2 uppercase tracking-widest">Letras</div>
-                <button id="close-lyrics-btn" class="lyrics-control-btn text-white/60 hover:text-white transition bg-white/5 hover:bg-white/10 rounded-full p-2">
-                    <svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+    <!-- NOVO: Modal Nativo de Contexto/Biblioteca (Bottom Sheet) -->
+    <div id="context-modal" class="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-spElevated md:border border-spHighlight w-full md:w-[90%] md:max-w-sm md:rounded-lg rounded-t-2xl shadow-2xl overflow-hidden translate-y-full md:translate-y-0 transition-transform duration-300 flex flex-col max-h-[80vh]" id="context-modal-panel">
+            <div class="p-4 border-b border-white/5 flex justify-between items-center sticky top-0 bg-spElevated z-10">
+                <h3 class="font-bold text-white text-lg">Sua Biblioteca</h3>
+                <button id="close-context-modal-btn" class="text-spTextSub hover:text-white p-1"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
-            <div id="lyrics-scroll-area" class="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-10 transition-all duration-300 flex flex-col">
-                <!-- Flex com margin auto (my-auto) para o texto garantir que não corta no topo, mas centraliza no ecrã se for pequeno -->
-                <div id="lyrics-inner" class="my-auto w-full whitespace-pre-wrap text-center text-lg sm:text-2xl font-medium leading-relaxed transition-all duration-300 text-white/90"></div>
+            <div class="overflow-y-auto custom-scrollbar p-2 pb-6 flex flex-col gap-1">
+                <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3" data-value="all">
+                    <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> Tudo
+                </button>
+                <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3" data-value="favorites">
+                    <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><span class="text-red-500">❤️</span></div> Favoritas
+                </button>
+                
+                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4">Suas Playlists</div>
+                <div id="context-modal-playlists" class="flex flex-col gap-1"></div>
+                
+                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4">Artistas</div>
+                <div id="context-modal-artists" class="flex flex-col gap-1"></div>
             </div>
         </div>
     </div>
 
-    <!-- Restantes Modais... -->
+    <!-- Playlists Extras -->
     <div id="new-playlist-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-sm shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4">Nova Playlist</h3>
@@ -625,10 +603,14 @@
         
         let audioCtx, sourceNode, preampNode, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
         let visualizerMode = 0; let sleepTimerId = null; let eqModalVisible = false; let isCompact = false;
+        
+        // VARIÁVEIS GLOBAIS CORRIGIDAS (essenciais para os efeitos não encravarem o js)
         let settingChroma = JSON.parse(localStorage.getItem('webPlayerChroma')) || false;
         let settingPulse = JSON.parse(localStorage.getItem('webPlayerPulse')) || true;
         let settingAtmosphere = JSON.parse(localStorage.getItem('webPlayerAtmosphere')) || false;
-        let chromaHue = 0; let cachedAccentColor = '#1db954'; let cachedThemeArgs = ['#1db954', '#1ed760', 'rgba(29,185,84,0.2)'];
+        let chromaHue = 0; 
+        let cachedAccentColor = '#1db954'; 
+        let cachedThemeArgs = ['#1db954', '#1ed760', 'rgba(29,185,84,0.2)'];
 
         const DOM = {
             installAppBtn: document.getElementById('install-app-btn'),
@@ -639,10 +621,9 @@
             progWrap: document.getElementById('progress-wrapper'), progBar: document.getElementById('progress-bar'), progFill: document.getElementById('progress-fill'), curTime: document.getElementById('current-time'), totTime: document.getElementById('total-time'),
             volBar: document.getElementById('volume-bar'), volFill: document.getElementById('vol-fill'), mute: document.getElementById('mute-btn'), volValueDisplay: document.getElementById('vol-value-display'),
             fileUpload: document.getElementById('file-upload'), folderUpload: document.getElementById('folder-upload'),
-            sortTriggerBtn: document.getElementById('sort-trigger-btn'), sortTriggerText: document.getElementById('sort-trigger-text'), localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
-            contextTrigger: document.getElementById('context-trigger'), contextTriggerText: document.getElementById('context-trigger-text'), trackCount: document.getElementById('track-count'), customArtistList: document.getElementById('custom-artist-list'),
-            customPlaylistsList: document.getElementById('custom-playlists-list'), createPlaylistBtn: document.getElementById('create-playlist-btn'),
-            contextModal: document.getElementById('context-modal'), sortModal: document.getElementById('sort-modal'),
+            localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
+            contextTriggerText: document.getElementById('context-trigger-text'), trackCount: document.getElementById('track-count'), 
+            createPlaylistBtn: document.getElementById('create-playlist-btn'),
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
             preampSlider: document.getElementById('preamp-slider'), preampDisp: document.getElementById('preamp-value-display'),
             rightPanel: document.getElementById('right-panel'), drawerHandle: document.getElementById('drawer-handle'), listHeader: document.getElementById('list-header'),
@@ -653,14 +634,23 @@
         };
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
 
-        // Logic for Mobile Sidebar Menu
         const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebar-overlay');
         const closeSidebarBtn = document.getElementById('close-sidebar-btn');
 
-        function openSidebar() { if(!sidebar) return; sidebar.classList.remove('-translate-x-full'); sidebarOverlay.classList.remove('hidden'); setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10); }
-        function closeSidebar() { if(!sidebar) return; sidebar.classList.add('-translate-x-full'); sidebarOverlay.classList.add('opacity-0'); setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300); }
+        function openSidebar() {
+            if(!sidebar) return;
+            sidebar.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.remove('hidden');
+            setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
+        }
+        function closeSidebar() {
+            if(!sidebar) return;
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('opacity-0');
+            setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
+        }
 
         if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', openSidebar);
         if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
@@ -676,14 +666,23 @@
         
         function forceCloseModal(m) {
             if (!m) return;
-            if (!m.classList.contains('hidden')) { m.classList.add('opacity-0'); setTimeout(()=>{ m.classList.add('hidden'); m.classList.remove('flex'); }, 300); if (m === DOM.eqModal) eqModalVisible = false; }
+            if (!m.classList.contains('hidden')) { 
+                m.classList.add('opacity-0'); 
+                // Special handling for bottom sheets sliding animation
+                const panel = m.querySelector('[id$="-panel"]');
+                if(panel && panel.classList.contains('translate-y-0')) {
+                    panel.classList.remove('translate-y-0');
+                    panel.classList.add('translate-y-full');
+                }
+                setTimeout(()=>{ m.classList.add('hidden'); m.classList.remove('flex'); }, 300); 
+                if (m === DOM.eqModal) eqModalVisible = false; 
+            }
         }
 
         function closeAllOverlays() {
             if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
             if (typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded) { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); }
-            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal'));
-            forceCloseModal(DOM.contextModal); forceCloseModal(DOM.sortModal);
+            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); forceCloseModal(document.getElementById('sort-modal')); forceCloseModal(document.getElementById('context-modal'));
         }
 
         window.addEventListener('popstate', (e) => {
@@ -691,7 +690,7 @@
             if (h === '') { exitClicks++; if (exitClicks >= 3) { history.back(); } else { history.pushState(null, '', '#main'); showToast(`Voltar mais ${3 - exitClicks} vezes para sair.`); clearTimeout(exitTimer); exitTimer = setTimeout(() => { exitClicks = 0; }, 2000); } return; } else { exitClicks = 0; }
             if (h === '#main') { closeAllOverlays(); return; }
             if (h === '#playlist') { closeAllOverlays(); if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); } return; }
-            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#context': DOM.contextModal, '#sort': DOM.sortModal };
+            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#sort': document.getElementById('sort-modal'), '#context': document.getElementById('context-modal') };
             Object.keys(hashToModal).forEach(key => { if (h !== key) forceCloseModal(hashToModal[key]); }); if (h !== '#game' && typeof closeGameUI === 'function' && isGameActive) closeGameUI();
         });
 
@@ -716,7 +715,7 @@
 
         async function initOfflineMode() {
             try {
-                const swCode = `const CACHE='emera-offline-v2';const urls=[location.href.split('#')[0],'https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js','https://cdn.tailwindcss.com'];self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(urls)))});self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(res=>res||fetch(e.request).catch(()=>new Response('Offline'))))});`;
+                const swCode = `const CACHE='emera-offline-v3';const urls=[location.href.split('#')[0],'https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js','https://cdn.tailwindcss.com'];self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(urls)))});self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(res=>res||fetch(e.request).catch(()=>new Response('Offline'))))});`;
                 const swBlob = new Blob([swCode], {type: 'application/javascript'}); if ('serviceWorker' in navigator) { await navigator.serviceWorker.register(URL.createObjectURL(swBlob)); }
             } catch(e) {}
         }
@@ -778,7 +777,14 @@
         };
 
         const visualizerNames = ["Radial", "Barras Clássicas", "Osciloscópio", "Pulso", "Partículas", "Desligado"];
-        DOM.toggleVis.addEventListener('click', (e) => { e.stopPropagation(); visualizerMode = (visualizerMode + 1) % visualizerNames.length; if(visualizerMode===5) canvasCtx.clearRect(0,0,DOM.canvas.width,DOM.canvas.height); showToast(`Efeito: ${visualizerNames[visualizerMode]}`); });
+        const handleVisualizerToggle = (e) => { 
+            e.stopPropagation(); 
+            visualizerMode = (visualizerMode + 1) % visualizerNames.length; 
+            if(visualizerMode===5) canvasCtx.clearRect(0,0,DOM.canvas.width,DOM.canvas.height); 
+            showToast(`Efeito: ${visualizerNames[visualizerMode]}`); 
+        };
+        DOM.toggleVis.addEventListener('click', handleVisualizerToggle);
+        DOM.coverContainer.addEventListener('click', handleVisualizerToggle);
 
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
@@ -823,19 +829,107 @@
             }
         }
 
+        const tModal = (m, s, hash) => { 
+            if(!m) return;
+            if(s) { 
+                m.classList.remove('hidden'); m.classList.add('flex'); 
+                setTimeout(()=>m.classList.remove('opacity-0'),10); 
+                // Handle sliding panels if exist
+                const panel = m.querySelector('[id$="-panel"]');
+                if(panel) setTimeout(() => panel.classList.replace('translate-y-full', 'translate-y-0'), 10);
+
+                if (hash && location.hash !== '#' + hash) history.pushState(null, '', '#' + hash); 
+            } else { 
+                forceCloseModal(m);
+                if (hash && location.hash === '#' + hash) history.back(); 
+            } 
+            if(m === DOM.eqModal) eqModalVisible = s; 
+        };
+
+        // Modal de Ordenação
+        function updateSortUI() {
+            const texts = {'manual':'Personalizado', 'recent':'Adicionadas Recentemente', 'most_played':'Mais Tocadas'};
+            document.getElementById('current-sort-text').textContent = texts[currentSortMode] || 'Personalizado';
+            document.querySelectorAll('.sort-option').forEach(btn => {
+                btn.classList.toggle('text-accent', btn.dataset.value === currentSortMode);
+                btn.classList.toggle('text-white', btn.dataset.value !== currentSortMode);
+            });
+        }
+        
+        document.getElementById('open-sort-modal-btn').addEventListener('click', () => { updateSortUI(); tModal(document.getElementById('sort-modal'), true, 'sort'); });
+        document.getElementById('close-sort-btn').addEventListener('click', () => tModal(document.getElementById('sort-modal'), false, 'sort'));
+        document.querySelectorAll('.sort-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                currentSortMode = e.currentTarget.dataset.value;
+                localStorage.setItem('webPlayerSortMode', currentSortMode);
+                updateSortUI();
+                if(currentSortMode === 'manual') savePlaylistOrder(); 
+                triggerListUpdate();
+                tModal(document.getElementById('sort-modal'), false, 'sort');
+            });
+        });
+
+        // Modal de Contexto (Sua Biblioteca)
         function updatePlaylistContexts() {
-            if(!DOM.customArtistList) return;
-            const artists = [...new Set(playlist.map(t => t.artist))].filter(a => a && a !== "Desconhecido" && a.trim() !== "").sort(); DOM.customArtistList.innerHTML = '';
-            artists.forEach(a => { const btn = document.createElement('button'); btn.className = 'context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition truncate flex items-center gap-4'; btn.dataset.value = 'artist:' + a; btn.innerHTML = `<div class="w-10 h-10 rounded-full bg-spHighlight flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-spTextSub" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div> <span class="truncate font-bold">${a}</span>`; DOM.customArtistList.appendChild(btn); });
-            if(DOM.customPlaylistsList) {
-                DOM.customPlaylistsList.innerHTML = '';
-                if (customPlaylists.length === 0) { DOM.customPlaylistsList.innerHTML = `<div class="px-4 py-2 text-xs text-spTextSub italic">Sem playlists.</div>`; } 
-                else { customPlaylists.forEach(pl => { const btn = document.createElement('button'); btn.className = 'context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition flex justify-between items-center group'; btn.dataset.value = 'playlist:' + pl.id; btn.innerHTML = `<div class="flex items-center gap-4 truncate"><div class="w-10 h-10 rounded-md bg-spHighlight flex items-center justify-center flex-shrink-0 shadow"><svg class="w-5 h-5 text-spTextSub" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> <span class="truncate pr-2 pointer-events-none font-bold">${pl.name}</span></div> <span class="text-xs text-spTextSub pointer-events-none flex-shrink-0">${pl.tracks.length}</span>`; DOM.customPlaylistsList.appendChild(btn); }); }
+            const artistsList = document.getElementById('context-modal-artists');
+            const plList = document.getElementById('context-modal-playlists');
+            if(!artistsList) return;
+            
+            const artists = [...new Set(playlist.map(t => t.artist))].filter(a => a && a !== "Desconhecido" && a.trim() !== "").sort(); 
+            artistsList.innerHTML = '';
+            artists.forEach(a => { 
+                const btn = document.createElement('button'); 
+                btn.className = 'context-option text-left px-4 py-3 rounded-lg text-sm text-white hover:bg-white/10 transition truncate'; 
+                btn.dataset.value = 'artist:' + a; btn.textContent = a; artistsList.appendChild(btn); 
+            });
+            
+            if(plList) {
+                plList.innerHTML = '';
+                if (customPlaylists.length === 0) { plList.innerHTML = `<div class="px-4 py-2 text-xs text-spTextSub italic">Sem playlists.</div>`; } 
+                else { 
+                    customPlaylists.forEach(pl => { 
+                        const btn = document.createElement('button'); 
+                        btn.className = 'context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition flex justify-between items-center group'; 
+                        btn.dataset.value = 'playlist:' + pl.id; 
+                        btn.innerHTML = `<span class="truncate pr-2 pointer-events-none">${pl.name}</span> <span class="text-[10px] bg-spHighlight px-2 py-0.5 rounded-full pointer-events-none flex-shrink-0">${pl.tracks.length}</span>`; 
+                        plList.appendChild(btn); 
+                    }); 
+                }
             }
             if (currentContext.startsWith('artist:') && !artists.includes(currentContext.split('artist:')[1])) { setContext('all', 'Sua Biblioteca'); } 
             else if (currentContext.startsWith('playlist:') && !customPlaylists.find(p => p.id === currentContext.split('playlist:')[1])) { setContext('all', 'Sua Biblioteca'); } 
-            else { let text = 'Sua Biblioteca'; if(currentContext === 'favorites') text = 'Favoritas'; else if(currentContext.startsWith('artist:')) text = currentContext.split('artist:')[1]; else if(currentContext.startsWith('playlist:')) { const found = customPlaylists.find(p => p.id === currentContext.split('playlist:')[1]); if(found) text = found.name; } DOM.contextTriggerText.textContent = text; }
+            else { 
+                let text = 'Sua Biblioteca'; 
+                if(currentContext === 'favorites') text = 'Favoritas'; 
+                else if(currentContext.startsWith('artist:')) text = currentContext.split('artist:')[1]; 
+                else if(currentContext.startsWith('playlist:')) { const found = customPlaylists.find(p => p.id === currentContext.split('playlist:')[1]); if(found) text = found.name; } 
+                DOM.contextTriggerText.textContent = text; 
+                
+                // update visual selection inside context modal
+                document.querySelectorAll('.context-option').forEach(btn => {
+                    btn.classList.toggle('text-accent', btn.dataset.value === currentContext);
+                });
+            }
         }
+
+        document.getElementById('open-context-modal-btn').addEventListener('click', () => tModal(document.getElementById('context-modal'), true, 'context'));
+        document.getElementById('close-context-modal-btn').addEventListener('click', () => tModal(document.getElementById('context-modal'), false, 'context'));
+        
+        function setContext(val, text) { 
+            currentContext = val; DOM.contextTriggerText.textContent = text; 
+            localStorage.setItem('webPlayerContext', currentContext); 
+            tModal(document.getElementById('context-modal'), false, 'context'); 
+            triggerListUpdate(); 
+            
+            document.querySelectorAll('.context-option').forEach(btn => btn.classList.toggle('text-accent', btn.dataset.value === currentContext));
+        }
+        
+        document.getElementById('context-modal').addEventListener('click', (e) => { 
+            const btn = e.target.closest('.context-option'); 
+            if(!btn) return; 
+            e.stopPropagation(); 
+            setContext(btn.dataset.value, btn.textContent.trim().replace(/[0-9]+$/, '').trim()); // remove array size number from text on playlists
+        });
 
         function getVisualPlaylist() {
             const term = DOM.search.value.toLowerCase(); let pToRender = [...playlist];
@@ -846,43 +940,6 @@
             if(term.length > 0) pToRender = pToRender.filter(track => track.title.toLowerCase().includes(term) || track.artist.toLowerCase().includes(term));
             return pToRender; 
         }
-
-        // Novos Eventos para o Context Modal (Antigo Dropdown)
-        DOM.contextTrigger.addEventListener('click', () => tModal(DOM.contextModal, true, 'context'));
-        document.getElementById('close-context-btn').addEventListener('click', () => tModal(DOM.contextModal, false, 'context'));
-        
-        DOM.contextModal.addEventListener('click', (e) => { 
-            const btn = e.target.closest('.context-option'); if(!btn) return; e.stopPropagation(); 
-            const textSpan = btn.querySelector('span.truncate, span.font-bold');
-            setContext(btn.dataset.value, textSpan ? textSpan.textContent.trim() : btn.textContent.trim().split('\n').pop().trim()); 
-            tModal(DOM.contextModal, false, 'context'); 
-        });
-
-        function setContext(val, text) { currentContext = val; DOM.contextTriggerText.textContent = text; localStorage.setItem('webPlayerContext', currentContext); triggerListUpdate(); }
-
-        // Novos Eventos para o Sort Modal (Antigo Select)
-        function updateSortUI() {
-            const map = { 'manual': 'Personalizado', 'recent': 'Adicionadas Recentemente', 'most_played': 'Mais Tocadas' };
-            if(DOM.sortTriggerText) DOM.sortTriggerText.textContent = map[currentSortMode] || 'Personalizado';
-            document.querySelectorAll('.sort-option').forEach(btn => {
-                const icon = btn.querySelector('.check-icon');
-                if(btn.dataset.value === currentSortMode) { btn.classList.add('text-accent'); icon.classList.remove('hidden'); }
-                else { btn.classList.remove('text-accent'); icon.classList.add('hidden'); }
-            });
-        }
-        
-        if(DOM.sortTriggerBtn) DOM.sortTriggerBtn.addEventListener('click', () => { updateSortUI(); tModal(DOM.sortModal, true, 'sort'); });
-        document.getElementById('close-sort-btn').addEventListener('click', () => tModal(DOM.sortModal, false, 'sort'));
-        
-        DOM.sortModal.addEventListener('click', (e) => {
-            const btn = e.target.closest('.sort-option'); if(!btn) return; e.stopPropagation();
-            currentSortMode = btn.dataset.value; localStorage.setItem('webPlayerSortMode', currentSortMode); 
-            if(currentSortMode === 'manual') savePlaylistOrder(); 
-            updateSortUI(); triggerListUpdate(); tModal(DOM.sortModal, false, 'sort');
-        });
-
-        // Initialize sort UI on load
-        updateSortUI();
 
         function updateMediaSession() {
             if ('mediaSession' in navigator && playlist.length > 0) { const t = playlist[currentTrackIndex]; if (!t) return; navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: t.artist || t.genre, album: 'Emera Player', artwork: [ { src: t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=512&h=512&fit=crop', sizes: '512x512', type: 'image/jpeg' } ] }); }
@@ -903,9 +960,6 @@
             DOM.title.textContent = t.title; DOM.artist.textContent = t.artist || t.genre; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
             DOM.lyricsBtn.classList.remove('hidden'); DOM.shareBtn.classList.remove('hidden');
             updateMainFavoriteIcon(); updateMiniPlayer(); triggerListUpdate(); updateMediaSession(); if(isGameActive) resetGameForNewTrack();
-            
-            renderLyricsContent();
-            
             if (isPlaying) { const p = audio.play(); if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); }).catch((err)=>{ console.warn(err); }); }
         }
 
@@ -986,8 +1040,6 @@
 
         DOM.mute.addEventListener('click', () => { const m = !audio.muted; audio.muted = m; if(m){ DOM.volBar.value=0; DOM.volFill.style.width='0%'; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = '0%'; } else { const restoredVol = parseFloat(localStorage.getItem('webPlayerVol'))||0.5; DOM.volBar.value=restoredVol; DOM.volFill.style.width=restoredVol*100+'%'; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(restoredVol*100)+'%'; } DOM.volBar.dispatchEvent(new Event('input')); });
 
-        const tModal = (m, s, hash) => { if(s) { m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(()=>m.classList.remove('opacity-0'),10); if (hash && location.hash !== '#' + hash) history.pushState(null, '', '#' + hash); } else { m.classList.add('opacity-0'); setTimeout(()=>{ m.classList.add('hidden'); m.classList.remove('flex'); },300); if (hash && location.hash === '#' + hash) history.back(); } if(m === DOM.eqModal) eqModalVisible = s; };
-        
         document.getElementById('eq-btn').addEventListener('click', () => tModal(DOM.eqModal, true, 'eq')); document.getElementById('close-eq-btn').addEventListener('click', () => tModal(DOM.eqModal, false, 'eq'));
         document.getElementById('settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), true, 'settings')); document.getElementById('close-settings-btn').addEventListener('click', () => tModal(document.getElementById('settings-modal'), false, 'settings'));
 
@@ -1002,7 +1054,7 @@
         }
 
         let isDrawerExpanded = false;
-        if(window.innerWidth < 768) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); } // Expandido por defeito no mobile
+        if(window.innerWidth < 768) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); } 
         
         function toggleDrawer(e) { 
             if (window.innerWidth >= 768) return; 
@@ -1101,13 +1153,6 @@
             else if (clearDbClicks === 2) { clearTimeout(clearDbTimer); if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear(); playlist=[]; audio.pause(); audio.src=""; localStorage.removeItem('webPlayerOrder'); updatePlaylistContexts(); triggerListUpdate(); DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; showToast("Biblioteca eliminada com sucesso."); clearDbClicks = 0; btn.innerHTML = `Eliminar Biblioteca`; btn.classList.remove('bg-red-500', 'text-black'); btn.classList.add('bg-transparent', 'text-red-500'); }
         });
 
-        function renderLyricsContent() {
-            const t = playlist[currentTrackIndex];
-            const rawText = t && t.lyrics ? t.lyrics : "A música está a tocar sem letras associadas.\nPodes adicionar na opção Editar Info.";
-            const container = document.getElementById('lyrics-inner');
-            if(container) container.textContent = rawText;
-        }
-
         document.getElementById('export-backup-btn').addEventListener('click', () => {
             if(playlist.length===0) return showToast("A playlist está vazia."); showToast("A preparar backup...");
             setTimeout(() => { const b = playlist.map(t => { const ct = {...t}; delete ct.file; delete ct.src; return ct; }); const blob = new Blob([JSON.stringify(b)], {type: "application/json"}); const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = `emera_backup_${new Date().toISOString().split('T')[0]}.emera`; a.click(); URL.revokeObjectURL(u); showToast("Backup transferido!"); }, 100);
@@ -1121,10 +1166,11 @@
         DOM.mainFav.addEventListener('click', () => { if(playlist.length===0) return; const t=playlist[currentTrackIndex]; t.favorite = !t.favorite; if(t.isLocal) saveTrackToDB(t); updateMainFavoriteIcon(); if(currentContext === 'favorites') triggerListUpdate(); });
         DOM.shareBtn.addEventListener('click', () => { const t = playlist[currentTrackIndex]; if(!t) return; if(navigator.share) { navigator.share({ title: `A ouvir ${t.title}`, text: `Estou a ouvir "${t.title}" de ${t.artist} no Emera Player!` }).catch(e=>console.log(e)); } else { showToast("Partilha não suportada neste browser."); } });
         
-        // Letras - Limpo e com enquadramento flexbox (my-auto)
+        // Modal de Letras Atualizado (Simples com Fundo Preto)
         DOM.lyricsBtn.addEventListener('click', () => { 
-            const t = playlist[currentTrackIndex]; if(!t) return; 
-            document.getElementById('lyrics-inner').textContent = t.lyrics ? t.lyrics : "A música está a tocar sem letras associadas.\nPodes adicionar na opção Editar Info.";
+            const t = playlist[currentTrackIndex]; 
+            if(!t) return; 
+            document.getElementById('lyrics-text').textContent = t.lyrics ? t.lyrics : "Não há letras disponíveis para esta faixa. Pode adicionar na opção Editar Info."; 
             tModal(document.getElementById('lyrics-modal'), true, 'lyrics'); 
         });
         document.getElementById('close-lyrics-btn').addEventListener('click', () => tModal(document.getElementById('lyrics-modal'), false, 'lyrics'));
@@ -1134,11 +1180,11 @@
         document.getElementById('save-edit-btn').addEventListener('click', () => {
             if(trackToEditIndex === null) return; const t = playlist[trackToEditIndex];
             t.title = document.getElementById('edit-title-input').value || "Desconhecido"; t.artist = document.getElementById('edit-artist-input').value || "Desconhecido"; t.lyrics = document.getElementById('edit-lyrics-input').value; t.cover = editCoverBase64;
-            if(t.isLocal) saveTrackToDB(t); if(trackToEditIndex === currentTrackIndex) { DOM.title.textContent = t.title; DOM.artist.textContent = t.artist; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; updateMiniPlayer(); renderLyricsContent(); } updatePlaylistContexts(); triggerListUpdate(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
+            if(t.isLocal) saveTrackToDB(t); if(trackToEditIndex === currentTrackIndex) { DOM.title.textContent = t.title; DOM.artist.textContent = t.artist; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; updateMiniPlayer(); } updatePlaylistContexts(); triggerListUpdate(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
         });
 
         function savePlaylists() { localStorage.setItem('emeraPlaylists', JSON.stringify(customPlaylists)); updatePlaylistContexts(); }
-        DOM.createPlaylistBtn.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('new-playlist-name').value = ''; tModal(document.getElementById('new-playlist-modal'), true, 'new-playlist'); });
+        if(DOM.createPlaylistBtn) DOM.createPlaylistBtn.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('new-playlist-name').value = ''; tModal(document.getElementById('new-playlist-modal'), true, 'new-playlist'); });
         document.getElementById('cancel-new-playlist-btn').addEventListener('click', () => tModal(document.getElementById('new-playlist-modal'), false, 'new-playlist'));
         document.getElementById('save-new-playlist-btn').addEventListener('click', () => { const name = document.getElementById('new-playlist-name').value.trim(); if (name) { customPlaylists.push({ id: 'pl_' + Date.now(), name: name, tracks: [] }); savePlaylists(); tModal(document.getElementById('new-playlist-modal'), false, 'new-playlist'); showToast(`Playlist criada!`); if(!document.getElementById('add-to-playlist-modal').classList.contains('hidden')) renderAddToPlaylistModal(); } });
         document.getElementById('cancel-add-to-playlist-btn').addEventListener('click', () => tModal(document.getElementById('add-to-playlist-modal'), false, 'add-playlist'));
@@ -1182,6 +1228,7 @@
             sidebar.classList.toggle('md:hidden');
         });
 
+        // Minigame Logic
         const gamePanel = document.getElementById('game-panel'); const gameOverlay = document.getElementById('game-overlay'); const gameOverOverlay = document.getElementById('game-over-overlay'); const victoryOverlay = document.getElementById('victory-overlay'); const countdownOverlay = document.getElementById('countdown-overlay'); 
         const gameCanvas = document.getElementById('game-canvas'); const gCtx = gameCanvas.getContext('2d'); const gameScoreEl = document.getElementById('game-score'); const gameComboEl = document.getElementById('game-combo'); const gameSpeedDisplay = document.getElementById('game-speed-display'); const gameBonusCount = document.getElementById('game-bonus-count'); 
         
