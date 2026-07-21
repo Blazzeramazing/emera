@@ -36,10 +36,9 @@
 
         /* Prevenir seleção de texto (efeito app nativo) */
         body { -webkit-touch-callout: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-        /* Permitir seleção/digitação apenas onde é necessário */
         input, textarea, #lyrics-text { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
 
-        /* --- Barra de Progresso Estilo Spotify --- */
+        /* --- Barra de Progresso Minimalista Estilo Moderno --- */
         .standard-slider { -webkit-appearance: none; width: 100%; background: transparent; height: 16px; }
         .standard-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: white; cursor: pointer; margin-top: -4px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.2s, transform 0.1s; }
         .progress-bar-container:hover .standard-slider::-webkit-slider-thumb { opacity: 1; background: var(--accent); }
@@ -80,8 +79,6 @@
         
         /* Dropdown customizado (Animações) */
         #context-dropdown { transform-origin: top; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .dropdown-open { opacity: 1 !important; transform: scaleY(1) !important; pointer-events: auto !important; }
-        .dropdown-closed { opacity: 0; transform: scaleY(0.95); pointer-events: none; }
         
         /* MODO OLED & GERAL */
         body.theme-oled, body.theme-oled .bg-gray-900, body.theme-oled .bg-[#121212] { background-color: #000000 !important; }
@@ -661,14 +658,11 @@
         };
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
 
-        // Virtual Scroller Setup
-        const VIRTUAL_ITEM_HEIGHT = 68;
+        const VIRTUAL_ITEM_HEIGHT = 64; 
         const OVERSCAN = 10;
         let visualPlaylist = [];
 
-        document.addEventListener('visibilitychange', () => {
-            isPageVisible = !document.hidden;
-        });
+        document.addEventListener('visibilitychange', () => { isPageVisible = !document.hidden; });
 
         if (location.hash === '') history.pushState(null, '', '#main');
         let exitClicks = 0; let exitTimer = null;
@@ -796,29 +790,50 @@
         }
 
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
-        function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 2); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
         
-        function saveTrackToDB(track) { 
-            if(db){ 
-                runIdle(() => {
-                    const t={...track}; delete t.src; 
-                    if(t.file && t.file instanceof File) {
-                        t.bufferType = t.file.type || 'audio/mp3';
-                        t.bufferName = t.file.name;
-                        t.file.arrayBuffer().then(buffer => {
-                            t.dataBuffer = buffer;
-                            delete t.file;
-                            db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t);
-                        }).catch(() => {
-                            db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); 
-                        });
-                    } else {
-                        db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); 
-                    }
-                });
-            } 
+        function initDB() { 
+            return new Promise(r => { 
+                const req = indexedDB.open(DB_NAME, 2); 
+                req.onerror = () => r(null); 
+                req.onsuccess = e => { db = e.target.result; r(db); }; 
+                req.onupgradeneeded = e => { if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"}); }; 
+            }); 
         }
+        
+        const saveTrackToDBAsync = (track) => new Promise((resolve) => {
+            if(!db) { resolve(); return; }
+            const t = {...track}; delete t.src;
+            
+            if (t.file && t.file instanceof File) {
+                t.bufferType = t.file.type || 'audio/mp3';
+                t.bufferName = t.file.name;
+                t.fileSize = t.file.size;
+                
+                t.file.arrayBuffer().then(buffer => {
+                    t.dataBuffer = buffer;
+                    delete t.file;
+                    const tx = db.transaction(STORE_NAME, "readwrite");
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => resolve();
+                    tx.objectStore(STORE_NAME).put(t);
+                }).catch(() => {
+                    const tx = db.transaction(STORE_NAME, "readwrite");
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => resolve();
+                    tx.objectStore(STORE_NAME).put(t);
+                });
+            } else {
+                const tx = db.transaction(STORE_NAME, "readwrite");
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => resolve();
+                tx.objectStore(STORE_NAME).put(t);
+            }
+        });
+
+        function saveTrackToDB(track) { saveTrackToDBAsync(track); }
+        
         function deleteTrackFromDB(id) { if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).delete(id); }
+        
         function loadTracksFromDB() {
             if(!db) return Promise.resolve();
             return new Promise(r => { 
@@ -829,11 +844,10 @@
                         if (t.dataBuffer) {
                             const blob = new Blob([t.dataBuffer], { type: t.bufferType });
                             t.src = URL.createObjectURL(blob);
-                            t.file = new File([blob], t.bufferName, { type: t.bufferType }); 
+                            t.file = new File([blob], t.bufferName || "audio.mp3", { type: t.bufferType }); 
                         } else if (t.file instanceof File) {
                             t.src = URL.createObjectURL(t.file);
                         }
-                        
                         t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); 
                         playlist.push(t); 
                     }); 
@@ -908,7 +922,7 @@
 
         const visualizerNames = ["Radial", "Barras Clássicas", "Osciloscópio", "Pulso de Graves", "Partículas", "Desligado"];
         DOM.toggleVis.addEventListener('click', (e) => { e.stopPropagation(); visualizerMode = (visualizerMode + 1) % visualizerNames.length; if(visualizerMode===5) canvasCtx.clearRect(0,0,DOM.canvas.width,DOM.canvas.height); showToast(`Efeito: ${visualizerNames[visualizerMode]}`); });
-        document.getElementById('cover-container').addEventListener('click', () => DOM.toggleVis.click()); 
+        if(DOM.coverContainer) DOM.coverContainer.addEventListener('click', () => DOM.toggleVis.click()); 
 
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
@@ -1010,6 +1024,7 @@
         }
 
         function updateContextUI(value, text) {
+            if(!DOM.contextTriggerText) return;
             DOM.contextTriggerText.textContent = text;
             document.querySelectorAll('.context-option .indicator').forEach(ind => ind.classList.replace('opacity-100', 'opacity-0'));
             const activeOpt = document.querySelector(`.context-option[data-value="${value}"] .indicator`);
@@ -1017,10 +1032,22 @@
         }
 
         function toggleContextDropdown(e) {
-            e.stopPropagation(); const isOpen = DOM.contextDropdown.classList.contains('visible');
-            if (isOpen) { closeContextDropdown(); } else { DOM.contextDropdown.classList.replace('opacity-0', 'opacity-100'); DOM.contextDropdown.classList.replace('invisible', 'visible'); DOM.contextDropdown.classList.replace('-translate-y-2', 'translate-y-0'); DOM.contextTriggerIcon.classList.add('rotate-180'); }
+            if(e) e.stopPropagation(); 
+            const isHidden = DOM.contextDropdown.classList.contains('opacity-0');
+            if (!isHidden) { closeContextDropdown(); } 
+            else { 
+                DOM.contextDropdown.classList.remove('opacity-0', 'invisible', '-translate-y-2');
+                DOM.contextDropdown.classList.add('opacity-100', 'visible', 'translate-y-0');
+                DOM.contextTriggerIcon.classList.add('rotate-180'); 
+            }
         }
-        function closeContextDropdown() { DOM.contextDropdown.classList.replace('opacity-100', 'opacity-0'); DOM.contextDropdown.classList.replace('visible', 'invisible'); DOM.contextDropdown.classList.replace('translate-y-0', '-translate-y-2'); DOM.contextTriggerIcon.classList.remove('rotate-180'); }
+
+        function closeContextDropdown() { 
+            if(!DOM.contextDropdown) return;
+            DOM.contextDropdown.classList.remove('opacity-100', 'visible', 'translate-y-0');
+            DOM.contextDropdown.classList.add('opacity-0', 'invisible', '-translate-y-2');
+            DOM.contextTriggerIcon.classList.remove('rotate-180'); 
+        }
 
         DOM.contextTrigger.addEventListener('click', toggleContextDropdown); document.addEventListener('click', closeContextDropdown);
         document.querySelectorAll('.context-option[data-value="all"], .context-option[data-value="favorites"]').forEach(opt => { opt.addEventListener('click', (e) => { e.stopPropagation(); selectContext(opt.dataset.value, opt.dataset.text); }); });
@@ -1154,7 +1181,7 @@
 
             if (isPlaying) { 
                 const p = audio.play(); 
-                if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); }).catch((err)=>{ console.warn(err); showToast("Erro ao reproduzir ficheiro."); }); 
+                if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDBAsync(t); }).catch((err)=>{ console.warn(err); showToast("Erro ao reproduzir ficheiro."); }); 
             }
         }
 
@@ -1250,6 +1277,15 @@
             else { const restoredVol = parseFloat(localStorage.getItem('webPlayerVol'))||0.5; DOM.volBar.value=restoredVol; DOM.volFill.style.width=restoredVol*100+'%'; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(restoredVol*100)+'%'; } 
         });
 
+        let isDrawerExpanded = false;
+        function toggleDrawer(e) { 
+            if (window.innerWidth >= 768) return; 
+            if(e && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'SELECT')) return; 
+            if (!isDrawerExpanded) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); if (location.hash !== '#playlist') history.pushState(null, '', '#playlist'); } 
+            else { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); if (location.hash === '#playlist') history.back(); }
+        }
+        DOM.listHeader.addEventListener('click', toggleDrawer); DOM.drawerHandle.addEventListener('click', toggleDrawer);
+
         DOM.sortSel.addEventListener('change', (e) => { currentSortMode = e.target.value; localStorage.setItem('webPlayerSortMode', currentSortMode); if(currentSortMode === 'manual') savePlaylistOrder(); triggerListUpdate(); });
         DOM.search.addEventListener('input', triggerListUpdate);
 
@@ -1301,10 +1337,16 @@
             r.onload = ev => {
                 try {
                     const data = JSON.parse(ev.target.result); let added = 0;
-                    data.forEach(t => { if(!playlist.find(x=>x.id===t.id)){ playlist.push(t); saveTrackToDB(t); added++; } });
+                    data.forEach(t => { if(!playlist.find(x=>x.id===t.id)){ playlist.push(t); saveTrackToDBAsync(t); added++; } });
                     savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); showToast(`${added} músicas importadas.`);
                 } catch(err) { showToast("Erro: Backup inválido."); }
             }; r.readAsText(f);
+        });
+
+        DOM.mainFav.addEventListener('click', () => {
+            if(playlist.length===0) return; const t=playlist[currentTrackIndex]; t.favorite = !t.favorite;
+            if(t.isLocal) saveTrackToDBAsync(t); updateMainFavoriteIcon(); showToast(t.favorite ? "Adicionado aos Favoritos" : "Removido dos Favoritos");
+            if(currentContext === 'favorites') triggerListUpdate();
         });
 
         DOM.shareBtn.addEventListener('click', () => {
@@ -1329,7 +1371,7 @@
             if(trackToEditIndex === null) return; const t = playlist[trackToEditIndex];
             t.title = document.getElementById('edit-title-input').value || "Desconhecido"; t.artist = document.getElementById('edit-artist-input').value || "Desconhecido";
             t.lyrics = document.getElementById('edit-lyrics-input').value; t.cover = editCoverBase64;
-            if(t.isLocal) saveTrackToDB(t);
+            if(t.isLocal) saveTrackToDBAsync(t);
             if(trackToEditIndex === currentTrackIndex) { DOM.title.textContent = t.title; DOM.artist.textContent = t.artist; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; updateMiniPlayer(); }
             updatePlaylistContexts(); triggerListUpdate(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
         });
@@ -1349,16 +1391,16 @@
         function renderAddToPlaylistModal() {
             const list = document.getElementById('add-to-playlist-list'); list.innerHTML = '';
             const btnNew = document.createElement('button');
-            btnNew.className = 'w-full text-left px-4 py-3 bg-black/20 border border-white/10 border-dashed text-accent hover:bg-white/5 rounded-xl transition font-bold text-sm flex items-center gap-2 mb-2';
-            btnNew.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Nova Playlist';
+            btnNew.className = 'w-full text-left px-4 py-3 bg-[#121212] border border-white/10 border-dashed text-accent hover:bg-white/5 rounded-xl transition font-bold text-sm flex items-center gap-2 mb-2';
+            btnNew.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Criar Nova Playlist';
             btnNew.onclick = () => { document.getElementById('new-playlist-name').value = ''; tModal(document.getElementById('new-playlist-modal'), true, 'new-playlist'); };
             list.appendChild(btnNew);
             if(trackToAddIndex === null) return; const track = playlist[trackToAddIndex];
             
             customPlaylists.forEach(pl => {
                 const hasTrack = pl.tracks.includes(track.id); const btn = document.createElement('button');
-                btn.className = `w-full text-left px-4 py-3 bg-black/40 border ${hasTrack ? 'border-accent text-accent' : 'border-transparent text-gray-200'} hover:bg-white/10 rounded-xl transition text-sm flex justify-between items-center font-medium`;
-                btn.innerHTML = `<span class="truncate pr-2">${pl.name}</span> <span class="text-[10px] ${hasTrack ? 'bg-accent/20 text-accent' : 'bg-white/10 text-gray-400'} px-2.5 py-1 rounded-full flex-shrink-0">${hasTrack ? 'Adicionada ✓' : '+ Adicionar'}</span>`;
+                btn.className = `w-full text-left px-4 py-3 bg-[#121212] border ${hasTrack ? 'border-accent text-accent' : 'border-transparent text-gray-200'} hover:bg-white/10 rounded-xl transition text-sm flex justify-between items-center`;
+                btn.innerHTML = `<span class="truncate pr-2">${pl.name}</span> <span class="text-[10px] ${hasTrack ? 'bg-accent/20 text-accent' : 'bg-white/10'} px-2 py-0.5 rounded-full flex-shrink-0">${hasTrack ? 'Adicionada ✓' : '+ Adicionar'}</span>`;
                 btn.onclick = () => {
                     if (hasTrack) { pl.tracks = pl.tracks.filter(id => id !== track.id); showToast(`Removida de "${pl.name}"`); } 
                     else { pl.tracks.push(track.id); showToast(`Adicionada a "${pl.name}"`); }
@@ -1368,9 +1410,12 @@
             });
         }
 
-        function handleFiles(files) {
+        async function handleFiles(files) {
             if(files.length === 0) return; showToast(`A analisar ${files.length} ficheiro(s)...`);
-            const existingIds = new Set(playlist.map(t => t.file ? t.file.name + '_' + t.file.size : t.title));
+            
+            // Checks array with length matching size and name for 1-to-1 strict duplicate prevention
+            const existingIds = new Set(playlist.map(t => t.bufferName ? t.bufferName + '_' + t.fileSize : (t.file ? t.file.name + '_' + t.file.size : t.title)));
+            
             const validFiles = files.filter(f => {
                 const isAudio = f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|ogg|m4a)$/i);
                 return isAudio && !existingIds.has(f.name + '_' + f.size);
@@ -1378,25 +1423,44 @@
 
             if(validFiles.length === 0) { showToast("Nenhuma música nova encontrada."); return; }
 
-            let loadedCount = 0; let added = 0; const CHUNK_SIZE = 50; 
-            
-            function processChunk(startIndex) {
-                const endIndex = Math.min(startIndex + CHUNK_SIZE, validFiles.length);
-                const chunk = validFiles.slice(startIndex, endIndex);
-                let newTracks = [];
+            let added = 0; let newTracks = [];
+            showToast(`A importar ${validFiles.length} músicas. Por favor, aguarde...`);
+
+            for (let i = 0; i < validFiles.length; i++) {
+                const file = validFiles[i];
+                const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*1000000) + i;
+                let nT = { 
+                    id: trackId, 
+                    title: file.name.replace(/\.[^/.]+$/, ""), 
+                    artist: "Desconhecido", 
+                    file: file, 
+                    fileSize: file.size, 
+                    src: URL.createObjectURL(file), 
+                    cover: null, 
+                    lyrics: "", 
+                    isLocal: true, 
+                    addedAt: Date.now() + i 
+                };
                 
-                chunk.forEach(file => {
-                    const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*1000000) + loadedCount;
-                    let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "A processar...", file: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
-                    playlist.unshift(nT); newTracks.push(nT); added++; loadedCount++;
-                });
+                playlist.unshift(nT);
+                newTracks.push(nT);
+                added++;
 
-                if (db) { const tx = db.transaction(STORE_NAME, "readwrite"); const store = tx.objectStore(STORE_NAME); newTracks.forEach(t => { const ct = {...t}; delete ct.src; store.put(ct); }); }
+                await saveTrackToDBAsync(nT);
 
-                if (endIndex < validFiles.length) { requestAnimationFrame(() => setTimeout(() => processChunk(endIndex), 5)); } 
-                else { savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); showToast(`${validFiles.length} músicas prontas! A ler tags...`); if(!isPlaying) loadTrack(0); extractMetadataInBackground(validFiles.slice(), playlist.slice(0, added)); }
+                if ((i + 1) % 10 === 0 || i === validFiles.length - 1) {
+                    showToast(`Guardadas ${i + 1} de ${validFiles.length}...`);
+                    triggerListUpdate();
+                }
             }
-            requestAnimationFrame(() => processChunk(0));
+
+            savePlaylistOrder(); 
+            updatePlaylistContexts(); 
+            triggerListUpdate(); 
+            showToast(`${added} músicas prontas! A ler detalhes...`); 
+            
+            if(!isPlaying) loadTrack(0); 
+            extractMetadataInBackground(validFiles, newTracks);
         }
 
         function extractMetadataInBackground(files, tracksRefs) {
@@ -1411,7 +1475,7 @@
                         if(tag.tags.artist && tag.tags.artist !== track.artist) { track.artist = tag.tags.artist; updated = true; }
                         if(tag.tags.lyrics && tag.tags.lyrics.lyrics) { track.lyrics = tag.tags.lyrics.lyrics; updated = true; } else if(tag.tags.USLT && tag.tags.USLT.lyrics) { track.lyrics = tag.tags.USLT.lyrics; updated = true; }
                         if(tag.tags.picture && !track.cover) { let b64 = ""; for (let j=0; j<tag.tags.picture.data.length; j++) b64 += String.fromCharCode(tag.tags.picture.data[j]); track.cover = `data:${tag.tags.picture.format};base64,${window.btoa(b64)}`; updated = true; } 
-                        if(updated) { saveTrackToDB(track); if(playlist[currentTrackIndex] && playlist[currentTrackIndex].id === track.id) { DOM.title.textContent = track.title; DOM.artist.textContent = track.artist; if(track.cover) DOM.cover.src = track.cover; updateMiniPlayer(); updateMediaSession(); } }
+                        if(updated) { saveTrackToDBAsync(track); if(playlist[currentTrackIndex] && playlist[currentTrackIndex].id === track.id) { DOM.title.textContent = track.title; DOM.artist.textContent = track.artist; if(track.cover) DOM.cover.src = track.cover; updateMiniPlayer(); updateMediaSession(); } }
                         i++; if (updated && i % 25 === 0) triggerListUpdate(); setTimeout(processNext, 15); 
                     }, onError: () => { i++; setTimeout(processNext, 5); } 
                 });
@@ -1530,7 +1594,7 @@
             const track = playlist[currentTrackIndex]; if (!track) return; let updated = false;
             if (track.highScore === undefined) track.highScore = 0; if (track.maxLevel === undefined) track.maxLevel = 1;
             if (score > track.highScore) { track.highScore = score; updated = true; } if (currentMultiplier > track.maxLevel) { track.maxLevel = currentMultiplier; updated = true; }
-            if (updated && track.isLocal) saveTrackToDB(track);
+            if (updated && track.isLocal) saveTrackToDBAsync(track);
         }
 
         function triggerVictory() {
