@@ -98,6 +98,17 @@
 </head>
 <body class="text-spTextMain font-sans selection:bg-accent selection:text-white h-[100dvh] flex flex-col overflow-hidden">
 
+    <!-- NOVO: Ecrã de Carregamento Inicial (Splash Screen) -->
+    <div id="initial-loader" class="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="relative w-20 h-20 flex items-center justify-center mb-6">
+            <div class="absolute inset-0 border-4 border-white/10 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-accent rounded-full border-t-transparent animate-spin"></div>
+            <svg class="w-8 h-8 text-accent animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        </div>
+        <h2 class="text-white font-black tracking-widest uppercase text-lg">Emera Player</h2>
+        <p class="text-spTextSub text-xs mt-2 animate-pulse">A carregar a sua biblioteca...</p>
+    </div>
+
     <!-- Sidebar Overlay Mobile -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
 
@@ -1415,6 +1426,15 @@
         initDB().then(async () => {
             await loadTracksFromDB(); updateSortUI(); updatePlaylistContexts(); triggerListUpdate();
             if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas'; }
+            
+            // Adicionamos um pequeno delay (800ms) para garantir que a interface já foi "pintada" pelo navegador antes de ocultar o ecrã de loading
+            setTimeout(() => {
+                const loader = document.getElementById('initial-loader');
+                if (loader) {
+                    loader.classList.add('opacity-0');
+                    setTimeout(() => loader.remove(), 500); // Remove completamente do HTML após a transição
+                }
+            }, 800);
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ 
