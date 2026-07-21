@@ -83,10 +83,14 @@
         
         /* Mobile adjustments for Spotify feel */
         @media (max-width: 767px) {
-            /* Drawer agora é o painel de lista que sobe sobre o visualizador, mas deixa o footer visível */
-            #right-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: absolute; bottom: 80px; left: 0; right: 0; height: calc(100dvh - 160px); transform: translateY(120%); z-index: 40; border-radius: 12px 12px 0 0; background-color: #121212; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
+            #right-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: absolute; top: 10%; bottom: 0; left: 0; right: 0; height: auto; transform: translateY(100%); z-index: 40; border-radius: 16px 16px 0 0; background-color: #121212; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); }
             #right-panel.expanded { transform: translateY(0); }
             .drawer-puller { width: 40px; height: 4px; background-color: #535353; border-radius: 2px; margin: 8px auto; display: block; }
+            /* Reposition Progress Bar on Mobile to the top of the Footer */
+            #progress-wrapper { position: absolute; top: -4px; left: 0; width: 100%; padding: 0 !important; margin: 0; gap: 0 !important; z-index: 10; }
+            #progress-wrapper .progress-bar-container { height: 4px; border-radius: 0; }
+            #progress-wrapper .progress-fill { border-radius: 0; }
+            #current-time, #total-time { display: none !important; }
         }
         @media (min-width: 768px) {
             .drawer-puller { display: none; }
@@ -104,16 +108,24 @@
 </head>
 <body class="text-spTextMain font-sans selection:bg-accent selection:text-white h-[100dvh] flex flex-col overflow-hidden">
 
+    <!-- Sidebar Overlay Mobile -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
+
     <!-- App Container -->
-    <div id="main-app-container" class="flex-1 flex w-full p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-90px)]">
+    <div id="main-app-container" class="flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
         
         <!-- SIDEBAR (Bibliotecas e Filtros) -->
-        <aside class="w-64 bg-spBase rounded-lg flex-col hidden md:flex overflow-hidden">
+        <aside id="sidebar" class="w-72 md:w-64 bg-spBase md:rounded-lg flex-col fixed inset-y-0 left-0 z-[100] transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 flex overflow-hidden">
             <div class="p-4 sm:p-6 flex flex-col gap-4">
                 <!-- Top Nav Mimic -->
-                <div class="flex items-center gap-3 text-spTextSub hover:text-white transition cursor-pointer font-bold">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.5 3.247a1 1 0 00-1 0L4 7.577V20h4.5v-6a1 1 0 011-1h5a1 1 0 011 1v6H20V7.577l-7.5-4.33z"></path></svg>
-                    <span>Início</span>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3 text-spTextSub hover:text-white transition cursor-pointer font-bold">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.5 3.247a1 1 0 00-1 0L4 7.577V20h4.5v-6a1 1 0 011-1h5a1 1 0 011 1v6H20V7.577l-7.5-4.33z"></path></svg>
+                        <span>Início</span>
+                    </div>
+                    <button id="close-sidebar-btn" class="md:hidden text-spTextSub hover:text-white p-2 -mr-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                 </div>
                 
                 <div id="local-search-container" class="relative w-full mt-2 group" onclick="event.stopPropagation()">
@@ -172,6 +184,16 @@
                         </label>
                     </div>
                 </div>
+                
+                <!-- Acesso a EQ e Definições apenas no Mobile via Sidebar -->
+                <div class="md:hidden border-t border-white/5 mt-auto pt-4 pb-6 px-4 flex flex-col gap-4 bg-spBase">
+                    <button id="mobile-eq-btn" class="flex items-center gap-3 text-spTextSub hover:text-white transition font-bold text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg> Equalizador
+                    </button>
+                    <button id="mobile-settings-btn" class="flex items-center gap-3 text-spTextSub hover:text-white transition font-bold text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg> Definições
+                    </button>
+                </div>
             </div>
         </aside>
 
@@ -181,20 +203,22 @@
             <!-- Cabeçalho Principal (Apenas Mobile/Utilitários) -->
             <div class="h-16 flex justify-between items-center px-4 bg-gradient-to-b from-black/60 to-transparent absolute top-0 w-full z-20 pointer-events-none">
                 <div class="flex items-center gap-2 pointer-events-auto md:hidden">
-                    <svg class="w-6 h-6 text-accent" viewBox="0 0 24 24" fill="currentColor"><path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+                    <button id="mobile-menu-toggle" class="text-white hover:text-accent transition p-1.5 rounded-full bg-black/20 backdrop-blur-md">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
                 </div>
                 <div class="flex gap-2 pointer-events-auto ml-auto">
                     <button id="install-app-btn" class="hidden text-xs bg-white text-black font-bold py-1 px-3 rounded-full hover:scale-105 transition">Instalar</button>
-                    <button id="open-game-btn" class="bg-black/40 hover:bg-black text-white p-2 rounded-full transition backdrop-blur-md" title="Jogar Piano Tiles"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4M15 13h.01M18 11h.01"/></svg></button>
+                    <button id="open-game-btn" class="bg-black/40 hover:bg-black text-white p-2 rounded-full transition backdrop-blur-md shadow-lg" title="Jogar Piano Tiles"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4M15 13h.01M18 11h.01"/></svg></button>
                 </div>
             </div>
 
             <!-- Área de Visualização Superior (Capa/Atmosfera) -->
-            <div id="player-bg" class="h-1/3 md:h-2/5 w-full bg-gradient-to-b from-[#404040] to-spBase relative flex flex-col items-center justify-center flex-shrink-0 transition-colors duration-1000">
+            <div id="player-bg" class="flex-1 w-full bg-gradient-to-b from-[#404040] to-spBase relative flex flex-col items-center justify-center flex-shrink-0 transition-colors duration-1000">
                 <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
                 
                 <div class="flex items-center gap-6 mt-8 z-10 w-full max-w-4xl px-4 md:px-8">
-                    <div id="cover-container" class="relative w-28 h-28 md:w-48 md:h-48 rounded shadow-2xl flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador">
+                    <div id="cover-container" class="relative w-32 h-32 md:w-56 md:h-56 rounded shadow-2xl flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador">
                         <img id="cover-art" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop" class="w-full h-full object-cover rounded relative z-10 bg-spElevated pointer-events-none">
                         <canvas id="visualizer" class="absolute inset-0 w-full h-full z-20 opacity-80 pointer-events-none rounded"></canvas>
                     </div>
@@ -212,86 +236,6 @@
                 <button id="toggle-vis-btn" class="absolute bottom-4 right-4 z-40 bg-black/40 hover:bg-black text-white p-2 rounded-full transition shadow-lg opacity-0 hover:opacity-100" title="Mudar Visualizador">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                 </button>
-                
-                <!-- GAME PANEL REAPROVEITADO (MANTIDO EXATAMENTE IGUAL) -->
-                <div id="game-panel" class="absolute inset-0 bg-black z-[60] hidden flex flex-col overflow-hidden transition-opacity duration-300 opacity-0">
-                    <div class="w-full p-4 md:p-6 flex justify-between items-center bg-[#121212] border-b border-[#282828] z-10 shadow-lg flex-shrink-0">
-                        <button id="close-game-btn" class="text-spTextSub hover:text-white transition p-2 hover:bg-white/10 rounded-full flex-shrink-0">
-                            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                        <div class="text-center flex-1 mx-2">
-                            <h3 class="text-white font-bold text-sm md:text-base tracking-widest uppercase flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg> Emera Tiles
-                            </h3>
-                        </div>
-                        <div class="flex gap-4 items-center justify-end min-w-[120px]">
-                            <div class="flex flex-col items-center justify-center text-yellow-500 transform transition-transform hover:scale-110">
-                                <svg class="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                                <span id="game-bonus-count" class="text-xs font-black leading-none mt-1">0</span>
-                            </div>
-                            <div class="text-right border-l border-[#282828] pl-4">
-                                <div class="text-xl md:text-2xl font-black text-accent leading-none" id="game-score">0</div>
-                                <div class="text-[10px] md:text-xs text-spTextSub font-bold uppercase tracking-wider" id="game-combo">Combo x0</div>
-                                <div class="text-[9px] text-yellow-400 font-bold uppercase mt-1 hidden" id="game-speed-display">VELOCIDADE 1X</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex-1 w-full flex justify-center relative bg-[#121212] overflow-hidden min-h-0" id="game-canvas-wrapper">
-                        <canvas id="game-canvas" class="w-full max-w-md h-full touch-none bg-[#000000] border-x border-[#282828] block"></canvas>
-                        
-                        <div id="game-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20 backdrop-blur-sm p-6 text-center">
-                            <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mb-6">
-                                <svg class="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-                            </div>
-                            <h2 class="text-2xl md:text-3xl font-bold text-white mb-2" id="game-track-title">Emera Tiles</h2>
-                            <p class="text-spTextSub mb-6 text-sm">Acerte nas notas. Apanhe as <span class="text-yellow-500 font-bold">Douradas</span> para vidas.</p>
-                            <div id="game-stats-display" class="mb-6 hidden">
-                                <p class="text-accent font-bold text-sm">RECORDE: <span id="stat-highscore" class="text-white">0</span></p>
-                                <p class="text-yellow-400 font-bold text-xs">NÍVEL: <span id="stat-maxlevel" class="text-white">1</span>X</p>
-                            </div>
-                            <button id="start-game-btn" class="bg-accent text-black font-bold py-3 px-8 rounded-full hover:scale-105 transition flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg> JOGAR
-                            </button>
-                        </div>
-
-                        <div id="game-over-overlay" class="absolute inset-0 bg-black/90 flex-col items-center justify-center z-30 backdrop-blur-md p-6 text-center hidden opacity-0">
-                            <h2 class="text-4xl font-black text-red-500 mb-2">GAME OVER</h2>
-                            <div class="text-5xl font-black text-white mb-8" id="final-score-display">0</div>
-                            <div class="flex flex-col gap-3 w-full max-w-xs">
-                                <button id="revive-game-btn" class="w-full bg-transparent border border-yellow-500 text-yellow-500 py-3 rounded-full font-bold hover:bg-yellow-500 hover:text-black transition flex items-center justify-center gap-2 hidden">
-                                    USAR 2ª CHANCE
-                                </button>
-                                <button id="restart-game-btn" class="w-full bg-white text-black py-3 rounded-full font-bold hover:scale-105 transition flex items-center justify-center gap-2">
-                                    RECOMEÇAR
-                                </button>
-                                <button id="exit-game-btn" class="w-full text-spTextSub hover:text-white py-3 font-bold transition flex items-center justify-center gap-2">
-                                    SAIR
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="countdown-overlay" class="absolute inset-0 bg-black/80 flex-col items-center justify-center z-[55] hidden opacity-0 backdrop-blur-md text-center p-6">
-                            <div id="countdown-number" class="text-7xl font-black text-yellow-500 animate-pulse">5</div>
-                        </div>
-
-                        <div id="victory-overlay" class="absolute inset-0 bg-black/90 flex-col items-center justify-center z-30 backdrop-blur-md p-6 text-center hidden opacity-0">
-                            <h2 class="text-3xl font-black text-accent mb-2">MÚSICA CONCLUÍDA!</h2>
-                            <div class="text-4xl font-black text-white mb-2" id="victory-score-display">0</div>
-                            <div class="text-sm font-bold text-yellow-400 mb-8" id="victory-multiplier-display">Nível: 1X</div>
-                            <div class="flex flex-col gap-3 w-full max-w-xs">
-                                <button id="victory-continue-btn" class="w-full bg-accent text-black py-3 rounded-full font-black hover:scale-105 transition flex items-center justify-center gap-2">
-                                    CONTINUAR (<span id="next-mult-text">2X</span>)
-                                </button>
-                                <button id="victory-next-btn" class="w-full bg-transparent border border-white text-white py-3 rounded-full font-bold hover:bg-white hover:text-black transition">
-                                    PRÓXIMA MÚSICA
-                                </button>
-                                <button id="victory-exit-btn" class="w-full text-spTextSub hover:text-white py-3 font-bold transition">
-                                    SAIR
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
             
             <!-- Cabeçalho da Tabela da Lista -->
@@ -305,9 +249,89 @@
             <div id="right-panel" class="flex-1 w-full bg-spBase relative z-20">
                 <div class="drawer-puller cursor-pointer absolute top-0 left-0 right-0 z-30" id="drawer-handle"></div>
                 <!-- O Virtual Scroller habita aqui -->
-                <div class="h-full w-full overflow-y-auto custom-scrollbar p-2 pb-24 md:pb-4 relative" id="list-container">
+                <div class="h-full w-full overflow-y-auto custom-scrollbar p-2 pb-4 relative" id="list-container">
                     <div id="virtual-spacer" style="height: 0px; position: relative; width: 100%;">
                         <div id="virtual-content" style="position: absolute; top: 0; left: 0; width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GAME PANEL REAPROVEITADO (Movido para ocupar o ecrã completo) -->
+            <div id="game-panel" class="absolute inset-0 bg-black z-[200] hidden flex-col overflow-hidden transition-opacity duration-300 opacity-0">
+                <div class="w-full p-4 md:p-6 flex justify-between items-center bg-[#121212] border-b border-[#282828] z-10 shadow-lg flex-shrink-0">
+                    <button id="close-game-btn" class="text-spTextSub hover:text-white transition p-2 hover:bg-white/10 rounded-full flex-shrink-0">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    <div class="text-center flex-1 mx-2">
+                        <h3 class="text-white font-bold text-sm md:text-base tracking-widest uppercase flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg> Emera Tiles
+                        </h3>
+                    </div>
+                    <div class="flex gap-4 items-center justify-end min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center text-yellow-500 transform transition-transform hover:scale-110">
+                            <svg class="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            <span id="game-bonus-count" class="text-xs font-black leading-none mt-1">0</span>
+                        </div>
+                        <div class="text-right border-l border-[#282828] pl-4">
+                            <div class="text-xl md:text-2xl font-black text-accent leading-none" id="game-score">0</div>
+                            <div class="text-[10px] md:text-xs text-spTextSub font-bold uppercase tracking-wider" id="game-combo">Combo x0</div>
+                            <div class="text-[9px] text-yellow-400 font-bold uppercase mt-1 hidden" id="game-speed-display">VELOCIDADE 1X</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 w-full flex justify-center relative bg-[#121212] overflow-hidden min-h-0" id="game-canvas-wrapper">
+                    <canvas id="game-canvas" class="w-full max-w-md h-full touch-none bg-[#000000] border-x border-[#282828] block"></canvas>
+                    
+                    <div id="game-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20 backdrop-blur-sm p-6 text-center">
+                        <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold text-white mb-2" id="game-track-title">Emera Tiles</h2>
+                        <p class="text-spTextSub mb-6 text-sm">Acerte nas notas. Apanhe as <span class="text-yellow-500 font-bold">Douradas</span> para vidas.</p>
+                        <div id="game-stats-display" class="mb-6 hidden">
+                            <p class="text-accent font-bold text-sm">RECORDE: <span id="stat-highscore" class="text-white">0</span></p>
+                            <p class="text-yellow-400 font-bold text-xs">NÍVEL: <span id="stat-maxlevel" class="text-white">1</span>X</p>
+                        </div>
+                        <button id="start-game-btn" class="bg-accent text-black font-bold py-3 px-8 rounded-full hover:scale-105 transition flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg> JOGAR
+                        </button>
+                    </div>
+
+                    <div id="game-over-overlay" class="absolute inset-0 bg-black/90 flex-col items-center justify-center z-30 backdrop-blur-md p-6 text-center hidden opacity-0">
+                        <h2 class="text-4xl font-black text-red-500 mb-2">GAME OVER</h2>
+                        <div class="text-5xl font-black text-white mb-8" id="final-score-display">0</div>
+                        <div class="flex flex-col gap-3 w-full max-w-xs">
+                            <button id="revive-game-btn" class="w-full bg-transparent border border-yellow-500 text-yellow-500 py-3 rounded-full font-bold hover:bg-yellow-500 hover:text-black transition flex items-center justify-center gap-2 hidden">
+                                USAR 2ª CHANCE
+                            </button>
+                            <button id="restart-game-btn" class="w-full bg-white text-black py-3 rounded-full font-bold hover:scale-105 transition flex items-center justify-center gap-2">
+                                RECOMEÇAR
+                            </button>
+                            <button id="exit-game-btn" class="w-full text-spTextSub hover:text-white py-3 font-bold transition flex items-center justify-center gap-2">
+                                SAIR
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="countdown-overlay" class="absolute inset-0 bg-black/80 flex-col items-center justify-center z-[55] hidden opacity-0 backdrop-blur-md text-center p-6">
+                        <div id="countdown-number" class="text-7xl font-black text-yellow-500 animate-pulse">5</div>
+                    </div>
+
+                    <div id="victory-overlay" class="absolute inset-0 bg-black/90 flex-col items-center justify-center z-30 backdrop-blur-md p-6 text-center hidden opacity-0">
+                        <h2 class="text-3xl font-black text-accent mb-2">MÚSICA CONCLUÍDA!</h2>
+                        <div class="text-4xl font-black text-white mb-2" id="victory-score-display">0</div>
+                        <div class="text-sm font-bold text-yellow-400 mb-8" id="victory-multiplier-display">Nível: 1X</div>
+                        <div class="flex flex-col gap-3 w-full max-w-xs">
+                            <button id="victory-continue-btn" class="w-full bg-accent text-black py-3 rounded-full font-black hover:scale-105 transition flex items-center justify-center gap-2">
+                                CONTINUAR (<span id="next-mult-text">2X</span>)
+                            </button>
+                            <button id="victory-next-btn" class="w-full bg-transparent border border-white text-white py-3 rounded-full font-bold hover:bg-white hover:text-black transition">
+                                PRÓXIMA MÚSICA
+                            </button>
+                            <button id="victory-exit-btn" class="w-full text-spTextSub hover:text-white py-3 font-bold transition">
+                                SAIR
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -315,37 +339,37 @@
     </div>
 
     <!-- BOTTOM BAR (Controlos Estilo Spotify) -->
-    <footer class="h-[90px] w-full bg-black border-t border-[#282828] flex items-center justify-between px-4 z-50 fixed bottom-0">
+    <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-50 fixed bottom-0">
         
-        <!-- Esquerda: Info da Faixa (Reproveitado dos IDs do mini-player) -->
-        <div class="w-[30%] min-w-[150px] flex items-center gap-3">
-            <div class="relative group">
-                <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-14 h-14 rounded object-cover">
+        <!-- Esquerda: Info da Faixa (Transformado em botão inteiro no mobile para expandir/ocultar a lista) -->
+        <div class="w-[50%] md:w-[30%] min-w-[120px] flex items-center gap-2 md:gap-3 order-1 cursor-pointer hover:bg-white/5 p-1 rounded-md transition" id="mini-player-info" title="Expandir/Ocultar Playlist">
+            <div class="relative group flex-shrink-0">
+                <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-10 h-10 md:w-14 md:h-14 rounded object-cover shadow-md md:shadow-none">
                 <!-- Botão hidden para expandir cover no mobile (reutiliza IDs) -->
                 <button id="restore-mode-btn" class="absolute top-1 right-1 text-white opacity-0 group-hover:opacity-100 bg-black/50 rounded-full p-0.5 hidden"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
             </div>
-            <div class="flex flex-col justify-center overflow-hidden">
-                <h4 id="mini-title" class="text-sm font-semibold text-white truncate hover:underline cursor-pointer">Emera Player</h4>
-                <p id="mini-artist" class="text-xs text-spTextSub truncate hover:underline cursor-pointer hover:text-white">A aguardar áudio</p>
+            <div class="flex flex-col justify-center overflow-hidden min-w-0">
+                <h4 id="mini-title" class="text-[13px] md:text-sm font-semibold text-white truncate hover:underline">Emera Player</h4>
+                <p id="mini-artist" class="text-[11px] md:text-xs text-spTextSub truncate hover:underline hover:text-white">A aguardar áudio</p>
             </div>
-            <button id="main-favorite-btn" class="text-spTextSub hover:text-white transition ml-2 hidden">
-                <svg class="w-4 h-4" id="main-fav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+            <button id="main-favorite-btn" class="text-spTextSub hover:text-white transition ml-1 md:ml-2 hidden flex-shrink-0" onclick="event.stopPropagation()">
+                <svg class="w-4 h-4 md:w-5 md:h-5" id="main-fav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
             </button>
         </div>
 
         <!-- Centro: Controlos Principais -->
-        <div class="flex-1 max-w-2xl flex flex-col items-center justify-center px-4">
-            <div class="flex items-center gap-6 mb-2">
-                <button id="mode-btn" class="text-spTextSub hover:text-white transition" title="Modo de Reprodução">
+        <div class="flex-1 md:max-w-2xl flex flex-row md:flex-col items-center justify-end md:justify-center px-0 md:px-4 order-2 gap-2 md:gap-0">
+            <div class="flex items-center gap-3 md:gap-6 md:mb-2 pr-1 md:pr-0 flex-shrink-0">
+                <button id="mode-btn" class="text-spTextSub hover:text-white transition hidden md:block" title="Modo de Reprodução">
                     <svg id="icon-repeat" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <svg id="icon-shuffle" class="w-4 h-4 hidden text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                 </button>
                 <button id="prev-btn" class="text-spTextSub hover:text-white transition"><svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 20L9 12l10-8v16zM5 19h2V5H5v14z"></path></svg></button>
                 
                 <!-- Mantém os IDs antigos escondidos para compatibilidade, criando novos para visual -->
-                <button id="play-pause-btn" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black hover:scale-105 transition">
-                    <svg id="play-icon" class="w-4 h-4 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
-                    <svg id="pause-icon" class="w-4 h-4 hidden fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                <button id="play-pause-btn" class="w-10 h-10 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center text-black hover:scale-105 transition flex-shrink-0">
+                    <svg id="play-icon" class="w-5 h-5 md:w-4 md:h-4 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                    <svg id="pause-icon" class="w-5 h-5 md:w-4 md:h-4 hidden fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
                 </button>
                 <!-- Hack para botões "mini" do mobile antigo continuarem a funcionar na lógica se chamados -->
                 <button id="mini-play-pause-btn" class="hidden"><svg id="mini-play"></svg><svg id="mini-pause"></svg></button>
@@ -355,18 +379,18 @@
                 <button id="compact-mode-btn" class="text-spTextSub hover:text-white transition hidden md:block" title="Ocultar Sidebar"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
             </div>
             
-            <div id="progress-wrapper" class="w-full flex items-center gap-2 group">
-                <span id="current-time" class="text-[11px] text-spTextSub min-w-[35px] text-right">0:00</span>
-                <div class="progress-bar-container flex-1 h-3">
+            <div id="progress-wrapper" class="w-full flex items-center gap-2 group absolute md:relative top-[-4px] md:top-0 left-0 px-0 md:px-0">
+                <span id="current-time" class="hidden md:block text-[11px] text-spTextSub min-w-[35px] text-right">0:00</span>
+                <div class="progress-bar-container flex-1 h-1 md:h-3">
                     <div class="progress-fill" id="progress-fill"></div>
-                    <input type="range" id="progress-bar" min="0" max="100" value="0" class="standard-slider z-10 relative">
+                    <input type="range" id="progress-bar" min="0" max="100" value="0" class="standard-slider z-10 relative opacity-0 md:opacity-100 w-full h-full">
                 </div>
-                <span id="total-time" class="text-[11px] text-spTextSub min-w-[35px]">0:00</span>
+                <span id="total-time" class="hidden md:block text-[11px] text-spTextSub min-w-[35px]">0:00</span>
             </div>
         </div>
 
         <!-- Direita: Controlos de Volume e Ferramentas -->
-        <div class="w-[30%] min-w-[150px] flex items-center justify-end gap-2 md:gap-4 pr-2" id="volume-section">
+        <div class="w-[30%] min-w-[150px] items-center justify-end gap-2 md:gap-4 pr-2 hidden md:flex order-3" id="volume-section">
             <button id="lyrics-btn" class="text-spTextSub hover:text-white transition hidden md:block" title="Letras"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg></button>
             <button id="eq-btn" class="text-spTextSub hover:text-white transition hidden md:block" title="Equalizador"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
             <button id="settings-btn" class="text-spTextSub hover:text-white transition hidden sm:block" title="Definições"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg></button>
@@ -585,9 +609,38 @@
             rightPanel: document.getElementById('right-panel'), drawerHandle: document.getElementById('drawer-handle'), listHeader: document.getElementById('list-header'),
             eqCanvasBg: document.getElementById('eq-canvas-bg'), eqModal: document.getElementById('eq-modal'), mainAppContainer: document.getElementById('main-app-container'),
             miniPlay: document.getElementById('mini-play'), miniPause: document.getElementById('mini-pause'), miniCover: document.getElementById('mini-cover'), miniTitle: document.getElementById('mini-title'), miniArtist: document.getElementById('mini-artist'),
-            listContainer: document.getElementById('list-container'), virtualSpacer: document.getElementById('virtual-spacer'), virtualContent: document.getElementById('virtual-content')
+            listContainer: document.getElementById('list-container'), virtualSpacer: document.getElementById('virtual-spacer'), virtualContent: document.getElementById('virtual-content'),
+            miniPlayerInfo: document.getElementById('mini-player-info')
         };
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
+
+        // Logic for Mobile Sidebar Menu
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+
+        function openSidebar() {
+            if(!sidebar) return;
+            sidebar.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.remove('hidden');
+            setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
+        }
+        function closeSidebar() {
+            if(!sidebar) return;
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('opacity-0');
+            setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
+        }
+
+        if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', openSidebar);
+        if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // Bind mobile EQ/Settings inside sidebar to original buttons without losing logic
+        document.getElementById('mobile-eq-btn')?.addEventListener('click', () => { closeSidebar(); document.getElementById('eq-btn').click(); });
+        document.getElementById('mobile-settings-btn')?.addEventListener('click', () => { closeSidebar(); document.getElementById('settings-btn').click(); });
+
 
         document.addEventListener('visibilitychange', () => { isPageVisible = !document.hidden; });
 
@@ -867,6 +920,8 @@
         }
 
         let isDrawerExpanded = false;
+        if(window.innerWidth < 768) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); } // Expandido por defeito no mobile
+        
         function toggleDrawer(e) { 
             if (window.innerWidth >= 768) return; 
             if(e && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'SELECT')) return; 
@@ -874,6 +929,7 @@
             else { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); if (location.hash === '#playlist') history.back(); }
         }
         DOM.drawerHandle.addEventListener('click', toggleDrawer);
+        if(DOM.miniPlayerInfo) DOM.miniPlayerInfo.addEventListener('click', toggleDrawer);
 
         // --- ATUALIZADO: RENDERIZAÇÃO ESTILO SPOTIFY ---
         const ITEM_HEIGHT = 56; 
@@ -1029,9 +1085,8 @@
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files))); DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
 
         document.getElementById('compact-mode-btn').addEventListener('click', () => { 
-            const sidebar = document.querySelector('aside'); 
-            if(sidebar.classList.contains('md:flex')) { sidebar.classList.remove('md:flex'); sidebar.classList.add('md:hidden'); } 
-            else { sidebar.classList.add('md:flex'); sidebar.classList.remove('md:hidden'); } 
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('md:hidden');
         });
 
         // Minigame Logic Integralmente mantida
