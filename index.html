@@ -208,12 +208,12 @@
                 </div>
             </div>
 
-            <div id="player-bg" class="flex-1 w-full bg-gradient-to-b from-[#404040] to-spBase relative flex flex-col items-center justify-center flex-shrink-0 transition-colors duration-1000" title="Deslize para mudar de música | Duplo clique para ecrã inteiro">
+            <div id="player-bg" class="flex-1 w-full bg-gradient-to-b from-[#404040] to-spBase relative flex flex-col items-center justify-center flex-shrink-0 transition-colors duration-1000">
                 <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
                 
                 <div class="flex items-center gap-6 mt-8 z-10 w-full max-w-4xl px-4 md:px-8">
                     <!-- Adicionado flex-shrink-0 na capa para impedir compressão -->
-                    <div id="cover-container" class="relative w-32 h-32 md:w-56 md:h-56 rounded shadow-2xl flex-shrink-0 flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador">
+                    <div id="cover-container" class="relative w-32 h-32 md:w-56 md:h-56 rounded shadow-2xl flex-shrink-0 flex items-center justify-center group cursor-pointer">
                         <img id="cover-art" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop" class="w-full h-full object-cover rounded relative z-10 bg-spElevated pointer-events-none">
                         <canvas id="visualizer" class="absolute inset-0 w-full h-full z-20 opacity-80 pointer-events-none rounded"></canvas>
                     </div>
@@ -810,7 +810,6 @@
             e.stopPropagation(); 
             visualizerMode = (visualizerMode + 1) % visualizerNames.length; 
             if(visualizerMode===5) canvasCtx.clearRect(0,0,DOM.canvas.width,DOM.canvas.height); 
-            showToast(`Efeito: ${visualizerNames[visualizerMode]}`); 
         };
         DOM.toggleVis.addEventListener('click', handleVisualizerToggle);
         DOM.coverContainer.addEventListener('click', handleVisualizerToggle);
