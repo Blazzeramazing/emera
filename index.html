@@ -359,6 +359,7 @@
                 <button id="mode-btn" class="text-spTextSub hover:text-white transition block w-8 h-8 flex items-center justify-center" title="Modo de Reprodução">
                     <svg id="icon-repeat" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <svg id="icon-shuffle" class="w-4 h-4 md:w-5 md:h-5 hidden text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                    <svg id="icon-radio" class="w-4 h-4 md:w-5 md:h-5 hidden text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
                 </button>
                 
                 <button id="prev-btn" class="text-spTextSub hover:text-white transition w-8 h-8 flex items-center justify-center"><svg class="w-5 h-5 md:w-6 md:h-6 fill-current" viewBox="0 0 24 24"><path d="M19 20L9 12l10-8v16zM5 19h2V5H5v14z"></path></svg></button>
@@ -622,7 +623,7 @@
         let isPageVisible = !document.hidden;
 
         let playMode = parseInt(localStorage.getItem('webPlayerMode')) || 0; 
-        let isRepeat = playMode === 1; let isShuffle = playMode === 2;
+        let isRepeat = playMode === 1; let isShuffle = playMode === 2; let isRadio = playMode === 3;
         const savedEq = JSON.parse(localStorage.getItem('webPlayerEq')) || [0,0,0,0,0];
         let savedPreamp = parseFloat(localStorage.getItem('webPlayerPreamp')); if (isNaN(savedPreamp)) savedPreamp = 1.0;
         let secondChances = parseInt(localStorage.getItem('emeraSecondChances')) || 0;
@@ -640,7 +641,7 @@
         const DOM = {
             installAppBtn: document.getElementById('install-app-btn'),
             playPause: document.getElementById('play-pause-btn'), playIcon: document.getElementById('play-icon'), pauseIcon: document.getElementById('pause-icon'),
-            prev: document.getElementById('prev-btn'), next: document.getElementById('next-btn'), modeBtn: document.getElementById('mode-btn'), iconRepeat: document.getElementById('icon-repeat'), iconShuffle: document.getElementById('icon-shuffle'),
+            prev: document.getElementById('prev-btn'), next: document.getElementById('next-btn'), modeBtn: document.getElementById('mode-btn'), iconRepeat: document.getElementById('icon-repeat'), iconShuffle: document.getElementById('icon-shuffle'), iconRadio: document.getElementById('icon-radio'),
             title: document.getElementById('track-title'), artist: document.getElementById('track-artist'), cover: document.getElementById('cover-art'), coverContainer: document.getElementById('cover-container'),
             mainFav: document.getElementById('main-favorite-btn'), mainFavIcon: document.getElementById('main-fav-icon'), shareBtn: document.getElementById('share-btn'), lyricsBtn: document.getElementById('lyrics-btn'),
             progWrap: document.getElementById('progress-wrapper'), progBar: document.getElementById('progress-bar'), progFill: document.getElementById('progress-fill'), curTime: document.getElementById('current-time'), totTime: document.getElementById('total-time'),
@@ -1015,9 +1016,38 @@
 
         function nextTrack() {
             if(playlist.length===0) return; const vis = getVisualPlaylist(); if(vis.length === 0) return; 
-            let currentVisIndex = vis.findIndex(t => t.id === playlist[currentTrackIndex].id); if(currentVisIndex === -1) currentVisIndex = 0; 
-            let nI = currentVisIndex + 1; if(isShuffle){ nI = Math.floor(Math.random()*vis.length); if(nI===currentVisIndex && vis.length>1) nI=(nI+1)%vis.length; } else if(nI >= vis.length) nI = 0;
-            const originalIndex = Math.max(0, playlist.findIndex(t => t.id === vis[nI].id));
+            let originalIndex;
+            
+            if (isRadio) {
+                const currentTrack = playlist[currentTrackIndex];
+                const candidates = playlist.filter(t => t.id !== currentTrack.id);
+                if (candidates.length === 0) {
+                    originalIndex = currentTrackIndex;
+                } else {
+                    let scored = candidates.map(t => {
+                        let s = 0;
+                        if (t.artist !== "Desconhecido" && t.artist === currentTrack.artist) s += 10;
+                        if (t.genre && currentTrack.genre && t.genre !== "Desconhecido" && t.genre === currentTrack.genre) s += 8;
+                        let cWords = currentTrack.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+                        if (cWords.some(w => t.title.toLowerCase().includes(w) || t.artist.toLowerCase().includes(w))) s += 3;
+                        return { track: t, score: s };
+                    });
+                    let bestCandidates = scored.filter(c => c.score > 0);
+                    if (bestCandidates.length > 0) {
+                        bestCandidates.sort((a,b) => b.score - a.score);
+                        let topN = bestCandidates.slice(0, 5);
+                        let picked = topN[Math.floor(Math.random() * topN.length)].track;
+                        originalIndex = playlist.findIndex(t => t.id === picked.id);
+                    } else {
+                        let picked = candidates[Math.floor(Math.random() * candidates.length)];
+                        originalIndex = playlist.findIndex(t => t.id === picked.id);
+                    }
+                }
+            } else {
+                let currentVisIndex = vis.findIndex(t => t.id === playlist[currentTrackIndex].id); if(currentVisIndex === -1) currentVisIndex = 0; 
+                let nI = currentVisIndex + 1; if(isShuffle){ nI = Math.floor(Math.random()*vis.length); if(nI===currentVisIndex && vis.length>1) nI=(nI+1)%vis.length; } else if(nI >= vis.length) nI = 0;
+                originalIndex = Math.max(0, playlist.findIndex(t => t.id === vis[nI].id));
+            }
             loadTrack(originalIndex); if(!isPlaying) togglePlay();
         }
 
@@ -1030,12 +1060,28 @@
         }
 
         function updateModeUI() {
-            DOM.iconRepeat.classList.add('hidden'); DOM.iconShuffle.classList.add('hidden'); DOM.modeBtn.classList.remove('text-accent'); DOM.modeBtn.classList.add('text-spTextSub');
-            if (playMode === 1) { DOM.iconRepeat.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); isRepeat = true; isShuffle = false; } 
-            else if (playMode === 2) { DOM.iconShuffle.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); isRepeat = false; isShuffle = true; } 
-            else { DOM.iconRepeat.classList.remove('hidden'); isRepeat = false; isShuffle = false; }
+            DOM.iconRepeat.classList.add('hidden'); DOM.iconShuffle.classList.add('hidden'); DOM.iconRadio.classList.add('hidden'); DOM.modeBtn.classList.remove('text-accent'); DOM.modeBtn.classList.add('text-spTextSub');
+            isRepeat = false; isShuffle = false; isRadio = false;
+            let tooltip = "Modo: Normal";
+            
+            if (playMode === 1) { 
+                DOM.iconRepeat.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); 
+                isRepeat = true; tooltip = "Modo: Repetir Faixa";
+            } 
+            else if (playMode === 2) { 
+                DOM.iconShuffle.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); 
+                isShuffle = true; tooltip = "Modo: Aleatório";
+            } 
+            else if (playMode === 3) {
+                DOM.iconRadio.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); 
+                isRadio = true; tooltip = "Modo: Rádio Inteligente (Similares)";
+            }
+            else { 
+                DOM.iconRepeat.classList.remove('hidden');
+            }
+            DOM.modeBtn.title = tooltip;
         }
-        updateModeUI(); DOM.modeBtn.addEventListener('click', () => { playMode = (playMode + 1) % 3; localStorage.setItem('webPlayerMode', playMode); updateModeUI(); });
+        updateModeUI(); DOM.modeBtn.addEventListener('click', () => { playMode = (playMode + 1) % 4; localStorage.setItem('webPlayerMode', playMode); updateModeUI(); showToast(DOM.modeBtn.title); });
 
         DOM.playPause.addEventListener('click', () => { togglePlay(); DOM.playPause.blur(); });
         DOM.next.addEventListener('click', () => { nextTrack(); DOM.next.blur(); }); DOM.prev.addEventListener('click', () => { prevTrack(); DOM.prev.blur(); });
@@ -1252,9 +1298,9 @@
                         reader.onload = (e) => {
                             const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
                             const safeFile = { name: file.name, type: file.type, size: file.size, data: e.target.result };
-                            let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", file: safeFile, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
+                            let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: safeFile, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
                             playlist.unshift(nT); saveTrackToDB(nT); loadedCount++;
-                            if (window.jsmediatags) { window.jsmediatags.read(file, { onSuccess: tag => { let needsUpdate = false; if(tag.tags.title) { nT.title = tag.tags.title; needsUpdate = true; } if(tag.tags.artist) { nT.artist = tag.tags.artist; needsUpdate = true; } if(tag.tags.lyrics && tag.tags.lyrics.lyrics) { nT.lyrics = tag.tags.lyrics.lyrics; needsUpdate = true; } else if(tag.tags.USLT && tag.tags.USLT.lyrics) { nT.lyrics = tag.tags.USLT.lyrics; needsUpdate = true; } if(tag.tags.picture) { let b64 = ""; for (let i=0; i<tag.tags.picture.data.length; i++) b64 += String.fromCharCode(tag.tags.picture.data[i]); nT.cover = `data:${tag.tags.picture.format};base64,${window.btoa(b64)}`; needsUpdate = true; } if(needsUpdate) { saveTrackToDB(nT); if(playlist[currentTrackIndex] && playlist[currentTrackIndex].id === nT.id) { DOM.title.textContent = nT.title; DOM.artist.textContent = nT.artist; if(nT.cover) DOM.cover.src = nT.cover; } } }, onError: () => {} }); }
+                            if (window.jsmediatags) { window.jsmediatags.read(file, { onSuccess: tag => { let needsUpdate = false; if(tag.tags.title) { nT.title = tag.tags.title; needsUpdate = true; } if(tag.tags.artist) { nT.artist = tag.tags.artist; needsUpdate = true; } if(tag.tags.genre) { nT.genre = tag.tags.genre; needsUpdate = true; } if(tag.tags.lyrics && tag.tags.lyrics.lyrics) { nT.lyrics = tag.tags.lyrics.lyrics; needsUpdate = true; } else if(tag.tags.USLT && tag.tags.USLT.lyrics) { nT.lyrics = tag.tags.USLT.lyrics; needsUpdate = true; } if(tag.tags.picture) { let b64 = ""; for (let i=0; i<tag.tags.picture.data.length; i++) b64 += String.fromCharCode(tag.tags.picture.data[i]); nT.cover = `data:${tag.tags.picture.format};base64,${window.btoa(b64)}`; needsUpdate = true; } if(needsUpdate) { saveTrackToDB(nT); if(playlist[currentTrackIndex] && playlist[currentTrackIndex].id === nT.id) { DOM.title.textContent = nT.title; DOM.artist.textContent = nT.artist; if(nT.cover) DOM.cover.src = nT.cover; } } }, onError: () => {} }); }
                             resolve();
                         }; reader.readAsArrayBuffer(file);
                     }); promises.push(promise);
