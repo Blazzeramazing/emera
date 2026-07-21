@@ -208,12 +208,12 @@
                 </div>
             </div>
 
-            <div id="player-bg" class="flex-1 w-full bg-gradient-to-b from-[#404040] to-spBase relative flex flex-col items-center justify-center flex-shrink-0 transition-colors duration-1000">
+            <div id="player-bg" class="flex-1 w-full bg-gradient-to-b from-[#404040] to-spBase relative flex flex-col items-center justify-center flex-shrink-0 transition-colors duration-1000" title="Deslize para mudar de música | Duplo clique para ecrã inteiro">
                 <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
                 
                 <div class="flex items-center gap-6 mt-8 z-10 w-full max-w-4xl px-4 md:px-8">
                     <!-- Adicionado flex-shrink-0 na capa para impedir compressão -->
-                    <div id="cover-container" class="relative w-32 h-32 md:w-56 md:h-56 rounded shadow-2xl flex-shrink-0 flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador | Duplo clique para ecrã inteiro">
+                    <div id="cover-container" class="relative w-32 h-32 md:w-56 md:h-56 rounded shadow-2xl flex-shrink-0 flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador">
                         <img id="cover-art" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop" class="w-full h-full object-cover rounded relative z-10 bg-spElevated pointer-events-none">
                         <canvas id="visualizer" class="absolute inset-0 w-full h-full z-20 opacity-80 pointer-events-none rounded"></canvas>
                     </div>
@@ -813,7 +813,8 @@
             showToast(`Efeito: ${visualizerNames[visualizerMode]}`); 
         };
         DOM.toggleVis.addEventListener('click', handleVisualizerToggle);
-        
+        DOM.coverContainer.addEventListener('click', handleVisualizerToggle);
+
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
             if (!isPageVisible || isGameActive) return; 
@@ -1450,6 +1451,7 @@
         // --- Gestos de Swipe na Área Principal do Reprodutor ---
         let touchStartX = 0;
         let touchStartY = 0;
+        let lastTouchBgTime = 0;
         
         DOM.playerBg.addEventListener('touchstart', e => { 
             touchStartX = e.changedTouches[0].screenX; 
@@ -1465,10 +1467,19 @@
             if (Math.abs(touchStartX - touchEndX) > Math.abs(touchStartY - touchEndY) && Math.abs(touchStartX - touchEndX) > 50) {
                 if (touchStartX - touchEndX > 50) nextTrack(); 
                 if (touchEndX - touchStartX > 50) prevTrack(); 
+            } else if (Math.abs(touchStartX - touchEndX) < 10 && Math.abs(touchStartY - touchEndY) < 10) {
+                // Toque curto (tap), verificar duplo toque
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTouchBgTime;
+                if (tapLength < 300 && tapLength > 0) {
+                    e.preventDefault();
+                    toggleFullscreen();
+                }
+                lastTouchBgTime = currentTime;
             }
         });
 
-        // --- Modo Ecrã Inteiro (Duplo Clique / Duplo Toque na Capa) ---
+        // --- Modo Ecrã Inteiro (Duplo Clique / Duplo Toque) ---
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(()=>{});
@@ -1477,22 +1488,10 @@
             }
         }
 
-        DOM.coverContainer.addEventListener('dblclick', () => {
+        DOM.playerBg.addEventListener('dblclick', () => {
             if(isGameActive) return;
             toggleFullscreen();
         });
-
-        let lastTouchCoverTime = 0;
-        DOM.coverContainer.addEventListener('touchend', (e) => {
-            if(isGameActive) return;
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - lastTouchCoverTime;
-            if (tapLength < 300 && tapLength > 0) {
-                e.preventDefault();
-                toggleFullscreen();
-            }
-            lastTouchCoverTime = currentTime;
-        }, {passive: false});
 
         let keyMappings = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
         document.addEventListener('keydown', e => {
