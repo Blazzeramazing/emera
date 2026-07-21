@@ -137,9 +137,9 @@
             </div>
 
             <!-- Library Header -->
-            <div id="list-header" class="flex-1 flex flex-col overflow-hidden relative cursor-pointer md:cursor-default bg-spBase">
+            <div id="list-header" class="flex-1 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar relative md:cursor-default bg-spBase">
                 <div class="px-4 py-2 flex justify-between items-center text-spTextSub">
-                    <div class="flex items-center gap-2 font-bold hover:text-white transition" id="context-trigger">
+                    <div class="flex items-center gap-2 font-bold hover:text-white transition cursor-pointer" id="context-trigger" onclick="event.stopPropagation()">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
                         <span id="context-trigger-text" class="truncate max-w-[120px]">Sua Biblioteca</span>
                         <svg class="w-4 h-4 transition-transform duration-300" id="context-trigger-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -185,8 +185,20 @@
                     </div>
                 </div>
                 
-                <!-- Acesso a EQ e Definições apenas no Mobile via Sidebar -->
+                <!-- Acesso a EQ, Definições e Volume apenas no Mobile via Sidebar -->
                 <div class="md:hidden border-t border-white/5 mt-auto pt-4 pb-6 px-4 flex flex-col gap-4 bg-spBase">
+                    <div class="flex flex-col gap-2 mb-2">
+                        <div class="flex items-center justify-between text-spTextSub text-sm font-bold">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg> Volume
+                            </div>
+                            <span id="mobile-vol-value-display" class="text-xs">100%</span>
+                        </div>
+                        <div class="progress-bar-container w-full h-3 group">
+                            <div class="progress-fill bg-white" id="mobile-vol-fill" style="width: 100%;"></div>
+                            <input type="range" id="mobile-volume-bar" min="0" max="1" step="0.01" value="1" class="standard-slider z-10 relative">
+                        </div>
+                    </div>
                     <button id="mobile-eq-btn" class="flex items-center gap-3 text-spTextSub hover:text-white transition font-bold text-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg> Equalizador
                     </button>
@@ -342,7 +354,7 @@
     <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-50 fixed bottom-0">
         
         <!-- Esquerda: Info da Faixa (Transformado em botão inteiro no mobile para expandir/ocultar a lista) -->
-        <div class="w-[50%] md:w-[30%] min-w-[120px] flex items-center gap-2 md:gap-3 order-1 cursor-pointer hover:bg-white/5 p-1 rounded-md transition" id="mini-player-info" title="Expandir/Ocultar Playlist">
+        <div class="w-[40%] md:w-[30%] max-w-[140px] md:max-w-none min-w-[100px] flex items-center gap-2 md:gap-3 order-1 cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir/Ocultar Playlist">
             <div class="relative group flex-shrink-0">
                 <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-10 h-10 md:w-14 md:h-14 rounded object-cover shadow-md md:shadow-none">
                 <!-- Botão hidden para expandir cover no mobile (reutiliza IDs) -->
@@ -358,25 +370,33 @@
         </div>
 
         <!-- Centro: Controlos Principais -->
-        <div class="flex-1 md:max-w-2xl flex flex-row md:flex-col items-center justify-end md:justify-center px-0 md:px-4 order-2 gap-2 md:gap-0">
-            <div class="flex items-center gap-3 md:gap-6 md:mb-2 pr-1 md:pr-0 flex-shrink-0">
-                <button id="mode-btn" class="text-spTextSub hover:text-white transition hidden md:block" title="Modo de Reprodução">
-                    <svg id="icon-repeat" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    <svg id="icon-shuffle" class="w-4 h-4 hidden text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+        <div class="flex-1 md:max-w-2xl flex flex-row md:flex-col items-center justify-end md:justify-center px-0 md:px-4 order-2 gap-1 sm:gap-2 md:gap-0">
+            <div class="flex items-center gap-1 sm:gap-2 md:gap-6 md:mb-2 pr-1 md:pr-0 flex-shrink-0">
+                
+                <button id="lyrics-btn" class="text-spTextSub hover:text-white transition block w-8 h-8 flex items-center justify-center" title="Letras">
+                    <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
                 </button>
-                <button id="prev-btn" class="text-spTextSub hover:text-white transition"><svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 20L9 12l10-8v16zM5 19h2V5H5v14z"></path></svg></button>
+
+                <button id="mode-btn" class="text-spTextSub hover:text-white transition block w-8 h-8 flex items-center justify-center" title="Modo de Reprodução">
+                    <svg id="icon-repeat" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <svg id="icon-shuffle" class="w-4 h-4 md:w-5 md:h-5 hidden text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                </button>
+                
+                <button id="prev-btn" class="text-spTextSub hover:text-white transition w-8 h-8 flex items-center justify-center"><svg class="w-5 h-5 md:w-6 md:h-6 fill-current" viewBox="0 0 24 24"><path d="M19 20L9 12l10-8v16zM5 19h2V5H5v14z"></path></svg></button>
                 
                 <!-- Mantém os IDs antigos escondidos para compatibilidade, criando novos para visual -->
-                <button id="play-pause-btn" class="w-10 h-10 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center text-black hover:scale-105 transition flex-shrink-0">
-                    <svg id="play-icon" class="w-5 h-5 md:w-4 md:h-4 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
-                    <svg id="pause-icon" class="w-5 h-5 md:w-4 md:h-4 hidden fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                <button id="play-pause-btn" class="w-8 h-8 md:w-10 md:h-10 bg-white rounded-full flex items-center justify-center text-black hover:scale-105 transition flex-shrink-0">
+                    <svg id="play-icon" class="w-4 h-4 md:w-5 md:h-5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                    <svg id="pause-icon" class="w-4 h-4 md:w-5 md:h-5 hidden fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
                 </button>
+                
+                <button id="next-btn" class="text-spTextSub hover:text-white transition w-8 h-8 flex items-center justify-center"><svg class="w-5 h-5 md:w-6 md:h-6 fill-current" viewBox="0 0 24 24"><path d="M5 4l10 8-10 8V4zm14 1h-2v14h2V5z"></path></svg></button>
+
+                <button id="compact-mode-btn" class="text-spTextSub hover:text-white transition hidden md:block ml-2" title="Ocultar Sidebar"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
+                
                 <!-- Hack para botões "mini" do mobile antigo continuarem a funcionar na lógica se chamados -->
                 <button id="mini-play-pause-btn" class="hidden"><svg id="mini-play"></svg><svg id="mini-pause"></svg></button>
                 <button id="mini-prev-btn" class="hidden"></button><button id="mini-next-btn" class="hidden"></button>
-
-                <button id="next-btn" class="text-spTextSub hover:text-white transition"><svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M5 4l10 8-10 8V4zm14 1h-2v14h2V5z"></path></svg></button>
-                <button id="compact-mode-btn" class="text-spTextSub hover:text-white transition hidden md:block" title="Ocultar Sidebar"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
             </div>
             
             <div id="progress-wrapper" class="w-full flex items-center gap-2 group absolute md:relative top-[-4px] md:top-0 left-0 px-0 md:px-0">
@@ -391,12 +411,11 @@
 
         <!-- Direita: Controlos de Volume e Ferramentas -->
         <div class="w-[30%] min-w-[150px] items-center justify-end gap-2 md:gap-4 pr-2 hidden md:flex order-3" id="volume-section">
-            <button id="lyrics-btn" class="text-spTextSub hover:text-white transition hidden md:block" title="Letras"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg></button>
-            <button id="eq-btn" class="text-spTextSub hover:text-white transition hidden md:block" title="Equalizador"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
-            <button id="settings-btn" class="text-spTextSub hover:text-white transition hidden sm:block" title="Definições"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg></button>
+            <button id="eq-btn" class="text-spTextSub hover:text-white transition" title="Equalizador"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
+            <button id="settings-btn" class="text-spTextSub hover:text-white transition" title="Definições"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg></button>
             <button id="share-btn" class="hidden"></button>
             
-            <button id="mute-btn" class="text-spTextSub hover:text-white transition"><svg id="vol-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
+            <button id="mute-btn" class="text-spTextSub hover:text-white transition"><svg id="vol-icon" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
             <div class="progress-bar-container w-24 h-3 group">
                 <div class="progress-fill" id="vol-fill" style="width: 100%;"></div>
                 <input type="range" id="volume-bar" min="0" max="1" step="0.01" value="1" class="standard-slider z-10 relative">
@@ -901,8 +920,28 @@
             if(currentSecond !== lastRenderedSecond) { const fT = s => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; DOM.curTime.textContent = fT(currentSecond); lastRenderedSecond = currentSecond; }
         });
         
-        DOM.volBar.addEventListener('input', e => { const v = e.target.value; audio.volume = v; DOM.volFill.style.width = v*100+'%'; const m = (v==0); audio.muted = m; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(v*100)+'%'; saveVolToStorage(v); });
-        DOM.mute.addEventListener('click', () => { const m = !audio.muted; audio.muted = m; if(m){ DOM.volBar.value=0; DOM.volFill.style.width='0%'; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = '0%'; } else { const restoredVol = parseFloat(localStorage.getItem('webPlayerVol'))||0.5; DOM.volBar.value=restoredVol; DOM.volFill.style.width=restoredVol*100+'%'; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(restoredVol*100)+'%'; } });
+        DOM.volBar.addEventListener('input', e => { 
+            const v = e.target.value; audio.volume = v; DOM.volFill.style.width = v*100+'%'; const m = (v==0); audio.muted = m; 
+            if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(v*100)+'%'; 
+            
+            const mobVolBar = document.getElementById('mobile-volume-bar');
+            if (mobVolBar && mobVolBar.value !== v) {
+                mobVolBar.value = v;
+                document.getElementById('mobile-vol-fill').style.width = v*100+'%';
+                document.getElementById('mobile-vol-value-display').textContent = Math.round(v*100)+'%';
+            }
+            saveVolToStorage(v); 
+        });
+
+        const mobileVolBar = document.getElementById('mobile-volume-bar');
+        if(mobileVolBar) {
+            mobileVolBar.addEventListener('input', e => {
+                DOM.volBar.value = e.target.value;
+                DOM.volBar.dispatchEvent(new Event('input'));
+            });
+        }
+
+        DOM.mute.addEventListener('click', () => { const m = !audio.muted; audio.muted = m; if(m){ DOM.volBar.value=0; DOM.volFill.style.width='0%'; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = '0%'; } else { const restoredVol = parseFloat(localStorage.getItem('webPlayerVol'))||0.5; DOM.volBar.value=restoredVol; DOM.volFill.style.width=restoredVol*100+'%'; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(restoredVol*100)+'%'; } DOM.volBar.dispatchEvent(new Event('input')); });
 
         const tModal = (m, s, hash) => { if(s) { m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(()=>m.classList.remove('opacity-0'),10); if (hash && location.hash !== '#' + hash) history.pushState(null, '', '#' + hash); } else { m.classList.add('opacity-0'); setTimeout(()=>{ m.classList.add('hidden'); m.classList.remove('flex'); },300); if (hash && location.hash === '#' + hash) history.back(); } if(m === DOM.eqModal) eqModalVisible = s; };
         
@@ -1278,7 +1317,16 @@
             if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas'; }
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
-        if(!isNaN(initVol)){ audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(initVol*100)+'%'; } 
+        if(!isNaN(initVol)){ 
+            audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); 
+            if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(initVol*100)+'%'; 
+            if(mobileVolBar) {
+                mobileVolBar.value = initVol;
+                document.getElementById('mobile-vol-fill').style.width = initVol*100+'%';
+                const mobVolDisplay = document.getElementById('mobile-vol-value-display');
+                if (mobVolDisplay) mobVolDisplay.textContent = Math.round(initVol*100)+'%';
+            }
+        } 
         else { audio.volume=1; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = '100%'; }
 
     </script>
