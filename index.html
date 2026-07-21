@@ -1415,11 +1415,44 @@
         gameCanvas.addEventListener('pointerup', (e) => { if(!isGamePlaying || isGameOver) return; e.preventDefault(); if(activePointers[e.pointerId] !== undefined) { handleGameInputUp(activePointers[e.pointerId]); delete activePointers[e.pointerId]; } try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){} });
         gameCanvas.addEventListener('pointercancel', (e) => { if(!isGamePlaying || isGameOver) return; e.preventDefault(); if(activePointers[e.pointerId] !== undefined) { handleGameInputUp(activePointers[e.pointerId]); delete activePointers[e.pointerId]; } try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){} });
 
+        // --- Gestos de Swipe na Capa (Mobile) ---
+        let touchStartX = 0;
+        DOM.coverContainer.addEventListener('touchstart', e => { 
+            touchStartX = e.changedTouches[0].screenX; 
+        }, {passive: true});
+        
+        DOM.coverContainer.addEventListener('touchend', e => {
+            if(isGameActive) return;
+            let touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 60) nextTrack(); // Swipe Esquerda -> Próxima
+            if (touchEndX - touchStartX > 60) prevTrack(); // Swipe Direita -> Anterior
+        });
+
+        // --- Modo Ecrã Inteiro (Duplo Clique) ---
+        DOM.coverContainer.addEventListener('dblclick', () => {
+            if(isGameActive) return;
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(()=>{});
+            } else {
+                if(document.exitFullscreen) document.exitFullscreen();
+            }
+        });
+
         let keyMappings = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
         document.addEventListener('keydown', e => {
             if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; if(e.target.tagName === 'BUTTON' && e.code === 'Space') e.preventDefault(); 
             if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { if (!e.repeat) handleGameInputDown(keyMappings[e.code]); return; }
-            switch(e.code) { case 'Space': e.preventDefault(); togglePlay(); break; case 'ArrowRight': e.preventDefault(); nextTrack(); break; case 'ArrowLeft': e.preventDefault(); prevTrack(); break; case 'ArrowUp': e.preventDefault(); DOM.volBar.value=Math.min(1,parseFloat(DOM.volBar.value)+0.1); DOM.volBar.dispatchEvent(new Event('input')); break; case 'ArrowDown': e.preventDefault(); DOM.volBar.value=Math.max(0,parseFloat(DOM.volBar.value)-0.1); DOM.volBar.dispatchEvent(new Event('input')); break; }
+            
+            switch(e.code) { 
+                case 'Space': e.preventDefault(); togglePlay(); break; 
+                case 'ArrowRight': e.preventDefault(); nextTrack(); break; 
+                case 'ArrowLeft': e.preventDefault(); prevTrack(); break; 
+                case 'ArrowUp': e.preventDefault(); DOM.volBar.value=Math.min(1,parseFloat(DOM.volBar.value)+0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
+                case 'ArrowDown': e.preventDefault(); DOM.volBar.value=Math.max(0,parseFloat(DOM.volBar.value)-0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
+                case 'KeyM': e.preventDefault(); DOM.mute.click(); break; // M -> Mute
+                case 'KeyL': e.preventDefault(); DOM.lyricsBtn.click(); break; // L -> Letras
+                case 'KeyV': e.preventDefault(); handleVisualizerToggle(e); break; // V -> Visualizador
+            }
         });
         document.addEventListener('keyup', e => { if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { handleGameInputUp(keyMappings[e.code]); } });
 
