@@ -98,7 +98,7 @@
 </head>
 <body class="text-spTextMain font-sans selection:bg-accent selection:text-white h-[100dvh] flex flex-col overflow-hidden">
 
-    <!-- NOVO: Ecrã de Carregamento Inicial (Splash Screen) -->
+    <!-- Ecrã de Carregamento Inicial (Splash Screen) -->
     <div id="initial-loader" class="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="relative w-20 h-20 flex items-center justify-center mb-6">
             <div class="absolute inset-0 border-4 border-white/10 rounded-full"></div>
@@ -139,7 +139,6 @@
             <!-- Library Header -->
             <div id="list-header" class="flex-1 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar relative md:cursor-default bg-spBase">
                 <div class="px-4 py-2 flex justify-between items-center text-spTextSub">
-                    <!-- Novo Botão para Modal Nativo da Biblioteca -->
                     <div class="flex items-center gap-2 font-bold hover:text-white transition cursor-pointer group" id="open-context-modal-btn">
                         <svg class="w-6 h-6 group-hover:scale-105 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
                         <span id="context-trigger-text" class="truncate max-w-[120px]">Sua Biblioteca</span>
@@ -147,9 +146,7 @@
                     <button id="create-playlist-btn" class="hover:text-white transition rounded-full p-1 hover:bg-spElevated" title="Criar Playlist"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
                 </div>
 
-                <!-- Filtros e Upload -->
                 <div class="px-4 py-2 flex flex-wrap gap-2">
-                    <!-- Novo Botão para Modal Nativo de Ordenação -->
                     <button id="open-sort-modal-btn" class="bg-spHighlight text-xs text-white rounded-full px-3 py-1 outline-none hover:bg-white/10 transition cursor-pointer flex items-center gap-1.5">
                         <span id="current-sort-text">Personalizado</span>
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -213,7 +210,7 @@
                 <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
                 
                 <div class="flex items-center gap-6 mt-8 z-10 w-full max-w-4xl px-4 md:px-8">
-                    <div id="cover-container" class="relative w-32 h-32 md:w-56 md:h-56 rounded shadow-2xl flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador">
+                    <div id="cover-container" class="relative w-32 h-32 md:w-56 md:h-56 rounded shadow-2xl flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador | Duplo clique para ecrã inteiro">
                         <img id="cover-art" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop" class="w-full h-full object-cover rounded relative z-10 bg-spElevated pointer-events-none">
                         <canvas id="visualizer" class="absolute inset-0 w-full h-full z-20 opacity-80 pointer-events-none rounded"></canvas>
                     </div>
@@ -384,7 +381,7 @@
         </div>
 
         <div class="w-[30%] min-w-[150px] items-center justify-end gap-2 md:gap-4 pr-2 hidden md:flex order-3" id="volume-section">
-            <button id="eq-btn" class="text-spTextSub hover:text-white transition" title="Equalizador"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
+            <button id="eq-btn" class="text-spTextSub hover:text-white transition" title="Equalizador"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
             <button id="settings-btn" class="text-spTextSub hover:text-white transition" title="Definições"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg></button>
             <button id="share-btn" class="hidden"></button>
             
@@ -517,7 +514,7 @@
         </div>
     </div>
 
-    <!-- Modal de Letras Corrigido: Estilo dark/simples com m-auto para nunca cortar a primeira linha! -->
+    <!-- Modal de Letras Otimizado com Flexbox -->
     <div id="lyrics-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-[#121212] border border-[#282828] text-white w-full max-w-lg h-[70vh] rounded-xl p-6 flex flex-col shadow-2xl relative overflow-hidden">
             <button id="close-lyrics-btn" class="absolute top-4 right-4 text-spTextSub hover:text-white transition bg-black/20 hover:bg-black/40 rounded-full p-2 z-10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -527,7 +524,7 @@
         </div>
     </div>
 
-    <!-- NOVO: Modal Nativo de Ordenação (Bottom Sheet) -->
+    <!-- Modal Nativo de Ordenação -->
     <div id="sort-modal" class="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300">
         <div class="bg-spElevated md:border border-spHighlight w-full md:w-[90%] md:max-w-xs md:rounded-lg rounded-t-2xl shadow-2xl overflow-hidden translate-y-full md:translate-y-0 transition-transform duration-300" id="sort-modal-panel">
             <div class="p-4 border-b border-white/5 flex justify-between items-center md:hidden">
@@ -542,7 +539,7 @@
         </div>
     </div>
 
-    <!-- NOVO: Modal Nativo de Contexto/Biblioteca (Bottom Sheet) -->
+    <!-- Modal Nativo de Contexto/Biblioteca -->
     <div id="context-modal" class="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300">
         <div class="bg-spElevated md:border border-spHighlight w-full md:w-[90%] md:max-w-sm md:rounded-lg rounded-t-2xl shadow-2xl overflow-hidden translate-y-full md:translate-y-0 transition-transform duration-300 flex flex-col max-h-[80vh]" id="context-modal-panel">
             <div class="p-4 border-b border-white/5 flex justify-between items-center sticky top-0 bg-spElevated z-10">
@@ -615,7 +612,6 @@
         let audioCtx, sourceNode, preampNode, analyser, eqFilters = [], eqFrequencies = [60, 230, 910, 3600, 14000];
         let visualizerMode = 0; let sleepTimerId = null; let eqModalVisible = false; let isCompact = false;
         
-        // VARIÁVEIS GLOBAIS CORRIGIDAS (essenciais para os efeitos não encravarem o js)
         let settingChroma = JSON.parse(localStorage.getItem('webPlayerChroma')) || false;
         let settingPulse = JSON.parse(localStorage.getItem('webPlayerPulse')) || true;
         let settingAtmosphere = JSON.parse(localStorage.getItem('webPlayerAtmosphere')) || false;
@@ -679,7 +675,6 @@
             if (!m) return;
             if (!m.classList.contains('hidden')) { 
                 m.classList.add('opacity-0'); 
-                // Special handling for bottom sheets sliding animation
                 const panel = m.querySelector('[id$="-panel"]');
                 if(panel && panel.classList.contains('translate-y-0')) {
                     panel.classList.remove('translate-y-0');
@@ -845,7 +840,6 @@
             if(s) { 
                 m.classList.remove('hidden'); m.classList.add('flex'); 
                 setTimeout(()=>m.classList.remove('opacity-0'),10); 
-                // Handle sliding panels if exist
                 const panel = m.querySelector('[id$="-panel"]');
                 if(panel) setTimeout(() => panel.classList.replace('translate-y-full', 'translate-y-0'), 10);
 
@@ -857,7 +851,6 @@
             if(m === DOM.eqModal) eqModalVisible = s; 
         };
 
-        // Modal de Ordenação
         function updateSortUI() {
             const texts = {'manual':'Personalizado', 'recent':'Adicionadas Recentemente', 'most_played':'Mais Tocadas'};
             document.getElementById('current-sort-text').textContent = texts[currentSortMode] || 'Personalizado';
@@ -880,7 +873,6 @@
             });
         });
 
-        // Modal de Contexto (Sua Biblioteca)
         function updatePlaylistContexts() {
             const artistsList = document.getElementById('context-modal-artists');
             const plList = document.getElementById('context-modal-playlists');
@@ -916,7 +908,6 @@
                 else if(currentContext.startsWith('playlist:')) { const found = customPlaylists.find(p => p.id === currentContext.split('playlist:')[1]); if(found) text = found.name; } 
                 DOM.contextTriggerText.textContent = text; 
                 
-                // update visual selection inside context modal
                 document.querySelectorAll('.context-option').forEach(btn => {
                     btn.classList.toggle('text-accent', btn.dataset.value === currentContext);
                 });
@@ -939,7 +930,7 @@
             const btn = e.target.closest('.context-option'); 
             if(!btn) return; 
             e.stopPropagation(); 
-            setContext(btn.dataset.value, btn.textContent.trim().replace(/[0-9]+$/, '').trim()); // remove array size number from text on playlists
+            setContext(btn.dataset.value, btn.textContent.trim().replace(/[0-9]+$/, '').trim());
         });
 
         function getVisualPlaylist() {
@@ -1125,7 +1116,7 @@
         DOM.virtualContent.addEventListener('click', (e) => {
             const item = e.target.closest('.playlist-item'); if(!item) return; const originalIndex = parseInt(item.dataset.index); if(isNaN(originalIndex)) return;
             if (e.target.closest('.del-btn')) { e.stopPropagation(); const t=playlist[originalIndex]; if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(originalIndex,1); savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); return; }
-            if (e.target.closest('.edit-btn')) { e.stopPropagation(); trackToEditIndex = originalIndex; const t = playlist[trackToEditIndex]; document.getElementById('edit-title-input').value = t.title; document.getElementById('edit-artist-input').value = t.artist; document.getElementById('edit-lyrics-input').value = t.lyrics || ""; document.getElementById('edit-cover-preview').src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'; editCoverBase64 = t.cover; tModal(document.getElementById('edit-modal'), true, 'edit'); return; }
+            if (e.target.closest('.edit-btn')) { e.stopPropagation(); trackToEditIndex = originalIndex; const t = playlist[trackToEditIndex]; document.getElementById('edit-title-input').value = t.title; document.getElementById('edit-artist-input').value = t.artist; document.getElementById('edit-lyrics-input').value = t.lyrics || ""; document.getElementById('edit-cover-preview').src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; editCoverBase64 = t.cover; tModal(document.getElementById('edit-modal'), true, 'edit'); return; }
             if (e.target.closest('.add-pl-btn')) { e.stopPropagation(); trackToAddIndex = originalIndex; renderAddToPlaylistModal(); tModal(document.getElementById('add-to-playlist-modal'), true, 'add-playlist'); return; }
             loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play();
         });
@@ -1177,7 +1168,6 @@
         DOM.mainFav.addEventListener('click', () => { if(playlist.length===0) return; const t=playlist[currentTrackIndex]; t.favorite = !t.favorite; if(t.isLocal) saveTrackToDB(t); updateMainFavoriteIcon(); if(currentContext === 'favorites') triggerListUpdate(); });
         DOM.shareBtn.addEventListener('click', () => { const t = playlist[currentTrackIndex]; if(!t) return; if(navigator.share) { navigator.share({ title: `A ouvir ${t.title}`, text: `Estou a ouvir "${t.title}" de ${t.artist} no Emera Player!` }).catch(e=>console.log(e)); } else { showToast("Partilha não suportada neste browser."); } });
         
-        // Modal de Letras Atualizado (Simples com Fundo Preto)
         DOM.lyricsBtn.addEventListener('click', () => { 
             const t = playlist[currentTrackIndex]; 
             if(!t) return; 
@@ -1429,14 +1419,13 @@
             let touchEndX = e.changedTouches[0].screenX;
             let touchEndY = e.changedTouches[0].screenY;
             
-            // Verifica se o movimento foi mais horizontal do que vertical (para não atrapalhar o scroll)
             if (Math.abs(touchStartX - touchEndX) > Math.abs(touchStartY - touchEndY)) {
-                if (touchStartX - touchEndX > 60) nextTrack(); // Swipe Esquerda -> Próxima
-                if (touchEndX - touchStartX > 60) prevTrack(); // Swipe Direita -> Anterior
+                if (touchStartX - touchEndX > 60) nextTrack(); 
+                if (touchEndX - touchStartX > 60) prevTrack(); 
             }
         });
 
-        // --- Modo Ecrã Inteiro (Duplo Clique na Capa) ---
+        // --- Modo Ecrã Inteiro (Duplo Clique / Duplo Toque na Capa) ---
         DOM.coverContainer.addEventListener('dblclick', () => {
             if(isGameActive) return;
             if (!document.fullscreenElement) {
@@ -1445,6 +1434,22 @@
                 if(document.exitFullscreen) document.exitFullscreen();
             }
         });
+
+        let lastTouchCoverTime = 0;
+        DOM.coverContainer.addEventListener('touchend', (e) => {
+            if(isGameActive) return;
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTouchCoverTime;
+            if (tapLength < 300 && tapLength > 0) {
+                e.preventDefault();
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(()=>{});
+                } else {
+                    if(document.exitFullscreen) document.exitFullscreen();
+                }
+            }
+            lastTouchCoverTime = currentTime;
+        }, {passive: false});
 
         let keyMappings = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
         document.addEventListener('keydown', e => {
@@ -1457,9 +1462,9 @@
                 case 'ArrowLeft': e.preventDefault(); prevTrack(); break; 
                 case 'ArrowUp': e.preventDefault(); DOM.volBar.value=Math.min(1,parseFloat(DOM.volBar.value)+0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
                 case 'ArrowDown': e.preventDefault(); DOM.volBar.value=Math.max(0,parseFloat(DOM.volBar.value)-0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
-                case 'KeyM': e.preventDefault(); DOM.mute.click(); break; // M -> Mute
-                case 'KeyL': e.preventDefault(); DOM.lyricsBtn.click(); break; // L -> Letras
-                case 'KeyV': e.preventDefault(); handleVisualizerToggle(e); break; // V -> Visualizador
+                case 'KeyM': e.preventDefault(); DOM.mute.click(); break;
+                case 'KeyL': e.preventDefault(); DOM.lyricsBtn.click(); break;
+                case 'KeyV': e.preventDefault(); handleVisualizerToggle(e); break;
             }
         });
         document.addEventListener('keyup', e => { if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { handleGameInputUp(keyMappings[e.code]); } });
@@ -1468,12 +1473,11 @@
             await loadTracksFromDB(); updateSortUI(); updatePlaylistContexts(); triggerListUpdate();
             if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas'; }
             
-            // Adicionamos um pequeno delay (800ms) para garantir que a interface já foi "pintada" pelo navegador antes de ocultar o ecrã de loading
             setTimeout(() => {
                 const loader = document.getElementById('initial-loader');
                 if (loader) {
                     loader.classList.add('opacity-0');
-                    setTimeout(() => loader.remove(), 500); // Remove completamente do HTML após a transição
+                    setTimeout(() => loader.remove(), 500);
                 }
             }, 800);
         });
@@ -1485,7 +1489,7 @@
                 mobileVolBar.value = initVol;
                 document.getElementById('mobile-vol-fill').style.width = initVol*100+'%';
                 const mobVolDisplay = document.getElementById('mobile-vol-value-display');
-                if (mobVolDisplay) mobVolDisplay.textContent = Math.round(initVol*100)+'%';
+                if (mobVolDisplay) mobVolDisplay.textContent = Math.round(mobVolDisplay.textContent = Math.round(initVol*100)+'%');
             }
         } 
         else { audio.volume=1; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = '100%'; }
