@@ -1415,20 +1415,28 @@
         gameCanvas.addEventListener('pointerup', (e) => { if(!isGamePlaying || isGameOver) return; e.preventDefault(); if(activePointers[e.pointerId] !== undefined) { handleGameInputUp(activePointers[e.pointerId]); delete activePointers[e.pointerId]; } try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){} });
         gameCanvas.addEventListener('pointercancel', (e) => { if(!isGamePlaying || isGameOver) return; e.preventDefault(); if(activePointers[e.pointerId] !== undefined) { handleGameInputUp(activePointers[e.pointerId]); delete activePointers[e.pointerId]; } try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){} });
 
-        // --- Gestos de Swipe na Capa (Mobile) ---
+        // --- Gestos de Swipe na Área do Reprodutor (Mobile) ---
         let touchStartX = 0;
-        DOM.coverContainer.addEventListener('touchstart', e => { 
+        let touchStartY = 0;
+        
+        DOM.playerBg.addEventListener('touchstart', e => { 
             touchStartX = e.changedTouches[0].screenX; 
+            touchStartY = e.changedTouches[0].screenY;
         }, {passive: true});
         
-        DOM.coverContainer.addEventListener('touchend', e => {
+        DOM.playerBg.addEventListener('touchend', e => {
             if(isGameActive) return;
             let touchEndX = e.changedTouches[0].screenX;
-            if (touchStartX - touchEndX > 60) nextTrack(); // Swipe Esquerda -> Próxima
-            if (touchEndX - touchStartX > 60) prevTrack(); // Swipe Direita -> Anterior
+            let touchEndY = e.changedTouches[0].screenY;
+            
+            // Verifica se o movimento foi mais horizontal do que vertical (para não atrapalhar o scroll)
+            if (Math.abs(touchStartX - touchEndX) > Math.abs(touchStartY - touchEndY)) {
+                if (touchStartX - touchEndX > 60) nextTrack(); // Swipe Esquerda -> Próxima
+                if (touchEndX - touchStartX > 60) prevTrack(); // Swipe Direita -> Anterior
+            }
         });
 
-        // --- Modo Ecrã Inteiro (Duplo Clique) ---
+        // --- Modo Ecrã Inteiro (Duplo Clique na Capa) ---
         DOM.coverContainer.addEventListener('dblclick', () => {
             if(isGameActive) return;
             if (!document.fullscreenElement) {
