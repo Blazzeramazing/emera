@@ -208,30 +208,41 @@
                 </div>
             </div>
 
-            <div id="player-bg" class="flex-1 w-full bg-gradient-to-b from-[#404040] to-spBase relative flex flex-col items-center justify-center flex-shrink-0 transition-colors duration-1000">
+            <div id="player-bg" class="flex-1 w-full bg-spBase relative flex flex-col items-center justify-center flex-shrink-0 overflow-hidden">
+                <!-- Fundo Desfocado (Ambient Blur Imersivo) -->
+                <div class="absolute inset-0 z-0 pointer-events-none">
+                    <img id="bg-blur-cover" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-full h-full object-cover opacity-20 blur-[60px] scale-125 transition-all duration-1000">
+                    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-spBase/80 to-spBase"></div>
+                </div>
+
                 <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
                 
-                <div class="flex items-center gap-6 mt-8 z-10 w-full max-w-4xl px-4 md:px-8">
-                    <!-- Adicionado flex-shrink-0 na capa para impedir compressão -->
-                    <div id="cover-container" class="relative w-32 h-32 md:w-56 md:h-56 rounded shadow-2xl flex-shrink-0 flex items-center justify-center group cursor-pointer">
+                <!-- Main Content (Cover + Text Responsivo) -->
+                <div class="flex flex-col md:flex-row items-center md:items-end justify-center md:justify-start gap-6 md:gap-10 mt-auto mb-auto z-10 w-full max-w-5xl px-6 md:px-12">
+                    
+                    <div id="cover-container" class="relative w-64 h-64 sm:w-80 sm:h-80 md:w-56 md:h-56 lg:w-72 lg:h-72 rounded shadow-2xl flex-shrink-0 flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador">
                         <img id="cover-art" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop" class="w-full h-full object-cover rounded relative z-10 bg-spElevated pointer-events-none">
                         <canvas id="visualizer" class="absolute inset-0 w-full h-full z-20 opacity-80 pointer-events-none rounded"></canvas>
                     </div>
                     
-                    <!-- Adicionado flex-1 e min-w-0 para permitir o truncate dos filhos -->
-                    <div class="flex flex-col justify-end h-full py-2 flex-1 min-w-0">
-                        <span class="text-xs font-bold uppercase tracking-widest hidden md:block text-spTextMain/80 mb-2">A Tocar Agora</span>
-                        <!-- Adicionado w-full, hover:text-accent e lógica para abrir modal no clique -->
-                        <h2 id="track-title" class="text-2xl md:text-5xl font-black text-white truncate w-full tracking-tighter cursor-pointer hover:text-accent transition-colors" title="Ver Informações Completas">Playlist Vazia</h2>
-                        <div class="flex items-center gap-2 mt-2 w-full min-w-0">
-                            <!-- Adicionado truncate também ao artista -->
-                            <p id="track-artist" class="text-sm md:text-base font-bold text-spTextMain hover:underline cursor-pointer truncate">Adicione músicas</p>
-                            <span class="text-spTextSub text-xs flex-shrink-0 whitespace-nowrap" id="track-count">• 0 músicas</span>
+                    <div class="flex flex-col justify-end flex-1 min-w-0 items-center md:items-start text-center md:text-left w-full mt-2 md:mt-0">
+                        <span class="text-xs font-bold uppercase tracking-widest hidden md:block text-spTextMain/80 mb-2 drop-shadow-md">A Tocar Agora</span>
+                        <h2 id="track-title" class="text-3xl sm:text-4xl md:text-5xl font-black text-white w-full tracking-tighter cursor-pointer hover:text-accent transition-colors drop-shadow-lg overflow-hidden line-clamp-2 md:line-clamp-none md:truncate leading-tight">Playlist Vazia</h2>
+                        <div class="flex items-center justify-center md:justify-start gap-2 mt-3 w-full min-w-0">
+                            <p id="track-artist" class="text-base sm:text-lg font-bold text-spTextSub hover:text-white transition cursor-pointer truncate drop-shadow-md">Adicione músicas</p>
+                            <span class="text-spTextSub/50 text-sm flex-shrink-0 whitespace-nowrap hidden sm:inline" id="track-count">• 0 músicas</span>
                         </div>
                     </div>
                 </div>
 
-                <button id="toggle-vis-btn" class="absolute bottom-4 right-4 z-40 bg-black/40 hover:bg-black text-white p-2 rounded-full transition shadow-lg opacity-0 hover:opacity-100" title="Mudar Visualizador">
+                <!-- Up Next Indicator -->
+                <div id="up-next-container" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex items-center gap-3 bg-black/50 backdrop-blur-md px-5 py-2 rounded-full cursor-pointer border border-white/10 hover:bg-white/10 transition opacity-0 pointer-events-none group shadow-lg">
+                    <span class="text-[10px] text-spTextSub font-bold uppercase tracking-widest group-hover:text-white transition whitespace-nowrap">A seguir</span>
+                    <img id="up-next-img" class="w-5 h-5 rounded-sm object-cover hidden" src="">
+                    <span id="up-next-text" class="text-xs text-white font-semibold truncate max-w-[150px] sm:max-w-[200px]">...</span>
+                </div>
+
+                <button id="toggle-vis-btn" class="absolute bottom-6 right-6 z-40 bg-black/40 hover:bg-black text-white p-2.5 rounded-full transition shadow-lg opacity-0 hover:opacity-100" title="Mudar Visualizador">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                 </button>
             </div>
@@ -651,13 +662,14 @@
             contextTriggerText: document.getElementById('context-trigger-text'), trackCount: document.getElementById('track-count'), 
             createPlaylistBtn: document.getElementById('create-playlist-btn'),
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
+            bgBlurCover: document.getElementById('bg-blur-cover'), upNextContainer: document.getElementById('up-next-container'), upNextText: document.getElementById('up-next-text'), upNextImg: document.getElementById('up-next-img'),
             preampSlider: document.getElementById('preamp-slider'), preampDisp: document.getElementById('preamp-value-display'),
             rightPanel: document.getElementById('right-panel'), drawerHandle: document.getElementById('drawer-handle'), listHeader: document.getElementById('list-header'),
             eqCanvasBg: document.getElementById('eq-canvas-bg'), eqModal: document.getElementById('eq-modal'), mainAppContainer: document.getElementById('main-app-container'),
             miniPlay: document.getElementById('mini-play'), miniPause: document.getElementById('mini-pause'), miniCover: document.getElementById('mini-cover'), miniTitle: document.getElementById('mini-title'), miniArtist: document.getElementById('mini-artist'),
             listContainer: document.getElementById('list-container'), virtualSpacer: document.getElementById('virtual-spacer'), virtualContent: document.getElementById('virtual-content'),
             miniPlayerInfo: document.getElementById('mini-player-info'),
-            fullInfoModal: document.getElementById('full-info-modal') // Added reference
+            fullInfoModal: document.getElementById('full-info-modal')
         };
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
 
@@ -1004,8 +1016,9 @@
             currentTrackIndex = index; const t = playlist[currentTrackIndex];
             if(t.isLocal) audio.removeAttribute('crossorigin'); else audio.setAttribute('crossorigin', 'anonymous'); audio.src = t.src; 
             DOM.title.textContent = t.title; DOM.artist.textContent = t.artist || t.genre; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
+            DOM.bgBlurCover.src = DOM.cover.src;
             DOM.lyricsBtn.classList.remove('hidden'); DOM.shareBtn.classList.remove('hidden');
-            updateMainFavoriteIcon(); updateMiniPlayer(); triggerListUpdate(); updateMediaSession(); if(isGameActive) resetGameForNewTrack();
+            updateMainFavoriteIcon(); updateMiniPlayer(); triggerListUpdate(); updateMediaSession(); updateUpNextUI(); if(isGameActive) resetGameForNewTrack();
             if (isPlaying) { const p = audio.play(); if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); }).catch((err)=>{ console.warn(err); }); }
         }
 
@@ -1062,26 +1075,38 @@
         function updateModeUI() {
             DOM.iconRepeat.classList.add('hidden'); DOM.iconShuffle.classList.add('hidden'); DOM.iconRadio.classList.add('hidden'); DOM.modeBtn.classList.remove('text-accent'); DOM.modeBtn.classList.add('text-spTextSub');
             isRepeat = false; isShuffle = false; isRadio = false;
-            let tooltip = "Modo: Normal";
             
-            if (playMode === 1) { 
-                DOM.iconRepeat.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); 
-                isRepeat = true; tooltip = "Modo: Repetir Faixa";
-            } 
-            else if (playMode === 2) { 
-                DOM.iconShuffle.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); 
-                isShuffle = true; tooltip = "Modo: Aleatório";
-            } 
-            else if (playMode === 3) {
-                DOM.iconRadio.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); 
-                isRadio = true; tooltip = "Modo: Rádio Inteligente (Similares)";
-            }
-            else { 
-                DOM.iconRepeat.classList.remove('hidden');
-            }
-            DOM.modeBtn.title = tooltip;
+            if (playMode === 1) { DOM.iconRepeat.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); isRepeat = true; } 
+            else if (playMode === 2) { DOM.iconShuffle.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); isShuffle = true; } 
+            else if (playMode === 3) { DOM.iconRadio.classList.remove('hidden'); DOM.modeBtn.classList.add('text-accent'); DOM.modeBtn.classList.remove('text-spTextSub'); isRadio = true; }
+            else { DOM.iconRepeat.classList.remove('hidden'); }
         }
-        updateModeUI(); DOM.modeBtn.addEventListener('click', () => { playMode = (playMode + 1) % 4; localStorage.setItem('webPlayerMode', playMode); updateModeUI(); showToast(DOM.modeBtn.title); });
+        updateModeUI(); DOM.modeBtn.addEventListener('click', () => { playMode = (playMode + 1) % 4; localStorage.setItem('webPlayerMode', playMode); updateModeUI(); updateUpNextUI(); });
+
+        function updateUpNextUI() {
+            if (playlist.length <= 1) { DOM.upNextContainer.classList.add('opacity-0', 'pointer-events-none'); return; }
+            DOM.upNextContainer.classList.remove('opacity-0', 'pointer-events-none');
+            
+            if (isRadio) {
+                DOM.upNextText.textContent = "Rádio Inteligente";
+                DOM.upNextImg.classList.add('hidden');
+            } else if (isShuffle) {
+                DOM.upNextText.textContent = "Música Aleatória";
+                DOM.upNextImg.classList.add('hidden');
+            } else {
+                const vis = getVisualPlaylist();
+                let currentVisIndex = vis.findIndex(t => t.id === playlist[currentTrackIndex]?.id);
+                if(currentVisIndex === -1) currentVisIndex = 0;
+                let nI = currentVisIndex + 1;
+                if(nI >= vis.length) nI = 0;
+                let nextTrackObj = vis[nI];
+
+                DOM.upNextText.textContent = nextTrackObj.title;
+                DOM.upNextImg.src = nextTrackObj.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=50&h=50&fit=crop';
+                DOM.upNextImg.classList.remove('hidden');
+            }
+        }
+        DOM.upNextContainer.addEventListener('click', () => nextTrack());
 
         DOM.playPause.addEventListener('click', () => { togglePlay(); DOM.playPause.blur(); });
         DOM.next.addEventListener('click', () => { nextTrack(); DOM.next.blur(); }); DOM.prev.addEventListener('click', () => { prevTrack(); DOM.prev.blur(); });
@@ -1269,7 +1294,7 @@
         document.getElementById('save-edit-btn').addEventListener('click', () => {
             if(trackToEditIndex === null) return; const t = playlist[trackToEditIndex];
             t.title = document.getElementById('edit-title-input').value || "Desconhecido"; t.artist = document.getElementById('edit-artist-input').value || "Desconhecido"; t.lyrics = document.getElementById('edit-lyrics-input').value; t.cover = editCoverBase64;
-            if(t.isLocal) saveTrackToDB(t); if(trackToEditIndex === currentTrackIndex) { DOM.title.textContent = t.title; DOM.artist.textContent = t.artist; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; updateMiniPlayer(); } updatePlaylistContexts(); triggerListUpdate(); tModal(document.getElementById('edit-modal'), false, 'edit'); showToast("Informação atualizada");
+            if(t.isLocal) saveTrackToDB(t); if(trackToEditIndex === currentTrackIndex) { DOM.title.textContent = t.title; DOM.artist.textContent = t.artist; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; DOM.bgBlurCover.src = DOM.cover.src; updateMiniPlayer(); } updatePlaylistContexts(); triggerListUpdate(); updateUpNextUI(); tModal(document.getElementById('edit-modal'), false, 'edit');
         });
 
         function savePlaylists() { localStorage.setItem('emeraPlaylists', JSON.stringify(customPlaylists)); updatePlaylistContexts(); }
