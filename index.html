@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
     
-    <link id="dynamic-favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%231db954'/><stop offset='100%' stop-color='%231ed760'/></linearGradient></defs><rect width='512' height='512' rx='120' fill='%23121212'/><circle cx='256' cy='256' r='180' fill='url(%23grad)' opacity='0.15'/><path d='M210 140v210c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V180h110v110c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V140H210z' fill='%23ffffff'/></svg>">
+    <link id="dynamic-favicon" rel="icon" type="image/svg+xml" href="">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
     
@@ -99,31 +99,26 @@
 <body class="text-spTextMain font-sans selection:bg-accent selection:text-white h-[100dvh] flex flex-col overflow-hidden">
 
     <div id="initial-loader" class="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="relative w-24 h-24 flex items-center justify-center mb-6">
-            <svg class="w-full h-full text-accent drop-shadow-lg animate-pulse" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="512" height="512" rx="120" fill="#121212"/>
-                <circle cx="256" cy="256" r="180" fill="var(--accent)" opacity="0.2"/>
-                <path d="M210 140v210c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V180h110v110c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V140H210z" fill="currentColor"/>
-            </svg>
-            <div class="absolute inset-0 border-4 border-accent rounded-full border-t-transparent animate-spin opacity-50"></div>
+        <div class="relative w-20 h-20 flex items-center justify-center mb-6">
+            <div class="absolute inset-0 border-4 border-white/10 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-accent rounded-full border-t-transparent animate-spin"></div>
+            <svg class="w-8 h-8 text-accent animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
         </div>
         <h2 class="text-white font-black tracking-widest uppercase text-lg">Emera Player</h2>
         <p class="text-spTextSub text-xs mt-2 animate-pulse">A carregar a sua biblioteca...</p>
     </div>
 
-    <!-- Sidebar Overlay Mobile -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
 
-    <!-- App Container -->
     <div id="main-app-container" class="flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
         
-        <!-- SIDEBAR (Bibliotecas e Filtros) -->
+        <!-- SIDEBAR -->
         <aside id="sidebar" class="w-72 md:w-64 bg-spBase md:rounded-lg flex-col fixed inset-y-0 left-0 z-[100] transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 flex overflow-hidden">
             <div class="p-4 sm:p-6 flex flex-col gap-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3 text-spTextSub hover:text-white transition cursor-pointer font-bold">
-                        <svg class="w-6 h-6 text-accent" viewBox="0 0 512 512" fill="currentColor"><path d="M210 140v210c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V180h110v110c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V140H210z"/></svg>
-                        <span>Emera</span>
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.5 3.247a1 1 0 00-1 0L4 7.577V20h4.5v-6a1 1 0 011-1h5a1 1 0 011 1v6H20V7.577l-7.5-4.33z"></path></svg>
+                        <span>Início</span>
                     </div>
                     <button id="close-sidebar-btn" class="md:hidden text-spTextSub hover:text-white p-2 -mr-2">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -138,7 +133,6 @@
                 </div>
             </div>
 
-            <!-- Library Header -->
             <div id="list-header" class="flex-1 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar relative md:cursor-default bg-spBase">
                 <div class="px-4 py-2 flex justify-between items-center text-spTextSub">
                     <div class="flex items-center gap-2 font-bold hover:text-white transition cursor-pointer group" id="open-context-modal-btn">
@@ -193,7 +187,6 @@
             </div>
         </aside>
 
-        <!-- MAIN VIEW (Visualizador + Lista) -->
         <main class="flex-1 bg-spBase md:rounded-lg overflow-hidden flex flex-col relative w-full h-full">
             
             <div class="h-16 flex justify-between items-center px-4 bg-gradient-to-b from-black/60 to-transparent absolute top-0 w-full z-20 pointer-events-none">
@@ -212,17 +205,18 @@
                 <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
                 
                 <div class="flex items-center gap-6 mt-8 z-10 w-full max-w-4xl px-4 md:px-8">
-                    <div id="cover-container" class="relative w-32 h-32 md:w-56 md:h-56 rounded shadow-2xl flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador | Duplo clique para ecrã inteiro">
+                    <!-- Added flex-shrink-0 to prevent cover squishing -->
+                    <div id="cover-container" class="relative w-32 h-32 md:w-56 md:h-56 rounded shadow-2xl flex items-center justify-center group cursor-pointer flex-shrink-0" title="Duplo clique para Ecrã Inteiro">
                         <img id="cover-art" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop" class="w-full h-full object-cover rounded relative z-10 bg-spElevated pointer-events-none">
                         <canvas id="visualizer" class="absolute inset-0 w-full h-full z-20 opacity-80 pointer-events-none rounded"></canvas>
                     </div>
                     
-                    <div class="flex flex-col justify-end h-full py-2">
+                    <div class="flex flex-col justify-end h-full py-2 flex-1 min-w-0">
                         <span class="text-xs font-bold uppercase tracking-widest hidden md:block text-spTextMain/80 mb-2">A Tocar Agora</span>
-                        <h2 id="track-title" class="text-2xl md:text-5xl font-black text-white truncate max-w-xs md:max-w-2xl tracking-tighter">Playlist Vazia</h2>
-                        <div class="flex items-center gap-2 mt-2">
-                            <p id="track-artist" class="text-sm md:text-base font-bold text-spTextMain hover:underline cursor-pointer">Adicione músicas</p>
-                            <span class="text-spTextSub text-xs" id="track-count">• 0 músicas</span>
+                        <h2 id="track-title" class="text-2xl md:text-5xl font-black text-white truncate w-full tracking-tighter cursor-pointer hover:text-accent transition" title="Ver detalhes da faixa">Playlist Vazia</h2>
+                        <div class="flex items-center gap-2 mt-2 w-full">
+                            <p id="track-artist" class="text-sm md:text-base font-bold text-spTextMain truncate cursor-pointer hover:underline" title="Ver detalhes da faixa">Adicione músicas</p>
+                            <span class="text-spTextSub text-xs flex-shrink-0" id="track-count">• 0 músicas</span>
                         </div>
                     </div>
                 </div>
@@ -328,7 +322,6 @@
         </main>
     </div>
 
-    <!-- BOTTOM BAR (Controlos Estilo Spotify) -->
     <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-50 fixed bottom-0">
         
         <div class="w-[40%] md:w-[30%] max-w-[140px] md:max-w-none min-w-[100px] flex items-center gap-2 md:gap-3 order-1 cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir/Ocultar Playlist">
@@ -383,7 +376,7 @@
         </div>
 
         <div class="w-[30%] min-w-[150px] items-center justify-end gap-2 md:gap-4 pr-2 hidden md:flex order-3" id="volume-section">
-            <button id="eq-btn" class="text-spTextSub hover:text-white transition" title="Equalizador"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
+            <button id="eq-btn" class="text-spTextSub hover:text-white transition" title="Equalizador"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
             <button id="settings-btn" class="text-spTextSub hover:text-white transition" title="Definições"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg></button>
             <button id="share-btn" class="hidden"></button>
             
@@ -516,7 +509,7 @@
         </div>
     </div>
 
-    <!-- Modal de Letras perfeitamente enquadrado com Flexbox -->
+    <!-- Modal de Letras Corrigido -->
     <div id="lyrics-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-[#121212] border border-[#282828] text-white w-full max-w-lg h-[70vh] rounded-xl p-6 flex flex-col shadow-2xl relative overflow-hidden">
             <button id="close-lyrics-btn" class="absolute top-4 right-4 text-spTextSub hover:text-white transition bg-black/20 hover:bg-black/40 rounded-full p-2 z-10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -582,6 +575,16 @@
             <h3 class="text-xl font-bold text-white mb-4 flex-shrink-0">Adicionar a Playlist</h3>
             <div id="add-to-playlist-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1 mb-4"></div>
             <button id="cancel-add-to-playlist-btn" class="w-full bg-transparent text-white font-bold py-3 rounded-full hover:scale-105 transition text-sm flex-shrink-0">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Informação Completa da Faixa -->
+    <div id="track-info-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4" onclick="document.getElementById('close-track-info-btn').click()">
+        <div class="bg-spElevated p-6 md:p-10 rounded-lg border border-spHighlight w-full max-w-lg shadow-2xl flex flex-col items-center text-center relative" onclick="event.stopPropagation()">
+            <button id="close-track-info-btn" class="absolute top-4 right-4 text-spTextSub hover:text-white transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            <img id="info-modal-cover" src="" class="w-32 h-32 md:w-48 md:h-48 rounded shadow-lg mb-6 object-cover bg-black">
+            <h2 id="info-modal-title" class="text-xl md:text-3xl font-black text-white w-full break-words"></h2>
+            <p id="info-modal-artist" class="text-base md:text-lg text-accent font-bold mt-2 w-full break-words"></p>
         </div>
     </div>
 
@@ -690,7 +693,7 @@
         function closeAllOverlays() {
             if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
             if (typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded) { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); }
-            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); forceCloseModal(document.getElementById('sort-modal')); forceCloseModal(document.getElementById('context-modal'));
+            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); forceCloseModal(document.getElementById('sort-modal')); forceCloseModal(document.getElementById('context-modal')); forceCloseModal(document.getElementById('track-info-modal'));
         }
 
         window.addEventListener('popstate', (e) => {
@@ -698,7 +701,7 @@
             if (h === '') { exitClicks++; if (exitClicks >= 3) { history.back(); } else { history.pushState(null, '', '#main'); showToast(`Voltar mais ${3 - exitClicks} vezes para sair.`); clearTimeout(exitTimer); exitTimer = setTimeout(() => { exitClicks = 0; }, 2000); } return; } else { exitClicks = 0; }
             if (h === '#main') { closeAllOverlays(); return; }
             if (h === '#playlist') { closeAllOverlays(); if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); } return; }
-            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#sort': document.getElementById('sort-modal'), '#context': document.getElementById('context-modal') };
+            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#sort': document.getElementById('sort-modal'), '#context': document.getElementById('context-modal'), '#track-info': document.getElementById('track-info-modal') };
             Object.keys(hashToModal).forEach(key => { if (h !== key) forceCloseModal(hashToModal[key]); }); if (h !== '#game' && typeof closeGameUI === 'function' && isGameActive) closeGameUI();
         });
 
@@ -707,14 +710,14 @@
         function applyTheme(hex, hover, light) {
             document.documentElement.style.setProperty('--accent', hex); document.documentElement.style.setProperty('--accent-hover', hover); document.documentElement.style.setProperty('--accent-light', light);
             localStorage.setItem('webPlayerTheme', `${hex},${hover},${light}`);
-            document.getElementById('dynamic-favicon').href = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='${hex.replace('#','%23')}'/><stop offset='100%' stop-color='%231ed760'/></linearGradient></defs><rect width='512' height='512' rx='120' fill='%23121212'/><circle cx='256' cy='256' r='180' fill='url(%23grad)' opacity='0.15'/><path d='M210 140v210c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V180h110v110c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V140H210z' fill='%23ffffff'/></svg>`;
+            document.getElementById('dynamic-favicon').href = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${hex.replace('#','%23')}'><path d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'/></svg>`;
             cachedAccentColor = hex; cachedThemeArgs = [hex, hover, light]; updateMediaSession();
         }
 
         const savedTheme = localStorage.getItem('webPlayerTheme'); if (savedTheme) applyTheme(...savedTheme.split(',')); else applyTheme('#1db954', '#1ed760', 'rgba(29, 185, 84, 0.2)');
         document.querySelectorAll('.theme-btn').forEach(btn => btn.addEventListener('click', (e) => { const c = e.target.dataset.theme.split(','); applyTheme(c[0], c[1], c[2]); }));
 
-        const manifestConfig = { name: "Emera Player", short_name: "Emera", start_url: window.location.href.split('?')[0] || ".", display: "standalone", background_color: "#000000", theme_color: cachedAccentColor, icons: [{ src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%231db954'/><stop offset='100%' stop-color='%231ed760'/></linearGradient></defs><rect width='512' height='512' rx='120' fill='%23121212'/><circle cx='256' cy='256' r='180' fill='url(%23grad)' opacity='0.15'/><path d='M210 140v210c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V180h110v110c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V140H210z' fill='%23ffffff'/></svg>", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }] };
+        const manifestConfig = { name: "Emera Player", short_name: "Emera", start_url: window.location.href.split('?')[0] || ".", display: "standalone", background_color: "#000000", theme_color: cachedAccentColor, icons: [{ src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231db954'><path d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'/></svg>", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }] };
         const manifestLink = document.createElement('link'); manifestLink.rel = 'manifest'; manifestLink.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifestConfig)); document.head.appendChild(manifestLink);
 
         let deferredPrompt;
@@ -723,7 +726,7 @@
 
         async function initOfflineMode() {
             try {
-                const swCode = `const CACHE='emera-offline-v4';const urls=[location.href.split('#')[0],'https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js','https://cdn.tailwindcss.com'];self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(urls)))});self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(res=>res||fetch(e.request).catch(()=>new Response('Offline'))))});`;
+                const swCode = `const CACHE='emera-offline-v3';const urls=[location.href.split('#')[0],'https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js','https://cdn.tailwindcss.com'];self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(urls)))});self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(res=>res||fetch(e.request).catch(()=>new Response('Offline'))))});`;
                 const swBlob = new Blob([swCode], {type: 'application/javascript'}); if ('serviceWorker' in navigator) { await navigator.serviceWorker.register(URL.createObjectURL(swBlob)); }
             } catch(e) {}
         }
@@ -792,7 +795,18 @@
             showToast(`Efeito: ${visualizerNames[visualizerMode]}`); 
         };
         DOM.toggleVis.addEventListener('click', handleVisualizerToggle);
-        DOM.coverContainer.addEventListener('click', handleVisualizerToggle);
+        
+        // Modal Completo de Info da Faixa
+        const showTrackInfoModal = () => {
+            const t = playlist[currentTrackIndex]; if(!t) return;
+            document.getElementById('info-modal-cover').src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
+            document.getElementById('info-modal-title').textContent = t.title;
+            document.getElementById('info-modal-artist').textContent = t.artist;
+            tModal(document.getElementById('track-info-modal'), true, 'track-info');
+        };
+        DOM.title.addEventListener('click', showTrackInfoModal);
+        DOM.artist.addEventListener('click', showTrackInfoModal);
+        document.getElementById('close-track-info-btn').addEventListener('click', () => tModal(document.getElementById('track-info-modal'), false, 'track-info'));
 
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
@@ -837,22 +851,7 @@
             }
         }
 
-        const tModal = (m, s, hash) => { 
-            if(!m) return;
-            if(s) { 
-                m.classList.remove('hidden'); m.classList.add('flex'); 
-                setTimeout(()=>m.classList.remove('opacity-0'),10); 
-                const panel = m.querySelector('[id$="-panel"]');
-                if(panel) setTimeout(() => panel.classList.replace('translate-y-full', 'translate-y-0'), 10);
-
-                if (hash && location.hash !== '#' + hash) history.pushState(null, '', '#' + hash); 
-            } else { 
-                forceCloseModal(m);
-                if (hash && location.hash === '#' + hash) history.back(); 
-            } 
-            if(m === DOM.eqModal) eqModalVisible = s; 
-        };
-
+        // Modal de Ordenação
         function updateSortUI() {
             const texts = {'manual':'Personalizado', 'recent':'Adicionadas Recentemente', 'most_played':'Mais Tocadas'};
             document.getElementById('current-sort-text').textContent = texts[currentSortMode] || 'Personalizado';
@@ -875,6 +874,7 @@
             });
         });
 
+        // Modal de Contexto (Sua Biblioteca)
         function updatePlaylistContexts() {
             const artistsList = document.getElementById('context-modal-artists');
             const plList = document.getElementById('context-modal-playlists');
@@ -924,7 +924,6 @@
             localStorage.setItem('webPlayerContext', currentContext); 
             tModal(document.getElementById('context-modal'), false, 'context'); 
             triggerListUpdate(); 
-            
             document.querySelectorAll('.context-option').forEach(btn => btn.classList.toggle('text-accent', btn.dataset.value === currentContext));
         }
         
@@ -932,7 +931,7 @@
             const btn = e.target.closest('.context-option'); 
             if(!btn) return; 
             e.stopPropagation(); 
-            setContext(btn.dataset.value, btn.textContent.trim().replace(/[0-9]+$/, '').trim());
+            setContext(btn.dataset.value, btn.textContent.trim().replace(/[0-9]+$/, '').trim()); 
         });
 
         function getVisualPlaylist() {
@@ -1058,6 +1057,7 @@
         }
 
         let isDrawerExpanded = false;
+        // Closed by default initially
         
         function toggleDrawer(e) { 
             if (window.innerWidth >= 768) return; 
@@ -1117,7 +1117,7 @@
         DOM.virtualContent.addEventListener('click', (e) => {
             const item = e.target.closest('.playlist-item'); if(!item) return; const originalIndex = parseInt(item.dataset.index); if(isNaN(originalIndex)) return;
             if (e.target.closest('.del-btn')) { e.stopPropagation(); const t=playlist[originalIndex]; if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(originalIndex,1); savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); return; }
-            if (e.target.closest('.edit-btn')) { e.stopPropagation(); trackToEditIndex = originalIndex; const t = playlist[trackToEditIndex]; document.getElementById('edit-title-input').value = t.title; document.getElementById('edit-artist-input').value = t.artist; document.getElementById('edit-lyrics-input').value = t.lyrics || ""; document.getElementById('edit-cover-preview').src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; editCoverBase64 = t.cover; tModal(document.getElementById('edit-modal'), true, 'edit'); return; }
+            if (e.target.closest('.edit-btn')) { e.stopPropagation(); trackToEditIndex = originalIndex; const t = playlist[trackToEditIndex]; document.getElementById('edit-title-input').value = t.title; document.getElementById('edit-artist-input').value = t.artist; document.getElementById('edit-lyrics-input').value = t.lyrics || ""; document.getElementById('edit-cover-preview').src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'; editCoverBase64 = t.cover; tModal(document.getElementById('edit-modal'), true, 'edit'); return; }
             if (e.target.closest('.add-pl-btn')) { e.stopPropagation(); trackToAddIndex = originalIndex; renderAddToPlaylistModal(); tModal(document.getElementById('add-to-playlist-modal'), true, 'add-playlist'); return; }
             loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play();
         });
@@ -1230,7 +1230,6 @@
             sidebar.classList.toggle('md:hidden');
         });
 
-        // Minigame Logic
         const gamePanel = document.getElementById('game-panel'); const gameOverlay = document.getElementById('game-overlay'); const gameOverOverlay = document.getElementById('game-over-overlay'); const victoryOverlay = document.getElementById('victory-overlay'); const countdownOverlay = document.getElementById('countdown-overlay'); 
         const gameCanvas = document.getElementById('game-canvas'); const gCtx = gameCanvas.getContext('2d'); const gameScoreEl = document.getElementById('game-score'); const gameComboEl = document.getElementById('game-combo'); const gameSpeedDisplay = document.getElementById('game-speed-display'); const gameBonusCount = document.getElementById('game-bonus-count'); 
         
@@ -1406,7 +1405,6 @@
         gameCanvas.addEventListener('pointerup', (e) => { if(!isGamePlaying || isGameOver) return; e.preventDefault(); if(activePointers[e.pointerId] !== undefined) { handleGameInputUp(activePointers[e.pointerId]); delete activePointers[e.pointerId]; } try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){} });
         gameCanvas.addEventListener('pointercancel', (e) => { if(!isGamePlaying || isGameOver) return; e.preventDefault(); if(activePointers[e.pointerId] !== undefined) { handleGameInputUp(activePointers[e.pointerId]); delete activePointers[e.pointerId]; } try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err){} });
 
-        // --- Gestos de Swipe na Área Principal do Reprodutor ---
         let touchStartX = 0;
         let touchStartY = 0;
         
@@ -1420,38 +1418,20 @@
             let touchEndX = e.changedTouches[0].screenX;
             let touchEndY = e.changedTouches[0].screenY;
             
-            // Garantir que o gesto é predominantemente horizontal e não scroll vertical
-            if (Math.abs(touchStartX - touchEndX) > Math.abs(touchStartY - touchEndY) && Math.abs(touchStartX - touchEndX) > 50) {
-                if (touchStartX - touchEndX > 50) nextTrack(); 
-                if (touchEndX - touchStartX > 50) prevTrack(); 
+            if (Math.abs(touchStartX - touchEndX) > Math.abs(touchStartY - touchEndY)) {
+                if (touchStartX - touchEndX > 60) nextTrack(); 
+                if (touchEndX - touchStartX > 60) prevTrack();
             }
         });
 
-        // --- Modo Ecrã Inteiro (Duplo Clique / Duplo Toque na Capa) ---
-        function toggleFullscreen() {
+        DOM.coverContainer.addEventListener('dblclick', () => {
+            if(isGameActive) return;
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(()=>{});
             } else {
                 if(document.exitFullscreen) document.exitFullscreen();
             }
-        }
-
-        DOM.coverContainer.addEventListener('dblclick', () => {
-            if(isGameActive) return;
-            toggleFullscreen();
         });
-
-        let lastTouchCoverTime = 0;
-        DOM.coverContainer.addEventListener('touchend', (e) => {
-            if(isGameActive) return;
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - lastTouchCoverTime;
-            if (tapLength < 300 && tapLength > 0) {
-                e.preventDefault();
-                toggleFullscreen();
-            }
-            lastTouchCoverTime = currentTime;
-        }, {passive: false});
 
         let keyMappings = { 'KeyD': 0, 'KeyF': 1, 'KeyJ': 2, 'KeyK': 3 };
         document.addEventListener('keydown', e => {
@@ -1464,9 +1444,9 @@
                 case 'ArrowLeft': e.preventDefault(); prevTrack(); break; 
                 case 'ArrowUp': e.preventDefault(); DOM.volBar.value=Math.min(1,parseFloat(DOM.volBar.value)+0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
                 case 'ArrowDown': e.preventDefault(); DOM.volBar.value=Math.max(0,parseFloat(DOM.volBar.value)-0.1); DOM.volBar.dispatchEvent(new Event('input')); break; 
-                case 'KeyM': e.preventDefault(); DOM.mute.click(); break;
-                case 'KeyL': e.preventDefault(); DOM.lyricsBtn.click(); break;
-                case 'KeyV': e.preventDefault(); handleVisualizerToggle(e); break;
+                case 'KeyM': e.preventDefault(); DOM.mute.click(); break; 
+                case 'KeyL': e.preventDefault(); DOM.lyricsBtn.click(); break; 
+                case 'KeyV': e.preventDefault(); handleVisualizerToggle(e); break; 
             }
         });
         document.addEventListener('keyup', e => { if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { handleGameInputUp(keyMappings[e.code]); } });
@@ -1479,10 +1459,11 @@
                 const loader = document.getElementById('initial-loader');
                 if (loader) {
                     loader.classList.add('opacity-0');
-                    setTimeout(() => loader.remove(), 500);
+                    setTimeout(() => loader.remove(), 500); 
                 }
             }, 800);
         });
+        
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ 
             audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); 
