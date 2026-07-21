@@ -139,33 +139,19 @@
             <!-- Library Header -->
             <div id="list-header" class="flex-1 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar relative md:cursor-default bg-spBase">
                 <div class="px-4 py-2 flex justify-between items-center text-spTextSub">
-                    <div class="flex items-center gap-2 font-bold hover:text-white transition cursor-pointer" id="context-trigger" onclick="event.stopPropagation()">
+                    <div class="flex items-center gap-2 font-bold hover:text-white transition cursor-pointer" id="context-trigger">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
                         <span id="context-trigger-text" class="truncate max-w-[120px]">Sua Biblioteca</span>
-                        <svg class="w-4 h-4 transition-transform duration-300" id="context-trigger-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                     <button id="create-playlist-btn" class="hover:text-white transition rounded-full p-1 hover:bg-spElevated" title="Criar Playlist"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
                 </div>
 
-                <div id="context-dropdown" class="absolute left-4 top-12 mt-1 w-56 bg-spHighlight rounded-md shadow-2xl z-50 dropdown-closed custom-scrollbar overflow-hidden flex flex-col border border-white/10" onclick="event.stopPropagation()">
-                    <button class="context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 transition flex items-center gap-2" data-value="all">
-                        Tudo
-                    </button>
-                    <button class="context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 transition flex items-center gap-2" data-value="favorites">
-                        <span class="text-red-500">❤️</span> Favoritas
-                    </button>
-                    <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2">Suas Playlists</div>
-                    <div id="custom-playlists-list" class="max-h-32 overflow-y-auto custom-scrollbar"></div>
-                    <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-2">Artistas</div>
-                    <div id="custom-artist-list" class="max-h-48 overflow-y-auto custom-scrollbar pb-2"></div>
-                </div>
-
                 <div class="px-4 py-2 flex flex-wrap gap-2">
-                    <select id="sort-select" class="bg-spHighlight text-xs text-white rounded-full px-3 py-1 outline-none hover:bg-white/10 transition cursor-pointer appearance-none">
-                        <option value="manual">Personalizado</option>
-                        <option value="recent">Adicionadas Recentemente</option>
-                        <option value="most_played">Mais Tocadas</option>
-                    </select>
+                    <button id="sort-trigger-btn" class="bg-spHighlight text-xs text-white rounded-full px-3 py-1.5 outline-none hover:bg-white/10 transition flex items-center gap-1 cursor-pointer">
+                        <span id="sort-trigger-text">Personalizado</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
                 </div>
 
                 <div class="px-4 mt-2 mb-4 flex flex-col gap-2">
@@ -532,31 +518,61 @@
         </div>
     </div>
 
-    <!-- Janela de Letras (Modificada) -->
+    <!-- Context Modal (Substitui o Dropdown) -->
+    <div id="context-modal" class="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 sm:p-4">
+        <div class="bg-spElevated w-full sm:max-w-md shadow-2xl rounded-t-2xl sm:rounded-xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-5 border-b border-white/5 flex justify-between items-center flex-shrink-0">
+                <h3 class="text-xl font-bold text-white">Mostrar</h3>
+                <button id="close-context-btn" class="text-spTextSub hover:text-white transition bg-white/5 hover:bg-white/10 rounded-full p-1.5"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="overflow-y-auto custom-scrollbar flex-1 p-3 flex flex-col gap-1">
+                <button class="context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition flex items-center gap-4" data-value="all">
+                    <div class="w-10 h-10 rounded-full bg-spHighlight flex items-center justify-center shadow"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> <span class="font-bold">Tudo</span>
+                </button>
+                <button class="context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition flex items-center gap-4" data-value="favorites">
+                    <div class="w-10 h-10 rounded-full bg-spHighlight flex items-center justify-center shadow"><span class="text-red-500 text-lg">❤️</span></div> <span class="font-bold">Favoritas</span>
+                </button>
+                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-4">Suas Playlists</div>
+                <div id="custom-playlists-list" class="flex flex-col gap-1"></div>
+                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-4 border-t border-white/5 pt-4">Artistas</div>
+                <div id="custom-artist-list" class="flex flex-col gap-1 pb-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sort Modal (Substitui a Select Nativa) -->
+    <div id="sort-modal" class="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 sm:p-4">
+        <div class="bg-spElevated w-full sm:max-w-sm shadow-2xl rounded-t-2xl sm:rounded-xl overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-white/5 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-white">Ordenar por</h3>
+                <button id="close-sort-btn" class="text-spTextSub hover:text-white transition bg-white/5 hover:bg-white/10 rounded-full p-1.5"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-3 flex flex-col gap-1">
+                <button class="sort-option w-full text-left px-4 py-4 text-sm text-white hover:bg-white/10 rounded-lg transition flex justify-between items-center font-bold" data-value="manual">
+                    Personalizado <svg class="w-5 h-5 text-accent hidden check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </button>
+                <button class="sort-option w-full text-left px-4 py-4 text-sm text-white hover:bg-white/10 rounded-lg transition flex justify-between items-center font-bold" data-value="recent">
+                    Adicionadas Recentemente <svg class="w-5 h-5 text-accent hidden check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </button>
+                <button class="sort-option w-full text-left px-4 py-4 text-sm text-white hover:bg-white/10 rounded-lg transition flex justify-between items-center font-bold" data-value="most_played">
+                    Mais Tocadas <svg class="w-5 h-5 text-accent hidden check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Janela de Letras (Limpa e Estável) -->
     <div id="lyrics-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4 sm:p-6">
-        <div id="lyrics-container" class="bg-accent text-black w-full max-w-2xl h-[85vh] rounded-2xl flex flex-col shadow-2xl relative overflow-hidden transition-colors duration-500">
-            
-            <!-- Barra Superior de Controlos -->
-            <div id="lyrics-header" class="flex justify-between items-center p-3 sm:p-4 border-b border-black/10 transition-colors duration-500 flex-shrink-0">
-                <div class="flex gap-2">
-                    <button id="lyrics-sync-btn" class="lyrics-control-btn p-2 bg-black/5 hover:bg-black/10 rounded-full transition-colors text-black/70 hover:text-black" title="Sincronizar c/ Música (Aproximado)">
-                        <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-                    </button>
-                    <button id="lyrics-dark-btn" class="lyrics-control-btn p-2 bg-black/5 hover:bg-black/10 rounded-full transition-colors text-black/70 hover:text-black" title="Modo Escuro">
-                        <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                    </button>
-                    <button id="lyrics-simple-btn" class="lyrics-control-btn p-2 bg-black/5 hover:bg-black/10 rounded-full transition-colors text-black/70 hover:text-black" title="Modo Simples (Sem Efeitos)">
-                        <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                    </button>
-                </div>
-                <button id="close-lyrics-btn" class="lyrics-control-btn text-black/60 hover:text-black transition bg-black/10 hover:bg-black/20 rounded-full p-2">
+        <div id="lyrics-container" class="bg-[#181818] text-white w-full max-w-2xl h-[85vh] rounded-2xl flex flex-col shadow-2xl relative overflow-hidden transition-colors duration-500">
+            <div id="lyrics-header" class="flex justify-between items-center p-3 sm:p-4 border-b border-white/10 transition-colors duration-500 flex-shrink-0">
+                <div class="flex gap-2 text-sm font-bold text-white/50 px-2 uppercase tracking-widest">Letras</div>
+                <button id="close-lyrics-btn" class="lyrics-control-btn text-white/60 hover:text-white transition bg-white/5 hover:bg-white/10 rounded-full p-2">
                     <svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
-            <!-- Área de Texto - Layout atualizado para evitar cortes -->
             <div id="lyrics-scroll-area" class="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-10 transition-all duration-300 flex flex-col">
-                <div id="lyrics-inner" class="m-auto w-full transition-all duration-300"></div>
+                <!-- Flex com margin auto (my-auto) para o texto garantir que não corta no topo, mas centraliza no ecrã se for pequeno -->
+                <div id="lyrics-inner" class="my-auto w-full whitespace-pre-wrap text-center text-lg sm:text-2xl font-medium leading-relaxed transition-all duration-300 text-white/90"></div>
             </div>
         </div>
     </div>
@@ -614,12 +630,6 @@
         let settingAtmosphere = JSON.parse(localStorage.getItem('webPlayerAtmosphere')) || false;
         let chromaHue = 0; let cachedAccentColor = '#1db954'; let cachedThemeArgs = ['#1db954', '#1ed760', 'rgba(29,185,84,0.2)'];
 
-        // Novas variáveis de estado para a Janela de Letras
-        let lyricsSyncMode = JSON.parse(localStorage.getItem('emeraLyricsSync')) || false;
-        let lyricsDarkMode = JSON.parse(localStorage.getItem('emeraLyricsDark')) || false;
-        let lyricsSimpleMode = JSON.parse(localStorage.getItem('emeraLyricsSimple')) || false;
-        let lastActiveLyricLine = -1;
-
         const DOM = {
             installAppBtn: document.getElementById('install-app-btn'),
             playPause: document.getElementById('play-pause-btn'), playIcon: document.getElementById('play-icon'), pauseIcon: document.getElementById('pause-icon'),
@@ -629,9 +639,10 @@
             progWrap: document.getElementById('progress-wrapper'), progBar: document.getElementById('progress-bar'), progFill: document.getElementById('progress-fill'), curTime: document.getElementById('current-time'), totTime: document.getElementById('total-time'),
             volBar: document.getElementById('volume-bar'), volFill: document.getElementById('vol-fill'), mute: document.getElementById('mute-btn'), volValueDisplay: document.getElementById('vol-value-display'),
             fileUpload: document.getElementById('file-upload'), folderUpload: document.getElementById('folder-upload'),
-            sortSel: document.getElementById('sort-select'), localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
-            contextTrigger: document.getElementById('context-trigger'), contextTriggerText: document.getElementById('context-trigger-text'), contextTriggerIcon: document.getElementById('context-trigger-icon'), trackCount: document.getElementById('track-count'), contextDropdown: document.getElementById('context-dropdown'), customArtistList: document.getElementById('custom-artist-list'),
+            sortTriggerBtn: document.getElementById('sort-trigger-btn'), sortTriggerText: document.getElementById('sort-trigger-text'), localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
+            contextTrigger: document.getElementById('context-trigger'), contextTriggerText: document.getElementById('context-trigger-text'), trackCount: document.getElementById('track-count'), customArtistList: document.getElementById('custom-artist-list'),
             customPlaylistsList: document.getElementById('custom-playlists-list'), createPlaylistBtn: document.getElementById('create-playlist-btn'),
+            contextModal: document.getElementById('context-modal'), sortModal: document.getElementById('sort-modal'),
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
             preampSlider: document.getElementById('preamp-slider'), preampDisp: document.getElementById('preamp-value-display'),
             rightPanel: document.getElementById('right-panel'), drawerHandle: document.getElementById('drawer-handle'), listHeader: document.getElementById('list-header'),
@@ -671,7 +682,8 @@
         function closeAllOverlays() {
             if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
             if (typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded) { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); }
-            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); closeContextDropdown();
+            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal'));
+            forceCloseModal(DOM.contextModal); forceCloseModal(DOM.sortModal);
         }
 
         window.addEventListener('popstate', (e) => {
@@ -679,7 +691,7 @@
             if (h === '') { exitClicks++; if (exitClicks >= 3) { history.back(); } else { history.pushState(null, '', '#main'); showToast(`Voltar mais ${3 - exitClicks} vezes para sair.`); clearTimeout(exitTimer); exitTimer = setTimeout(() => { exitClicks = 0; }, 2000); } return; } else { exitClicks = 0; }
             if (h === '#main') { closeAllOverlays(); return; }
             if (h === '#playlist') { closeAllOverlays(); if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); } return; }
-            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal') };
+            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#context': DOM.contextModal, '#sort': DOM.sortModal };
             Object.keys(hashToModal).forEach(key => { if (h !== key) forceCloseModal(hashToModal[key]); }); if (h !== '#game' && typeof closeGameUI === 'function' && isGameActive) closeGameUI();
         });
 
@@ -689,7 +701,7 @@
             document.documentElement.style.setProperty('--accent', hex); document.documentElement.style.setProperty('--accent-hover', hover); document.documentElement.style.setProperty('--accent-light', light);
             localStorage.setItem('webPlayerTheme', `${hex},${hover},${light}`);
             document.getElementById('dynamic-favicon').href = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${hex.replace('#','%23')}'><path d='M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'/></svg>`;
-            cachedAccentColor = hex; cachedThemeArgs = [hex, hover, light]; updateMediaSession(); updateLyricsUITheme(); // Update lyrics UI colors if open
+            cachedAccentColor = hex; cachedThemeArgs = [hex, hover, light]; updateMediaSession();
         }
 
         const savedTheme = localStorage.getItem('webPlayerTheme'); if (savedTheme) applyTheme(...savedTheme.split(',')); else applyTheme('#1db954', '#1ed760', 'rgba(29, 185, 84, 0.2)');
@@ -814,11 +826,11 @@
         function updatePlaylistContexts() {
             if(!DOM.customArtistList) return;
             const artists = [...new Set(playlist.map(t => t.artist))].filter(a => a && a !== "Desconhecido" && a.trim() !== "").sort(); DOM.customArtistList.innerHTML = '';
-            artists.forEach(a => { const btn = document.createElement('button'); btn.className = 'context-option w-full text-left px-4 py-2 text-sm text-spTextSub hover:text-white hover:bg-white/10 transition truncate'; btn.dataset.value = 'artist:' + a; btn.textContent = a; DOM.customArtistList.appendChild(btn); });
+            artists.forEach(a => { const btn = document.createElement('button'); btn.className = 'context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition truncate flex items-center gap-4'; btn.dataset.value = 'artist:' + a; btn.innerHTML = `<div class="w-10 h-10 rounded-full bg-spHighlight flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-spTextSub" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div> <span class="truncate font-bold">${a}</span>`; DOM.customArtistList.appendChild(btn); });
             if(DOM.customPlaylistsList) {
                 DOM.customPlaylistsList.innerHTML = '';
                 if (customPlaylists.length === 0) { DOM.customPlaylistsList.innerHTML = `<div class="px-4 py-2 text-xs text-spTextSub italic">Sem playlists.</div>`; } 
-                else { customPlaylists.forEach(pl => { const btn = document.createElement('button'); btn.className = 'context-option w-full text-left px-4 py-2 text-sm text-spTextSub hover:text-white hover:bg-white/10 transition flex justify-between items-center group'; btn.dataset.value = 'playlist:' + pl.id; btn.innerHTML = `<span class="truncate pr-2 pointer-events-none">${pl.name}</span> <span class="text-[10px] pointer-events-none flex-shrink-0">${pl.tracks.length}</span>`; DOM.customPlaylistsList.appendChild(btn); }); }
+                else { customPlaylists.forEach(pl => { const btn = document.createElement('button'); btn.className = 'context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition flex justify-between items-center group'; btn.dataset.value = 'playlist:' + pl.id; btn.innerHTML = `<div class="flex items-center gap-4 truncate"><div class="w-10 h-10 rounded-md bg-spHighlight flex items-center justify-center flex-shrink-0 shadow"><svg class="w-5 h-5 text-spTextSub" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> <span class="truncate pr-2 pointer-events-none font-bold">${pl.name}</span></div> <span class="text-xs text-spTextSub pointer-events-none flex-shrink-0">${pl.tracks.length}</span>`; DOM.customPlaylistsList.appendChild(btn); }); }
             }
             if (currentContext.startsWith('artist:') && !artists.includes(currentContext.split('artist:')[1])) { setContext('all', 'Sua Biblioteca'); } 
             else if (currentContext.startsWith('playlist:') && !customPlaylists.find(p => p.id === currentContext.split('playlist:')[1])) { setContext('all', 'Sua Biblioteca'); } 
@@ -835,11 +847,42 @@
             return pToRender; 
         }
 
-        function toggleContextDropdown() { const isClosed = DOM.contextDropdown.classList.contains('dropdown-closed'); if(isClosed) { DOM.contextDropdown.classList.remove('dropdown-closed'); DOM.contextDropdown.classList.add('dropdown-open'); DOM.contextTriggerIcon.style.transform = 'rotate(180deg)'; } else { closeContextDropdown(); } }
-        function closeContextDropdown() { if(!DOM.contextDropdown) return; DOM.contextDropdown.classList.remove('dropdown-open'); DOM.contextDropdown.classList.add('dropdown-closed'); DOM.contextTriggerIcon.style.transform = 'rotate(0deg)'; }
-        DOM.contextTrigger.addEventListener('click', toggleContextDropdown); document.addEventListener('click', closeContextDropdown);
-        function setContext(val, text) { currentContext = val; DOM.contextTriggerText.textContent = text; localStorage.setItem('webPlayerContext', currentContext); closeContextDropdown(); triggerListUpdate(); }
-        DOM.contextDropdown.addEventListener('click', (e) => { const btn = e.target.closest('.context-option'); if(!btn) return; e.stopPropagation(); setContext(btn.dataset.value, btn.textContent.trim()); });
+        // Novos Eventos para o Context Modal (Antigo Dropdown)
+        DOM.contextTrigger.addEventListener('click', () => tModal(DOM.contextModal, true, 'context'));
+        document.getElementById('close-context-btn').addEventListener('click', () => tModal(DOM.contextModal, false, 'context'));
+        
+        DOM.contextModal.addEventListener('click', (e) => { 
+            const btn = e.target.closest('.context-option'); if(!btn) return; e.stopPropagation(); 
+            const textSpan = btn.querySelector('span.truncate, span.font-bold');
+            setContext(btn.dataset.value, textSpan ? textSpan.textContent.trim() : btn.textContent.trim().split('\n').pop().trim()); 
+            tModal(DOM.contextModal, false, 'context'); 
+        });
+
+        function setContext(val, text) { currentContext = val; DOM.contextTriggerText.textContent = text; localStorage.setItem('webPlayerContext', currentContext); triggerListUpdate(); }
+
+        // Novos Eventos para o Sort Modal (Antigo Select)
+        function updateSortUI() {
+            const map = { 'manual': 'Personalizado', 'recent': 'Adicionadas Recentemente', 'most_played': 'Mais Tocadas' };
+            if(DOM.sortTriggerText) DOM.sortTriggerText.textContent = map[currentSortMode] || 'Personalizado';
+            document.querySelectorAll('.sort-option').forEach(btn => {
+                const icon = btn.querySelector('.check-icon');
+                if(btn.dataset.value === currentSortMode) { btn.classList.add('text-accent'); icon.classList.remove('hidden'); }
+                else { btn.classList.remove('text-accent'); icon.classList.add('hidden'); }
+            });
+        }
+        
+        if(DOM.sortTriggerBtn) DOM.sortTriggerBtn.addEventListener('click', () => { updateSortUI(); tModal(DOM.sortModal, true, 'sort'); });
+        document.getElementById('close-sort-btn').addEventListener('click', () => tModal(DOM.sortModal, false, 'sort'));
+        
+        DOM.sortModal.addEventListener('click', (e) => {
+            const btn = e.target.closest('.sort-option'); if(!btn) return; e.stopPropagation();
+            currentSortMode = btn.dataset.value; localStorage.setItem('webPlayerSortMode', currentSortMode); 
+            if(currentSortMode === 'manual') savePlaylistOrder(); 
+            updateSortUI(); triggerListUpdate(); tModal(DOM.sortModal, false, 'sort');
+        });
+
+        // Initialize sort UI on load
+        updateSortUI();
 
         function updateMediaSession() {
             if ('mediaSession' in navigator && playlist.length > 0) { const t = playlist[currentTrackIndex]; if (!t) return; navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: t.artist || t.genre, album: 'Emera Player', artwork: [ { src: t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=512&h=512&fit=crop', sizes: '512x512', type: 'image/jpeg' } ] }); }
@@ -860,8 +903,7 @@
             DOM.title.textContent = t.title; DOM.artist.textContent = t.artist || t.genre; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
             DOM.lyricsBtn.classList.remove('hidden'); DOM.shareBtn.classList.remove('hidden');
             updateMainFavoriteIcon(); updateMiniPlayer(); triggerListUpdate(); updateMediaSession(); if(isGameActive) resetGameForNewTrack();
-            // Reset lyrics visual state
-            lastActiveLyricLine = -1;
+            
             renderLyricsContent();
             
             if (isPlaying) { const p = audio.play(); if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); }).catch((err)=>{ console.warn(err); }); }
@@ -919,9 +961,6 @@
             const currentTime = audio.currentTime; const pct = (currentTime/audio.duration)*100; DOM.progBar.value = pct; DOM.progFill.style.width = pct+'%';
             const currentSecond = Math.floor(currentTime);
             if(currentSecond !== lastRenderedSecond) { const fT = s => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; DOM.curTime.textContent = fT(currentSecond); lastRenderedSecond = currentSecond; }
-            
-            // Sync lyrics
-            updateLyricsSyncVisuals();
         });
         
         DOM.volBar.addEventListener('input', e => { 
@@ -1038,7 +1077,7 @@
             if (item && dragSourceIndex !== null) {
                 const targetIndex = parseInt(item.dataset.index);
                 if(dragSourceIndex !== targetIndex) {
-                    currentSortMode = 'manual'; DOM.sortSel.value = 'manual'; localStorage.setItem('webPlayerSortMode', 'manual');
+                    currentSortMode = 'manual'; updateSortUI(); localStorage.setItem('webPlayerSortMode', 'manual');
                     const draggedTrack = playlist.splice(dragSourceIndex, 1)[0]; let insertIndex = targetIndex; if (dragSourceIndex < targetIndex) insertIndex--; playlist.splice(insertIndex, 0, draggedTrack);
                     if (currentTrackIndex === dragSourceIndex) { currentTrackIndex = insertIndex; } else { if (dragSourceIndex < currentTrackIndex && insertIndex >= currentTrackIndex) { currentTrackIndex--; } else if (dragSourceIndex > currentTrackIndex && insertIndex <= currentTrackIndex) { currentTrackIndex++; } }
                     DOM.search.value = ''; savePlaylistOrder(); triggerListUpdate(); 
@@ -1046,7 +1085,6 @@
             }
         });
 
-        DOM.sortSel.addEventListener('change', (e) => { currentSortMode = e.target.value; localStorage.setItem('webPlayerSortMode', currentSortMode); if(currentSortMode === 'manual') savePlaylistOrder(); triggerListUpdate(); });
         DOM.search.addEventListener('input', triggerListUpdate);
 
         function updateMiniPlayer() { const t = playlist[currentTrackIndex]; if(!t) return; DOM.miniTitle.textContent = t.title; DOM.miniArtist.textContent = t.artist; DOM.miniCover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'; }
@@ -1063,156 +1101,12 @@
             else if (clearDbClicks === 2) { clearTimeout(clearDbTimer); if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear(); playlist=[]; audio.pause(); audio.src=""; localStorage.removeItem('webPlayerOrder'); updatePlaylistContexts(); triggerListUpdate(); DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; showToast("Biblioteca eliminada com sucesso."); clearDbClicks = 0; btn.innerHTML = `Eliminar Biblioteca`; btn.classList.remove('bg-red-500', 'text-black'); btn.classList.add('bg-transparent', 'text-red-500'); }
         });
 
-        // Implementação das novas funcionalidades de Letras
         function renderLyricsContent() {
             const t = playlist[currentTrackIndex];
             const rawText = t && t.lyrics ? t.lyrics : "A música está a tocar sem letras associadas.\nPodes adicionar na opção Editar Info.";
             const container = document.getElementById('lyrics-inner');
-            
-            if (lyricsSimpleMode) {
-                // Modo Texto Simples
-                container.className = "w-full whitespace-pre-wrap text-left text-sm sm:text-base text-black/80 dark:text-white/80 font-normal leading-normal transition-all duration-300";
-                container.innerHTML = rawText;
-            } else if (lyricsSyncMode) {
-                // Modo Karaoke
-                container.className = "m-auto w-full transition-all duration-300 text-center text-xl sm:text-3xl font-bold leading-relaxed";
-                const lines = rawText.split('\n');
-                container.innerHTML = lines.map((l, i) => {
-                    const txt = l.trim() === '' ? '&nbsp;' : l;
-                    return `<div class="lyric-line transition-all duration-300 opacity-30 py-1 origin-center" data-index="${i}">${txt}</div>`;
-                }).join('');
-            } else {
-                // Modo Normal (Centralizado e Bonito)
-                container.className = "m-auto w-full whitespace-pre-wrap text-center text-xl sm:text-3xl font-bold leading-relaxed transition-all duration-300";
-                container.innerHTML = rawText;
-            }
-            updateLyricsSyncVisuals();
-            updateLyricsUITheme();
+            if(container) container.textContent = rawText;
         }
-
-        function updateLyricsSyncVisuals() {
-            if (!lyricsSyncMode || document.getElementById('lyrics-modal').classList.contains('hidden')) return;
-            if (isNaN(audio.duration) || audio.duration === 0) return;
-
-            const lines = document.querySelectorAll('.lyric-line');
-            if (lines.length === 0) return;
-
-            const pct = audio.currentTime / audio.duration;
-            let activeIndex = Math.floor(pct * lines.length);
-            if (activeIndex >= lines.length) activeIndex = lines.length - 1;
-
-            if (activeIndex === lastActiveLyricLine) return; // Só atualizar o DOM se a linha mudar
-            lastActiveLyricLine = activeIndex;
-
-            const activeColor = lyricsDarkMode ? 'text-accent' : 'text-white';
-
-            lines.forEach((l, i) => {
-                if (i === activeIndex) {
-                    l.classList.remove('opacity-30', 'scale-95');
-                    l.classList.add('opacity-100', 'scale-105', activeColor);
-                    // Scroll Suave
-                    const scrollArea = document.getElementById('lyrics-scroll-area');
-                    const offset = l.offsetTop - scrollArea.offsetTop - (scrollArea.clientHeight / 2) + (l.clientHeight / 2);
-                    scrollArea.scrollTo({ top: offset, behavior: 'smooth' });
-                } else {
-                    l.classList.add('opacity-30', 'scale-95');
-                    l.classList.remove('opacity-100', 'scale-105', activeColor);
-                }
-            });
-        }
-
-        function updateLyricsUITheme() {
-            const modalBg = document.getElementById('lyrics-container');
-            const header = document.getElementById('lyrics-header');
-            const btns = document.querySelectorAll('.lyrics-control-btn');
-            
-            if (lyricsDarkMode) {
-                modalBg.classList.replace('bg-accent', 'bg-[#181818]');
-                modalBg.style.backgroundColor = '#181818'; // Fallback
-                modalBg.classList.replace('text-black', 'text-white');
-                header.classList.replace('border-black/10', 'border-white/10');
-                
-                btns.forEach(b => {
-                    b.classList.replace('text-black/70', 'text-white/70');
-                    b.classList.replace('hover:text-black', 'hover:text-white');
-                    b.classList.replace('bg-black/5', 'bg-white/5');
-                    b.classList.replace('hover:bg-black/10', 'hover:bg-white/10');
-                    b.classList.replace('hover:bg-black/20', 'hover:bg-white/20');
-                });
-                
-                document.getElementById('lyrics-dark-btn').classList.add('bg-white/20');
-                if(lyricsSyncMode) document.getElementById('lyrics-sync-btn').classList.add('bg-white/20', 'text-accent');
-                else document.getElementById('lyrics-sync-btn').classList.remove('bg-white/20', 'text-accent');
-                
-                if(lyricsSimpleMode) document.getElementById('lyrics-simple-btn').classList.add('bg-white/20', 'text-accent');
-                else document.getElementById('lyrics-simple-btn').classList.remove('bg-white/20', 'text-accent');
-                
-                // Hack para Simple mode font color
-                const inner = document.getElementById('lyrics-inner');
-                if(lyricsSimpleMode && inner) {
-                    inner.classList.remove('text-black/80');
-                    inner.classList.add('text-white/80');
-                }
-
-            } else {
-                modalBg.classList.replace('bg-[#181818]', 'bg-accent');
-                modalBg.style.backgroundColor = cachedAccentColor;
-                modalBg.classList.replace('text-white', 'text-black');
-                header.classList.replace('border-white/10', 'border-black/10');
-                
-                btns.forEach(b => {
-                    b.classList.replace('text-white/70', 'text-black/70');
-                    b.classList.replace('hover:text-white', 'hover:text-black');
-                    b.classList.replace('bg-white/5', 'bg-black/5');
-                    b.classList.replace('hover:bg-white/10', 'hover:bg-black/10');
-                    b.classList.replace('hover:bg-white/20', 'hover:bg-black/20');
-                });
-                
-                document.getElementById('lyrics-dark-btn').classList.remove('bg-white/20', 'bg-black/20');
-                
-                if(lyricsSyncMode) document.getElementById('lyrics-sync-btn').classList.add('bg-black/20', 'text-white');
-                else document.getElementById('lyrics-sync-btn').classList.remove('bg-black/20', 'text-white');
-                
-                if(lyricsSimpleMode) document.getElementById('lyrics-simple-btn').classList.add('bg-black/20', 'text-white');
-                else document.getElementById('lyrics-simple-btn').classList.remove('bg-black/20', 'text-white');
-                
-                const inner = document.getElementById('lyrics-inner');
-                if(lyricsSimpleMode && inner) {
-                    inner.classList.remove('text-white/80');
-                    inner.classList.add('text-black/80');
-                }
-            }
-        }
-
-        DOM.lyricsBtn.addEventListener('click', () => { 
-            const t = playlist[currentTrackIndex]; if(!t) return; 
-            renderLyricsContent(); 
-            tModal(document.getElementById('lyrics-modal'), true, 'lyrics'); 
-        });
-        
-        document.getElementById('close-lyrics-btn').addEventListener('click', () => tModal(document.getElementById('lyrics-modal'), false, 'lyrics'));
-
-        document.getElementById('lyrics-sync-btn').addEventListener('click', () => {
-            lyricsSyncMode = !lyricsSyncMode;
-            if(lyricsSyncMode) { lyricsSimpleMode = false; localStorage.setItem('emeraLyricsSimple', false); }
-            localStorage.setItem('emeraLyricsSync', lyricsSyncMode);
-            lastActiveLyricLine = -1;
-            renderLyricsContent();
-        });
-
-        document.getElementById('lyrics-dark-btn').addEventListener('click', () => {
-            lyricsDarkMode = !lyricsDarkMode;
-            localStorage.setItem('emeraLyricsDark', lyricsDarkMode);
-            updateLyricsUITheme();
-            if(lyricsSyncMode) updateLyricsSyncVisuals();
-        });
-
-        document.getElementById('lyrics-simple-btn').addEventListener('click', () => {
-            lyricsSimpleMode = !lyricsSimpleMode;
-            if(lyricsSimpleMode) { lyricsSyncMode = false; localStorage.setItem('emeraLyricsSync', false); }
-            localStorage.setItem('emeraLyricsSimple', lyricsSimpleMode);
-            renderLyricsContent();
-        });
 
         document.getElementById('export-backup-btn').addEventListener('click', () => {
             if(playlist.length===0) return showToast("A playlist está vazia."); showToast("A preparar backup...");
@@ -1227,6 +1121,14 @@
         DOM.mainFav.addEventListener('click', () => { if(playlist.length===0) return; const t=playlist[currentTrackIndex]; t.favorite = !t.favorite; if(t.isLocal) saveTrackToDB(t); updateMainFavoriteIcon(); if(currentContext === 'favorites') triggerListUpdate(); });
         DOM.shareBtn.addEventListener('click', () => { const t = playlist[currentTrackIndex]; if(!t) return; if(navigator.share) { navigator.share({ title: `A ouvir ${t.title}`, text: `Estou a ouvir "${t.title}" de ${t.artist} no Emera Player!` }).catch(e=>console.log(e)); } else { showToast("Partilha não suportada neste browser."); } });
         
+        // Letras - Limpo e com enquadramento flexbox (my-auto)
+        DOM.lyricsBtn.addEventListener('click', () => { 
+            const t = playlist[currentTrackIndex]; if(!t) return; 
+            document.getElementById('lyrics-inner').textContent = t.lyrics ? t.lyrics : "A música está a tocar sem letras associadas.\nPodes adicionar na opção Editar Info.";
+            tModal(document.getElementById('lyrics-modal'), true, 'lyrics'); 
+        });
+        document.getElementById('close-lyrics-btn').addEventListener('click', () => tModal(document.getElementById('lyrics-modal'), false, 'lyrics'));
+
         document.getElementById('edit-cover-input').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = ev => { editCoverBase64 = ev.target.result; document.getElementById('edit-cover-preview').src = editCoverBase64; }; r.readAsDataURL(f); });
         document.getElementById('cancel-edit-btn').addEventListener('click', () => tModal(document.getElementById('edit-modal'), false, 'edit'));
         document.getElementById('save-edit-btn').addEventListener('click', () => {
@@ -1236,7 +1138,7 @@
         });
 
         function savePlaylists() { localStorage.setItem('emeraPlaylists', JSON.stringify(customPlaylists)); updatePlaylistContexts(); }
-        if(DOM.createPlaylistBtn) DOM.createPlaylistBtn.addEventListener('click', (e) => { e.stopPropagation(); closeContextDropdown(); document.getElementById('new-playlist-name').value = ''; tModal(document.getElementById('new-playlist-modal'), true, 'new-playlist'); });
+        DOM.createPlaylistBtn.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('new-playlist-name').value = ''; tModal(document.getElementById('new-playlist-modal'), true, 'new-playlist'); });
         document.getElementById('cancel-new-playlist-btn').addEventListener('click', () => tModal(document.getElementById('new-playlist-modal'), false, 'new-playlist'));
         document.getElementById('save-new-playlist-btn').addEventListener('click', () => { const name = document.getElementById('new-playlist-name').value.trim(); if (name) { customPlaylists.push({ id: 'pl_' + Date.now(), name: name, tracks: [] }); savePlaylists(); tModal(document.getElementById('new-playlist-modal'), false, 'new-playlist'); showToast(`Playlist criada!`); if(!document.getElementById('add-to-playlist-modal').classList.contains('hidden')) renderAddToPlaylistModal(); } });
         document.getElementById('cancel-add-to-playlist-btn').addEventListener('click', () => tModal(document.getElementById('add-to-playlist-modal'), false, 'add-playlist'));
@@ -1464,7 +1366,7 @@
         document.addEventListener('keyup', e => { if(isGamePlaying && !isGameOver && keyMappings[e.code] !== undefined) { handleGameInputUp(keyMappings[e.code]); } });
 
         initDB().then(async () => {
-            await loadTracksFromDB(); DOM.sortSel.value = currentSortMode; updatePlaylistContexts(); triggerListUpdate();
+            await loadTracksFromDB(); updateSortUI(); updatePlaylistContexts(); triggerListUpdate();
             if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas'; }
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
