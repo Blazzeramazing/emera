@@ -111,13 +111,11 @@
         <p class="text-spTextSub text-xs mt-2 animate-pulse">A carregar a sua biblioteca...</p>
     </div>
 
-    <!-- Sidebar Overlay Mobile -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
 
-    <!-- App Container -->
     <div id="main-app-container" class="flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
         
-        <!-- SIDEBAR (Bibliotecas e Filtros) -->
+        <!-- SIDEBAR -->
         <aside id="sidebar" class="w-72 md:w-64 bg-spBase md:rounded-lg flex-col fixed inset-y-0 left-0 z-[100] transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 flex overflow-hidden">
             <div class="p-4 sm:p-6 flex flex-col gap-4">
                 <div class="flex items-center justify-between">
@@ -129,16 +127,9 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
-                
-                <div id="local-search-container" class="relative w-full mt-2 group" onclick="event.stopPropagation()">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                    <input type="text" id="search-input" placeholder="Procurar" class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
-                </div>
+                <!-- Barra de busca removida daqui para contexto dinâmico no Right Panel -->
             </div>
 
-            <!-- Library Header -->
             <div id="list-header" class="flex-1 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar relative md:cursor-default bg-spBase">
                 <div class="px-4 py-2 flex justify-between items-center text-spTextSub">
                     <div class="flex items-center gap-2 font-bold hover:text-white transition cursor-pointer group" id="open-context-modal-btn">
@@ -148,14 +139,24 @@
                     <button id="create-playlist-btn" class="hover:text-white transition rounded-full p-1 hover:bg-spElevated" title="Criar Playlist"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
                 </div>
 
-                <div class="px-4 py-2 flex flex-wrap gap-2">
+                <div class="px-4 pb-2 flex flex-wrap gap-2">
                     <button id="open-sort-modal-btn" class="bg-spHighlight text-xs text-white rounded-full px-3 py-1 outline-none hover:bg-white/10 transition cursor-pointer flex items-center gap-1.5">
                         <span id="current-sort-text">Personalizado</span>
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                 </div>
 
-                <div class="px-4 mt-4 mb-4 flex flex-col gap-2">
+                <!-- Barra de Busca realocada para o contexto nativo -->
+                <div class="px-4 pb-3">
+                    <div id="local-search-container" class="relative w-full group">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" id="search-input" placeholder="Procurar na lista atual..." class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
+                    </div>
+                </div>
+
+                <div class="px-4 mt-2 mb-4 flex flex-col gap-2">
                      <span class="text-xs text-spTextSub font-bold uppercase tracking-wider">Adicionar Arquivos</span>
                      <div id="local-actions" class="flex gap-2">
                         <input type="file" id="folder-upload" webkitdirectory directory multiple class="sr-only">
@@ -209,7 +210,6 @@
             </div>
 
             <div id="player-bg" class="flex-1 w-full bg-spBase relative flex flex-col items-center justify-center flex-shrink-0 overflow-hidden">
-                <!-- Fundo Desfocado (Ambient Blur Imersivo) -->
                 <div class="absolute inset-0 z-0 pointer-events-none">
                     <img id="bg-blur-cover" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-full h-full object-cover opacity-20 blur-[60px] scale-125 transition-all duration-1000">
                     <div class="absolute inset-0 bg-gradient-to-b from-transparent via-spBase/80 to-spBase"></div>
@@ -217,7 +217,6 @@
 
                 <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
                 
-                <!-- Main Content (Cover + Text Responsivo) -->
                 <div class="flex flex-col md:flex-row items-center md:items-end justify-center md:justify-start gap-6 md:gap-10 mt-auto mb-auto z-10 w-full max-w-5xl px-6 md:px-12">
                     
                     <div id="cover-container" class="relative w-64 h-64 sm:w-80 sm:h-80 md:w-56 md:h-56 lg:w-72 lg:h-72 rounded shadow-2xl flex-shrink-0 flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador">
@@ -542,7 +541,6 @@
         </div>
     </div>
 
-    <!-- Novo Modal para Ver Detalhes Completos (Nome comprido) -->
     <div id="full-info-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[150] hidden opacity-0 transition-opacity duration-300 p-4 backdrop-blur-sm">
         <div class="bg-spElevated p-6 md:p-8 rounded-2xl border border-white/10 w-full max-w-lg shadow-2xl flex flex-col items-center text-center relative overflow-hidden transform scale-95 transition-transform duration-300" id="full-info-panel">
             <button id="close-full-info-btn" class="absolute top-4 right-4 text-spTextSub hover:text-white transition bg-black/40 hover:bg-black/80 rounded-full p-2 z-10">
@@ -554,7 +552,6 @@
         </div>
     </div>
 
-    <!-- Modal Nativo de Ordenação -->
     <div id="sort-modal" class="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300">
         <div class="bg-spElevated md:border border-spHighlight w-full md:w-[90%] md:max-w-xs md:rounded-lg rounded-t-2xl shadow-2xl overflow-hidden translate-y-full md:translate-y-0 transition-transform duration-300" id="sort-modal-panel">
             <div class="p-4 border-b border-white/5 flex justify-between items-center md:hidden">
@@ -568,14 +565,23 @@
             </div>
         </div>
     </div>
-
     <!-- Modal Nativo de Contexto/Biblioteca -->
     <div id="context-modal" class="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300">
         <div class="bg-spElevated md:border border-spHighlight w-full md:w-[90%] md:max-w-sm md:rounded-lg rounded-t-2xl shadow-2xl overflow-hidden translate-y-full md:translate-y-0 transition-transform duration-300 flex flex-col max-h-[80vh]" id="context-modal-panel">
-            <div class="p-4 border-b border-white/5 flex justify-between items-center sticky top-0 bg-spElevated z-10">
+            <div class="p-4 border-b border-white/5 flex justify-between items-center sticky top-0 bg-spElevated z-10 flex-shrink-0">
                 <h3 class="font-bold text-white text-lg">Sua Biblioteca</h3>
                 <button id="close-context-modal-btn" class="text-spTextSub hover:text-white p-1"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
+            
+            <div class="px-4 py-2 border-b border-white/5 bg-spElevated z-10 flex-shrink-0">
+                <div class="relative w-full group">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="context-search-input" placeholder="Procurar playlist, artista..." class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
+                </div>
+            </div>
+
             <div class="overflow-y-auto custom-scrollbar p-2 pb-6 flex flex-col gap-1">
                 <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3" data-value="all">
                     <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> Tudo
@@ -593,7 +599,6 @@
         </div>
     </div>
 
-    <!-- Playlists Extras -->
     <div id="new-playlist-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-sm shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4">Nova Playlist</h3>
@@ -683,31 +688,86 @@
         const sidebarOverlay = document.getElementById('sidebar-overlay');
         const closeSidebarBtn = document.getElementById('close-sidebar-btn');
 
-        function openSidebar() {
-            if(!sidebar) return;
-            sidebar.classList.remove('-translate-x-full');
-            sidebarOverlay.classList.remove('hidden');
-            setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
-        }
-        function closeSidebar() {
-            if(!sidebar) return;
-            sidebar.classList.add('-translate-x-full');
-            sidebarOverlay.classList.add('opacity-0');
-            setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
-        }
-
-        if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', openSidebar);
-        if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
-        if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
-
-        document.getElementById('mobile-eq-btn')?.addEventListener('click', () => { closeSidebar(); document.getElementById('eq-btn').click(); });
-        document.getElementById('mobile-settings-btn')?.addEventListener('click', () => { closeSidebar(); document.getElementById('settings-btn').click(); });
-
-        document.addEventListener('visibilitychange', () => { isPageVisible = !document.hidden; });
-
-        if (location.hash === '') history.pushState(null, '', '#main');
+        // HISTORY API PARA BOTÃO VOLTAR DO CELULAR (COMPLETO)
+        if (location.hash === '') history.replaceState(null, '', '#main');
         let exitClicks = 0; let exitTimer = null;
         
+        window.addEventListener('popstate', (e) => {
+            const h = location.hash;
+            
+            // Proteção de Encerramento Acidental (Janela Principal)
+            if (h === '') {
+                exitClicks++;
+                if (exitClicks >= 3) {
+                    history.go(-1); // Permite sair da app
+                } else {
+                    history.pushState(null, '', '#main'); // Empurra de volta para prender
+                    showToast(`Prima voltar mais ${3 - exitClicks} vezes para sair.`);
+                    clearTimeout(exitTimer);
+                    exitTimer = setTimeout(() => { exitClicks = 0; }, 2000);
+                }
+                return;
+            } else {
+                exitClicks = 0;
+            }
+
+            // Roteamento de Menus Baseado no Botão Voltar
+            if (h === '#main') {
+                closeAllOverlays(true);
+            } else if (h === '#menu') {
+                closeAllOverlays(true, ['sidebar']);
+                if (sidebar.classList.contains('-translate-x-full')) openSidebar(true);
+            } else if (h === '#playlist') {
+                closeAllOverlays(true, ['drawer']);
+                if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) {
+                    isDrawerExpanded = true;
+                    DOM.rightPanel.classList.add('expanded');
+                }
+            } else {
+                // Modais Pop-up
+                const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#sort': document.getElementById('sort-modal'), '#context': document.getElementById('context-modal'), '#info': DOM.fullInfoModal };
+                
+                closeAllOverlays(true, ['modal_' + h.replace('#', '')]); // Fecha tudo menos este
+                
+                if (hashToModal[h]) {
+                    const m = hashToModal[h];
+                    m.classList.remove('hidden'); m.classList.add('flex');
+                    setTimeout(()=>m.classList.remove('opacity-0'),10);
+                    const panel = m.querySelector('[id$="-panel"]');
+                    if(panel && panel.classList.contains('translate-y-full')) setTimeout(() => panel.classList.replace('translate-y-full', 'translate-y-0'), 10);
+                    if(panel && panel.classList.contains('scale-95')) setTimeout(() => panel.classList.replace('scale-95', 'scale-100'), 10);
+                    if(m === DOM.eqModal) eqModalVisible = true; 
+                } else if (h === '#game') {
+                    if(typeof isGameActive !== 'undefined' && !isGameActive) {
+                        currentMultiplier = 1; gamePanel.classList.remove('hidden'); gamePanel.classList.add('flex'); setTimeout(() => gamePanel.classList.remove('opacity-0'), 10); isGameActive = true; resetGameForNewTrack();
+                    }
+                }
+            }
+        });
+
+        function closeAllOverlays(fromHistory = false, exceptions = []) {
+            if (!exceptions.includes('sidebar') && !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('opacity-0');
+                setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
+            }
+            if (!exceptions.includes('drawer') && typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded && window.innerWidth < 768) {
+                isDrawerExpanded = false;
+                DOM.rightPanel.classList.remove('expanded');
+            }
+            if (!exceptions.includes('modal_game') && typeof closeGameUI === 'function' && isGameActive) {
+                gamePanel.classList.add('opacity-0'); setTimeout(() => { gamePanel.classList.add('hidden'); gamePanel.classList.remove('flex'); }, 300); isGameActive = false; isGamePlaying = false; isGameOver = false; cancelAnimationFrame(gameAnimFrame);
+            }
+            
+            const modals = { 'eq': DOM.eqModal, 'settings': document.getElementById('settings-modal'), 'edit': document.getElementById('edit-modal'), 'lyrics': document.getElementById('lyrics-modal'), 'new-playlist': document.getElementById('new-playlist-modal'), 'add-playlist': document.getElementById('add-to-playlist-modal'), 'sort': document.getElementById('sort-modal'), 'context': document.getElementById('context-modal'), 'info': DOM.fullInfoModal };
+            
+            for (const [key, m] of Object.entries(modals)) {
+                if (!exceptions.includes('modal_' + key)) {
+                    forceCloseModal(m);
+                }
+            }
+        }
+
         function forceCloseModal(m) {
             if (!m) return;
             if (!m.classList.contains('hidden')) { 
@@ -726,20 +786,29 @@
             }
         }
 
-        function closeAllOverlays() {
-            if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
-            if (typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded) { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); }
-            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); forceCloseModal(document.getElementById('sort-modal')); forceCloseModal(document.getElementById('context-modal')); forceCloseModal(DOM.fullInfoModal);
+        function openSidebar(fromHistory = false) {
+            if(!sidebar) return;
+            sidebar.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.remove('hidden');
+            setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
+            if (!fromHistory && location.hash !== '#menu') history.pushState(null, '', '#menu');
+        }
+        function closeSidebar(fromHistory = false) {
+            if(!sidebar) return;
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('opacity-0');
+            setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
+            if (!fromHistory && location.hash === '#menu') history.back();
         }
 
-        window.addEventListener('popstate', (e) => {
-            const h = location.hash;
-            if (h === '') { exitClicks++; if (exitClicks >= 3) { history.back(); } else { history.pushState(null, '', '#main'); showToast(`Voltar mais ${3 - exitClicks} vezes para sair.`); clearTimeout(exitTimer); exitTimer = setTimeout(() => { exitClicks = 0; }, 2000); } return; } else { exitClicks = 0; }
-            if (h === '#main') { closeAllOverlays(); return; }
-            if (h === '#playlist') { closeAllOverlays(); if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); } return; }
-            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#sort': document.getElementById('sort-modal'), '#context': document.getElementById('context-modal'), '#info': DOM.fullInfoModal };
-            Object.keys(hashToModal).forEach(key => { if (h !== key) forceCloseModal(hashToModal[key]); }); if (h !== '#game' && typeof closeGameUI === 'function' && isGameActive) closeGameUI();
-        });
+        if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', () => openSidebar());
+        if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', () => closeSidebar());
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', () => closeSidebar());
+
+        document.getElementById('mobile-eq-btn')?.addEventListener('click', () => { closeSidebar(); document.getElementById('eq-btn').click(); });
+        document.getElementById('mobile-settings-btn')?.addEventListener('click', () => { closeSidebar(); document.getElementById('settings-btn').click(); });
+
+        document.addEventListener('visibilitychange', () => { isPageVisible = !document.hidden; });
 
         const saveVolToStorage = debounce((v) => localStorage.setItem('webPlayerVol', v), 500); const saveEqToStorage = debounce((eq) => localStorage.setItem('webPlayerEq', JSON.stringify(eq)), 500); const savePreampToStorage = debounce((v) => localStorage.setItem('webPlayerPreamp', v), 500); const savePlaylistOrder = debounce(() => { if(currentSortMode === 'manual') localStorage.setItem('webPlayerOrder', JSON.stringify(playlist.map(t => t.id))); }, 500);
 
@@ -984,13 +1053,39 @@
             }
         }
 
-        document.getElementById('open-context-modal-btn').addEventListener('click', () => tModal(document.getElementById('context-modal'), true, 'context'));
+        document.getElementById('open-context-modal-btn').addEventListener('click', () => {
+            const sInput = document.getElementById('context-search-input');
+            if (sInput) { sInput.value = ''; sInput.dispatchEvent(new Event('input')); }
+            tModal(document.getElementById('context-modal'), true, 'context');
+        });
         document.getElementById('close-context-modal-btn').addEventListener('click', () => tModal(document.getElementById('context-modal'), false, 'context'));
         
+        document.getElementById('context-search-input').addEventListener('input', e => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('#context-modal .context-option').forEach(btn => {
+                btn.style.display = btn.textContent.toLowerCase().includes(term) ? '' : 'none';
+            });
+            
+            const plContainer = document.getElementById('context-modal-playlists');
+            const artContainer = document.getElementById('context-modal-artists');
+            
+            if(plContainer && plContainer.previousElementSibling) {
+                const hasVisiblePl = Array.from(plContainer.children).some(c => c.style.display !== 'none');
+                plContainer.previousElementSibling.style.display = (hasVisiblePl || term === '') ? '' : 'none';
+            }
+            if(artContainer && artContainer.previousElementSibling) {
+                const hasVisibleArt = Array.from(artContainer.children).some(c => c.style.display !== 'none');
+                artContainer.previousElementSibling.style.display = (hasVisibleArt || term === '') ? '' : 'none';
+            }
+        });
+
         function setContext(val, text) { 
             currentContext = val; DOM.contextTriggerText.textContent = text; 
             localStorage.setItem('webPlayerContext', currentContext); 
             tModal(document.getElementById('context-modal'), false, 'context'); 
+            
+            // O motor de busca usa o Contexto atual para filtrar. Limpamos a busca apenas visualmente por segurança.
+            DOM.search.value = '';
             triggerListUpdate(); 
             
             document.querySelectorAll('.context-option').forEach(btn => btn.classList.toggle('text-accent', btn.dataset.value === currentContext));
@@ -1003,6 +1098,7 @@
             setContext(btn.dataset.value, btn.textContent.trim().replace(/[0-9]+$/, '').trim());
         });
 
+        // O motor de busca contextual automático: Filtra com base no contexto selecionado.
         function getVisualPlaylist() {
             const term = DOM.search.value.toLowerCase(); let pToRender = [...playlist];
             if (currentContext === 'favorites') { pToRender = pToRender.filter(t => t.favorite); } 
@@ -1188,8 +1284,16 @@
         function toggleDrawer(e) { 
             if (window.innerWidth >= 768) return; 
             if(e && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'SELECT')) return; 
-            if (!isDrawerExpanded) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); if (location.hash !== '#playlist') history.pushState(null, '', '#playlist'); } 
-            else { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); if (location.hash === '#playlist') history.back(); }
+            if (!isDrawerExpanded) { 
+                isDrawerExpanded = true; 
+                DOM.rightPanel.classList.add('expanded'); 
+                if (location.hash !== '#playlist') history.pushState(null, '', '#playlist'); 
+            } 
+            else { 
+                isDrawerExpanded = false; 
+                DOM.rightPanel.classList.remove('expanded'); 
+                if (location.hash === '#playlist') history.back(); 
+            }
         }
         DOM.drawerHandle.addEventListener('click', toggleDrawer);
         if(DOM.miniPlayerInfo) DOM.miniPlayerInfo.addEventListener('click', toggleDrawer);
@@ -1245,7 +1349,16 @@
             if (e.target.closest('.del-btn')) { e.stopPropagation(); const t=playlist[originalIndex]; if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(originalIndex,1); savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); return; }
             if (e.target.closest('.edit-btn')) { e.stopPropagation(); trackToEditIndex = originalIndex; const t = playlist[trackToEditIndex]; document.getElementById('edit-title-input').value = t.title; document.getElementById('edit-artist-input').value = t.artist; document.getElementById('edit-lyrics-input').value = t.lyrics || ""; document.getElementById('edit-cover-preview').src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; editCoverBase64 = t.cover; tModal(document.getElementById('edit-modal'), true, 'edit'); return; }
             if (e.target.closest('.add-pl-btn')) { e.stopPropagation(); trackToAddIndex = originalIndex; renderAddToPlaylistModal(); tModal(document.getElementById('add-to-playlist-modal'), true, 'add-playlist'); return; }
+            
+            // Se clicar na música da lista...
             loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play();
+            
+            // Retorna ao Menu Hero (Mobile) e retrai a gaveta ao clicar e reproduzir música
+            if (window.innerWidth < 768 && isDrawerExpanded) {
+                isDrawerExpanded = false;
+                DOM.rightPanel.classList.remove('expanded');
+                if (location.hash === '#playlist') history.back();
+            }
         });
 
         DOM.virtualContent.addEventListener('dragstart', (e) => { const item = e.target.closest('.playlist-item'); if(!item) return; dragSourceIndex = parseInt(item.dataset.index); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragSourceIndex); setTimeout(() => item.classList.add('opacity-50'), 0); });
@@ -1645,12 +1758,10 @@
             let touchEndX = e.changedTouches[0].screenX;
             let touchEndY = e.changedTouches[0].screenY;
             
-            // Garantir que o gesto é predominantemente horizontal e não scroll vertical
             if (Math.abs(touchStartX - touchEndX) > Math.abs(touchStartY - touchEndY) && Math.abs(touchStartX - touchEndX) > 50) {
                 if (touchStartX - touchEndX > 50) nextTrack(); 
                 if (touchEndX - touchStartX > 50) prevTrack(); 
             } else if (Math.abs(touchStartX - touchEndX) < 10 && Math.abs(touchStartY - touchEndY) < 10) {
-                // Toque curto (tap), verificar duplo toque
                 const currentTime = new Date().getTime();
                 const tapLength = currentTime - lastTouchBgTime;
                 if (tapLength < 300 && tapLength > 0) {
@@ -1661,7 +1772,6 @@
             }
         });
 
-        // --- Modo Ecrã Inteiro (Duplo Clique / Duplo Toque) ---
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(()=>{});
