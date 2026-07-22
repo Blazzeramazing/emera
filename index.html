@@ -504,7 +504,7 @@
                 </div>
                 <hr class="border-spHighlight my-1">
                 <button id="clear-db-btn" class="w-full text-sm bg-transparent hover:bg-red-500 text-red-500 hover:text-black py-2 rounded font-bold border border-red-500 transition flex justify-center items-center gap-2">
-                    Eliminar Biblioteca
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Restaurar Aplicação (Apagar Tudo)
                 </button>
             </div>
         </div>
@@ -1278,8 +1278,37 @@
         let clearDbClicks = 0; let clearDbTimer = null;
         document.getElementById('clear-db-btn').addEventListener('click', (e) => {
             clearDbClicks++; const btn = e.target.closest('button');
-            if (clearDbClicks === 1) { const originalText = btn.innerHTML; btn.innerHTML = `CLIQUE NOVAMENTE PARA ELIMINAR`; btn.classList.add('bg-red-500', 'text-black'); btn.classList.remove('bg-transparent', 'text-red-500'); clearDbTimer = setTimeout(() => { clearDbClicks = 0; btn.innerHTML = originalText; btn.classList.remove('bg-red-500', 'text-black'); btn.classList.add('bg-transparent', 'text-red-500'); }, 3000); } 
-            else if (clearDbClicks === 2) { clearTimeout(clearDbTimer); if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear(); playlist=[]; audio.pause(); audio.src=""; localStorage.removeItem('webPlayerOrder'); updatePlaylistContexts(); triggerListUpdate(); DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; showToast("Biblioteca eliminada com sucesso."); clearDbClicks = 0; btn.innerHTML = `Eliminar Biblioteca`; btn.classList.remove('bg-red-500', 'text-black'); btn.classList.add('bg-transparent', 'text-red-500'); }
+            if (clearDbClicks === 1) { 
+                const originalText = btn.innerHTML; 
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> CONFIRMAR RESET TOTAL`; 
+                btn.classList.add('bg-red-500', 'text-black'); 
+                btn.classList.remove('bg-transparent', 'text-red-500'); 
+                clearDbTimer = setTimeout(() => { 
+                    clearDbClicks = 0; 
+                    btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Restaurar Aplicação (Apagar Tudo)`; 
+                    btn.classList.remove('bg-red-500', 'text-black'); 
+                    btn.classList.add('bg-transparent', 'text-red-500'); 
+                }, 4000); 
+            } 
+            else if (clearDbClicks === 2) { 
+                clearTimeout(clearDbTimer);
+                btn.innerHTML = `A APAGAR...`;
+                
+                const performHardReset = () => {
+                    localStorage.clear();
+                    audio.pause();
+                    audio.src = "";
+                    window.location.reload();
+                };
+
+                if(db) {
+                    const req = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear();
+                    req.onsuccess = performHardReset;
+                    req.onerror = performHardReset;
+                } else {
+                    performHardReset();
+                }
+            }
         });
 
         document.getElementById('export-backup-btn').addEventListener('click', () => {
@@ -1338,12 +1367,11 @@
             
             let loadedCount = 0; const wasEmpty = playlist.length === 0;
 
-            // Timeout rígido para evitar congelamentos eternos na leitura das tags
             const readTags = (file) => {
                 return new Promise((resolve) => {
                     if (!window.jsmediatags) { resolve(null); return; }
                     let finished = false;
-                    const tid = setTimeout(() => { if(!finished) { finished = true; resolve(null); } }, 2500); // 2.5s limite máximo
+                    const tid = setTimeout(() => { if(!finished) { finished = true; resolve(null); } }, 2500); 
                     window.jsmediatags.read(file, {
                         onSuccess: (tag) => { if(!finished) { finished = true; clearTimeout(tid); resolve(tag); } },
                         onError: () => { if(!finished) { finished = true; clearTimeout(tid); resolve(null); } }
@@ -1351,7 +1379,7 @@
                 });
             };
 
-            const BATCH_SIZE = 20; // Processa em lotes de 20 músicas para não sufocar a memória
+            const BATCH_SIZE = 20; 
 
             for (let i = 0; i < validFiles.length; i += BATCH_SIZE) {
                 const batch = validFiles.slice(i, i + BATCH_SIZE);
@@ -1404,11 +1432,9 @@
                     saveTrackToDB(nT);
                     loadedCount++;
                     
-                    // Pausa mínima por ficheiro (15ms) para garantir o respiro do navegador
                     await new Promise(r => setTimeout(r, 15));
                 }
                 
-                // Pausa maior (100ms) no final de cada lote de 20 e atualização da UI
                 triggerListUpdate();
                 await new Promise(r => setTimeout(r, 100));
             }
