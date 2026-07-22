@@ -615,6 +615,11 @@
 
     <div id="toast-container" class="fixed bottom-[100px] left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 pointer-events-none text-center"></div>
 
+    <div id="import-status" class="fixed bottom-[110px] left-1/2 -translate-x-1/2 z-[200] bg-accent text-black px-4 py-2 rounded-full shadow-lg text-sm font-bold pointer-events-none hidden transition-opacity duration-300 opacity-0 flex items-center gap-2">
+        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <span id="import-status-text">Processando...</span>
+    </div>
+
     <audio id="audio-player"></audio>
 
     <script>
@@ -1310,29 +1315,82 @@
             customPlaylists.forEach(pl => { const hasTrack = pl.tracks.includes(track.id); const btn = document.createElement('button'); btn.className = `w-full text-left px-4 py-3 bg-spHighlight hover:bg-white/10 rounded-lg transition text-sm flex justify-between items-center ${hasTrack ? 'text-accent' : 'text-white'}`; btn.innerHTML = `<span class="truncate pr-2">${pl.name}</span> <span class="text-[10px] ${hasTrack ? 'bg-accent/20' : 'bg-black'} px-2 py-0.5 rounded-full flex-shrink-0">${hasTrack ? 'Adicionada ✓' : '+ Adicionar'}</span>`; btn.onclick = () => { if (hasTrack) { pl.tracks = pl.tracks.filter(id => id !== track.id); showToast(`Removida de "${pl.name}"`); } else { pl.tracks.push(track.id); showToast(`Adicionada a "${pl.name}"`); } savePlaylists(); renderAddToPlaylistModal(); if(currentContext === 'playlist:' + pl.id) triggerListUpdate(); }; list.appendChild(btn); });
         }
 
-        function handleFiles(files) {
-            if(files.length === 0) return; showToast(`A analisar ${files.length} ficheiro(s)...`);
+        async function handleFiles(files) {
+            if(files.length === 0) return;
             const existingIds = new Set(playlist.map(t => t.file ? t.file.name + '_' + t.file.size : t.title));
             const validFiles = files.filter(f => { const isAudio = f.type.startsWith('audio/') || f.name.endsWith('.mp3') || f.name.endsWith('.wav') || f.name.endsWith('.ogg'); return isAudio && !existingIds.has(f.name + '_' + f.size); });
-            if(validFiles.length === 0) return; let loadedCount = 0; const CHUNK_SIZE = 10; 
-            function processChunk(startIndex) {
-                const endIndex = Math.min(startIndex + CHUNK_SIZE, validFiles.length); const chunk = validFiles.slice(startIndex, endIndex); let promises = [];
-                chunk.forEach(file => {
-                    const promise = new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
-                            const safeFile = { name: file.name, type: file.type, size: file.size, data: e.target.result };
-                            let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: safeFile, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
-                            playlist.unshift(nT); saveTrackToDB(nT); loadedCount++;
-                            if (window.jsmediatags) { window.jsmediatags.read(file, { onSuccess: tag => { let needsUpdate = false; if(tag.tags.title) { nT.title = tag.tags.title; needsUpdate = true; } if(tag.tags.artist) { nT.artist = tag.tags.artist; needsUpdate = true; } if(tag.tags.genre) { nT.genre = tag.tags.genre; needsUpdate = true; } if(tag.tags.lyrics && tag.tags.lyrics.lyrics) { nT.lyrics = tag.tags.lyrics.lyrics; needsUpdate = true; } else if(tag.tags.USLT && tag.tags.USLT.lyrics) { nT.lyrics = tag.tags.USLT.lyrics; needsUpdate = true; } if(tag.tags.picture) { let b64 = ""; for (let i=0; i<tag.tags.picture.data.length; i++) b64 += String.fromCharCode(tag.tags.picture.data[i]); nT.cover = `data:${tag.tags.picture.format};base64,${window.btoa(b64)}`; needsUpdate = true; } if(needsUpdate) { saveTrackToDB(nT); if(playlist[currentTrackIndex] && playlist[currentTrackIndex].id === nT.id) { DOM.title.textContent = nT.title; DOM.artist.textContent = nT.artist; if(nT.cover) DOM.cover.src = nT.cover; } } }, onError: () => {} }); }
+            
+            if(validFiles.length === 0) { showToast("Nenhum ficheiro suportado ou novo."); return; }
+            
+            const importStatus = document.getElementById('import-status');
+            const importText = document.getElementById('import-status-text');
+            importStatus.classList.remove('hidden');
+            setTimeout(() => importStatus.classList.remove('opacity-0'), 10);
+            
+            let loadedCount = 0; const wasEmpty = playlist.length === 0;
+
+            for (let i = 0; i < validFiles.length; i++) {
+                const file = validFiles[i];
+                importText.textContent = `A processar ${i+1}/${validFiles.length}...`;
+                
+                await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
+                        const safeFile = { name: file.name, type: file.type, size: file.size, data: e.target.result };
+                        let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: safeFile, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
+                        
+                        // Atualiza o índíce da música que está a tocar para que a interface nunca se confunda
+                        if (playlist.length > 0) currentTrackIndex++; 
+                        playlist.unshift(nT); 
+                        
+                        const finish = () => {
+                            saveTrackToDB(nT);
+                            loadedCount++;
+                            if (i % 5 === 0) triggerListUpdate();
                             resolve();
-                        }; reader.readAsArrayBuffer(file);
-                    }); promises.push(promise);
+                        };
+
+                        if (window.jsmediatags) {
+                            const timeoutId = setTimeout(() => finish(), 2500); // 2.5s limite para evitar encravamentos
+                            window.jsmediatags.read(file, {
+                                onSuccess: tag => {
+                                    clearTimeout(timeoutId);
+                                    if(tag.tags.title) nT.title = tag.tags.title; 
+                                    if(tag.tags.artist) nT.artist = tag.tags.artist; 
+                                    if(tag.tags.genre) nT.genre = tag.tags.genre; 
+                                    if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics; 
+                                    else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics; 
+                                    
+                                    if(tag.tags.picture) { 
+                                        try {
+                                            // Processamento de imagem incrivelmente otimizado com Blob (resolve falhas de memória)
+                                            const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
+                                            const imgReader = new FileReader();
+                                            imgReader.onloadend = () => { nT.cover = imgReader.result; finish(); };
+                                            imgReader.readAsDataURL(blob);
+                                        } catch(err) { finish(); }
+                                    } else {
+                                        finish();
+                                    }
+                                },
+                                onError: () => { clearTimeout(timeoutId); finish(); }
+                            }); 
+                        } else {
+                            finish();
+                        }
+                    };
+                    reader.onerror = () => resolve();
+                    reader.readAsArrayBuffer(file);
                 });
-                Promise.all(promises).then(() => { if (endIndex < validFiles.length) { requestAnimationFrame(() => setTimeout(() => processChunk(endIndex), 100)); } else { savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); if(!isPlaying) loadTrack(0); } });
             }
-            processChunk(0);
+            
+            importStatus.classList.add('opacity-0');
+            setTimeout(() => importStatus.classList.add('hidden'), 300);
+            
+            savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); 
+            if(wasEmpty) loadTrack(0);
+            showToast(`${loadedCount} músicas importadas com sucesso.`);
         }
 
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files))); DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
