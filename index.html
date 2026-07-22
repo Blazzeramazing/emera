@@ -776,13 +776,26 @@
 
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
         function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 2); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
+        
         function saveTrackToDB(track) { if(db){ runIdle(() => { const t={...track}; delete t.src; db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); }); } }
+        
         function deleteTrackFromDB(id) { if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).delete(id); }
+        
         function loadTracksFromDB() {
             if(!db) return Promise.resolve();
             return new Promise(r => { const req = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll(); 
-                req.onsuccess = () => { playlist = []; req.result.forEach(t => { if (t.file && t.file.data instanceof ArrayBuffer) { const blob = new Blob([t.file.data], { type: t.file.type }); t.src = URL.createObjectURL(blob); t.fileRef = new File([blob], t.file.name, { type: t.file.type }); } else if (t.file instanceof File) { t.src = URL.createObjectURL(t.file); t.fileRef = t.file; } t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); }); 
-                    try { const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder')); if (savedOrder && Array.isArray(savedOrder)) { playlist.sort((a, b) => { let indexA = savedOrder.indexOf(a.id); let indexB = savedOrder.indexOf(b.id); if (indexA === -1) indexA = 999999; if (indexB === -1) indexB = 999999; return indexA - indexB; }); } } catch(e) {} r(); 
+                req.onsuccess = () => { playlist = []; req.result.forEach(t => { 
+                    if (t.file && t.file.data instanceof ArrayBuffer) { 
+                        const blob = new Blob([t.file.data], { type: t.file.type }); 
+                        t.src = URL.createObjectURL(blob); 
+                        t.fileRef = new File([blob], t.file.name, { type: t.file.type }); 
+                    } else if (t.file instanceof File || t.file instanceof Blob) { 
+                        t.src = URL.createObjectURL(t.file); 
+                        t.fileRef = t.file; 
+                    } 
+                    t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); 
+                }); 
+                try { const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder')); if (savedOrder && Array.isArray(savedOrder)) { playlist.sort((a, b) => { let indexA = savedOrder.indexOf(a.id); let indexB = savedOrder.indexOf(b.id); if (indexA === -1) indexA = 999999; if (indexB === -1) indexB = 999999; return indexA - indexB; }); } } catch(e) {} r(); 
                 }; req.onerror = () => r(); 
             });
         }
@@ -892,7 +905,6 @@
             if(m === DOM.eqModal) eqModalVisible = s; 
         };
 
-        // Lógica do Modal de Informações da Faixa Completa (O novo modal)
         DOM.title.addEventListener('click', () => {
             if (playlist.length === 0) return;
             const track = playlist[currentTrackIndex];
@@ -902,12 +914,9 @@
             tModal(DOM.fullInfoModal, true, 'info');
         });
         
-        // Fazer com que clique no nome do artista fora abra o modal também se quiser, mas por agora mantém apenas no título que truncamos mais ativamente.
-
         document.getElementById('close-full-info-btn').addEventListener('click', () => {
             tModal(DOM.fullInfoModal, false, 'info');
         });
-        // Fechar se clicar fora do painel
         DOM.fullInfoModal.addEventListener('click', (e) => {
             if(e.target === DOM.fullInfoModal) tModal(DOM.fullInfoModal, false, 'info');
         });
@@ -1329,60 +1338,79 @@
             
             let loadedCount = 0; const wasEmpty = playlist.length === 0;
 
-            for (let i = 0; i < validFiles.length; i++) {
-                const file = validFiles[i];
-                importText.textContent = `A processar ${i+1}/${validFiles.length}...`;
-                
-                await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
-                        const safeFile = { name: file.name, type: file.type, size: file.size, data: e.target.result };
-                        let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: safeFile, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
-                        
-                        // Atualiza o índíce da música que está a tocar para que a interface nunca se confunda
-                        if (playlist.length > 0) currentTrackIndex++; 
-                        playlist.unshift(nT); 
-                        
-                        const finish = () => {
-                            saveTrackToDB(nT);
-                            loadedCount++;
-                            if (i % 5 === 0) triggerListUpdate();
-                            resolve();
-                        };
-
-                        if (window.jsmediatags) {
-                            const timeoutId = setTimeout(() => finish(), 2500); // 2.5s limite para evitar encravamentos
-                            window.jsmediatags.read(file, {
-                                onSuccess: tag => {
-                                    clearTimeout(timeoutId);
-                                    if(tag.tags.title) nT.title = tag.tags.title; 
-                                    if(tag.tags.artist) nT.artist = tag.tags.artist; 
-                                    if(tag.tags.genre) nT.genre = tag.tags.genre; 
-                                    if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics; 
-                                    else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics; 
-                                    
-                                    if(tag.tags.picture) { 
-                                        try {
-                                            // Processamento de imagem incrivelmente otimizado com Blob (resolve falhas de memória)
-                                            const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
-                                            const imgReader = new FileReader();
-                                            imgReader.onloadend = () => { nT.cover = imgReader.result; finish(); };
-                                            imgReader.readAsDataURL(blob);
-                                        } catch(err) { finish(); }
-                                    } else {
-                                        finish();
-                                    }
-                                },
-                                onError: () => { clearTimeout(timeoutId); finish(); }
-                            }); 
-                        } else {
-                            finish();
-                        }
-                    };
-                    reader.onerror = () => resolve();
-                    reader.readAsArrayBuffer(file);
+            // Timeout rígido para evitar congelamentos eternos na leitura das tags
+            const readTags = (file) => {
+                return new Promise((resolve) => {
+                    if (!window.jsmediatags) { resolve(null); return; }
+                    let finished = false;
+                    const tid = setTimeout(() => { if(!finished) { finished = true; resolve(null); } }, 2500); // 2.5s limite máximo
+                    window.jsmediatags.read(file, {
+                        onSuccess: (tag) => { if(!finished) { finished = true; clearTimeout(tid); resolve(tag); } },
+                        onError: () => { if(!finished) { finished = true; clearTimeout(tid); resolve(null); } }
+                    });
                 });
+            };
+
+            const BATCH_SIZE = 20; // Processa em lotes de 20 músicas para não sufocar a memória
+
+            for (let i = 0; i < validFiles.length; i += BATCH_SIZE) {
+                const batch = validFiles.slice(i, i + BATCH_SIZE);
+                
+                for (let j = 0; j < batch.length; j++) {
+                    const file = batch[j];
+                    const currentIndex = i + j;
+                    importText.textContent = `A processar ${currentIndex + 1}/${validFiles.length}...`;
+                    
+                    const trackId = 'local_'+Date.now()+'_'+Math.random().toString(36).substr(2, 9);
+                    let nT = {
+                        id: trackId,
+                        title: file.name.replace(/\.[^/.]+$/, ""),
+                        artist: "Desconhecido",
+                        genre: "Desconhecido",
+                        file: file,
+                        fileRef: file,
+                        src: URL.createObjectURL(file),
+                        cover: null,
+                        lyrics: "",
+                        isLocal: true,
+                        addedAt: Date.now() + loadedCount
+                    };
+
+                    const tag = await readTags(file);
+
+                    if (tag && tag.tags) {
+                        if(tag.tags.title) nT.title = tag.tags.title; 
+                        if(tag.tags.artist) nT.artist = tag.tags.artist; 
+                        if(tag.tags.genre) nT.genre = tag.tags.genre; 
+                        if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics; 
+                        else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics; 
+                        
+                        if(tag.tags.picture) { 
+                            try {
+                                const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
+                                nT.cover = await new Promise((res) => {
+                                    const imgReader = new FileReader();
+                                    imgReader.onloadend = () => res(imgReader.result);
+                                    imgReader.onerror = () => res(null);
+                                    imgReader.readAsDataURL(blob);
+                                });
+                            } catch(e) {}
+                        }
+                    }
+                    
+                    if (playlist.length > 0) currentTrackIndex++; 
+                    playlist.unshift(nT); 
+                    
+                    saveTrackToDB(nT);
+                    loadedCount++;
+                    
+                    // Pausa mínima por ficheiro (15ms) para garantir o respiro do navegador
+                    await new Promise(r => setTimeout(r, 15));
+                }
+                
+                // Pausa maior (100ms) no final de cada lote de 20 e atualização da UI
+                triggerListUpdate();
+                await new Promise(r => setTimeout(r, 100));
             }
             
             importStatus.classList.add('opacity-0');
@@ -1641,7 +1669,7 @@
 
         initDB().then(async () => {
             await loadTracksFromDB(); updateSortUI(); updatePlaylistContexts(); triggerListUpdate();
-            if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas'; }
+            if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; }
             
             setTimeout(() => {
                 const loader = document.getElementById('initial-loader');
@@ -1651,6 +1679,7 @@
                 }
             }, 800);
         });
+        
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ 
             audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); 
