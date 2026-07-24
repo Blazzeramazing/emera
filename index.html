@@ -14,11 +14,10 @@
     <link id="dynamic-favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%231db954'/><stop offset='100%' stop-color='%231ed760'/></linearGradient></defs><rect width='512' height='512' rx='120' fill='%23121212'/><circle cx='256' cy='256' r='180' fill='url(%23grad)' opacity='0.15'/><path d='M210 140v210c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V180h110v110c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V140H210z' fill='%23ffffff'/></svg>">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script>
         tailwind.config = {
             theme: { 
@@ -114,7 +113,6 @@
     <!-- Sidebar Overlay Mobile -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
 
-    <!-- App Container -->
     <div id="main-app-container" class="flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
         
         <!-- SIDEBAR (Bibliotecas e Filtros) -->
@@ -132,7 +130,7 @@
                 
                 <div class="mt-2 flex items-center justify-between">
                      <span class="text-xs text-spTextSub font-bold uppercase tracking-wider">Ações Locais</span>
-                     <div id="local-actions" class="flex gap-1">
+                     <div id="local-actions" class="flex gap-1 flex-wrap justify-end">
                         <input type="file" id="folder-upload" webkitdirectory directory multiple class="sr-only">
                         <label for="folder-upload" class="cursor-pointer text-spTextSub hover:text-accent hover:bg-white/5 p-1.5 rounded-full transition flex items-center justify-center" title="Importar Pasta">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
@@ -184,13 +182,10 @@
             </div>
         </aside>
 
-        <!-- MAIN VIEW (Visualizador + Lista Split View) -->
         <main class="flex-1 flex flex-col md:flex-row relative w-full h-full overflow-hidden bg-black md:rounded-lg">
             
             <div id="player-bg" class="flex-1 w-full bg-spBase md:rounded-l-lg relative flex flex-col items-center justify-center flex-shrink-0 overflow-hidden">
                 <div class="h-16 flex justify-between items-center px-4 bg-gradient-to-b from-black/60 to-transparent absolute top-0 w-full z-20 pointer-events-none">
-                    <div class="flex items-center gap-2 pointer-events-auto md:hidden">
-                    </div>
                     <div class="flex gap-2 pointer-events-auto ml-auto">
                         <button id="install-app-btn" class="hidden text-xs bg-white text-black font-bold py-1 px-3 rounded-full hover:scale-105 transition shadow-lg">Instalar</button>
                         <button id="open-game-btn" class="bg-black/40 hover:bg-black text-white p-2 rounded-full transition backdrop-blur-md shadow-lg" title="Jogar Piano Tiles"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4M15 13h.01M18 11h.01"/></svg></button>
@@ -343,21 +338,22 @@
     <!-- BOTTOM BAR (Controlos Estilo Spotify) -->
     <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-50 fixed bottom-0">
         
-        <div class="w-[30%] min-w-[100px] flex items-center gap-1 md:gap-3 order-1 overflow-hidden">
-            <button id="mobile-menu-toggle" class="text-spTextSub hover:text-white transition p-1.5 rounded-full md:hidden flex-shrink-0" title="Menu Principal">
+        <!-- Esquerda (Mobile): Menu e Capa Miniatura -->
+        <div class="w-[30%] min-w-[60px] flex items-center gap-2 md:gap-3 order-1 overflow-hidden md:hidden">
+            <button id="mobile-menu-toggle" class="text-spTextSub hover:text-white transition p-1.5 rounded-full flex-shrink-0" title="Menu Principal">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
-            <div class="flex-1 max-w-[140px] md:max-w-none flex items-center gap-2 md:gap-3 cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir/Ocultar Playlist">
+            <div class="flex items-center cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir/Ocultar Playlist">
                 <div class="relative group flex-shrink-0">
-                    <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-10 h-10 md:w-14 md:h-14 rounded object-cover shadow-md md:shadow-none bg-spHighlight pointer-events-none">
-                </div>
-                <div class="flex flex-col justify-center overflow-hidden min-w-0">
-                    <h4 id="mini-title" class="text-[13px] md:text-sm font-semibold text-white truncate hover:underline">Emera Player</h4>
-                    <p id="mini-artist" class="text-[11px] md:text-xs text-spTextSub truncate hover:underline hover:text-white">A aguardar áudio</p>
+                    <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-10 h-10 rounded object-cover shadow-md bg-spHighlight pointer-events-none">
                 </div>
             </div>
         </div>
+        
+        <!-- Esquerda (Desktop): Espaçador Vazio -->
+        <div class="hidden md:block w-[30%] order-1"></div>
 
+        <!-- Centro: Controlos de Reprodução -->
         <div class="flex-1 md:w-[40%] max-w-2xl flex flex-row md:flex-col items-center justify-end md:justify-center px-0 md:px-4 order-2 gap-1 sm:gap-2 md:gap-0">
             <div class="flex items-center gap-1 sm:gap-2 md:gap-6 md:mb-2 pr-1 md:pr-0 flex-shrink-0">
                 
@@ -400,6 +396,7 @@
             </div>
         </div>
 
+        <!-- Direita: Controlos Estáticos -->
         <div class="w-[30%] min-w-[150px] items-center justify-end gap-2 md:gap-4 pr-2 hidden md:flex order-3" id="volume-section">
             <button id="eq-btn" class="text-spTextSub hover:text-white transition" title="Equalizador"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
             <button id="settings-btn" class="text-spTextSub hover:text-white transition hidden" title="Definições"></button>
@@ -638,7 +635,7 @@
             title: document.getElementById('track-title'), artist: document.getElementById('track-artist'), cover: document.getElementById('cover-art'), coverContainer: document.getElementById('cover-container'),
             mainFav: document.getElementById('main-favorite-btn'), mainFavIcon: document.getElementById('main-fav-icon'), shareBtn: document.getElementById('share-btn'), lyricsBtn: document.getElementById('lyrics-btn'),
             progWrap: document.getElementById('progress-wrapper'), progBar: document.getElementById('progress-bar'), progFill: document.getElementById('progress-fill'), curTime: document.getElementById('current-time'), totTime: document.getElementById('total-time'),
-            volBar: document.getElementById('volume-bar'), volFill: document.getElementById('vol-fill'), mute: document.getElementById('mute-btn'), volValueDisplay: document.getElementById('vol-value-display'),
+            volBar: document.getElementById('volume-bar'), volFill: document.getElementById('vol-fill'), mute: document.getElementById('mute-btn'),
             fileUpload: document.getElementById('file-upload'), folderUpload: document.getElementById('folder-upload'),
             search: document.getElementById('search-input'), contextSearch: document.getElementById('context-search-input'), 
             trackCount: document.getElementById('track-count'), 
@@ -648,7 +645,7 @@
             preampSlider: document.getElementById('preamp-slider'), preampDisp: document.getElementById('preamp-value-display'),
             rightPanel: document.getElementById('right-panel'), drawerHandle: document.getElementById('drawer-handle'),
             eqCanvasBg: document.getElementById('eq-canvas-bg'), eqModal: document.getElementById('eq-modal'), mainAppContainer: document.getElementById('main-app-container'),
-            miniCover: document.getElementById('mini-cover'), miniTitle: document.getElementById('mini-title'), miniArtist: document.getElementById('mini-artist'),
+            miniCover: document.getElementById('mini-cover'),
             listContainer: document.getElementById('list-container'), virtualSpacer: document.getElementById('virtual-spacer'), virtualContent: document.getElementById('virtual-content'),
             miniPlayerInfo: document.getElementById('mini-player-info'),
             fullInfoModal: document.getElementById('full-info-modal')
@@ -719,17 +716,18 @@
             if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
             if (typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded) { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); }
             forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); forceCloseModal(document.getElementById('sort-modal')); forceCloseModal(DOM.fullInfoModal);
+            closeSidebar();
         }
 
         window.addEventListener('popstate', (e) => {
             const h = location.hash;
             if (h === '' || h === '#entry') { 
                 exitClicks++; 
-                if (exitClicks >= 3) { 
+                if (exitClicks >= 5) { 
                     history.back();
                 } else { 
                     history.pushState(null, '', '#main'); 
-                    showToast(`Pressione voltar mais ${3 - exitClicks} vezes para sair.`); 
+                    showToast(`Pressione voltar mais ${5 - exitClicks} vezes para sair.`); 
                     clearTimeout(exitTimer); 
                     exitTimer = setTimeout(() => { exitClicks = 0; }, 2000); 
                 } 
@@ -912,7 +910,7 @@
         function updateSortUI() {
             const texts = {'manual':'Personalizado', 'recent':'Adicionadas Recentemente', 'most_played':'Mais Tocadas'};
             const sortTextEl = document.getElementById('current-sort-text');
-            if (sortTextEl) sortTextEl.textContent = texts[currentSortMode] || 'Personalizado';
+            if(sortTextEl) sortTextEl.textContent = texts[currentSortMode] || 'Personalizado';
             
             document.querySelectorAll('.sort-option').forEach(btn => {
                 btn.classList.toggle('text-accent', btn.dataset.value === currentSortMode);
@@ -1264,7 +1262,10 @@
 
         DOM.search.addEventListener('input', triggerListUpdate);
 
-        function updateMiniPlayer() { const t = playlist[currentTrackIndex]; if(!t) return; DOM.miniTitle.textContent = t.title; DOM.miniArtist.textContent = t.artist; DOM.miniCover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'; }
+        function updateMiniPlayer() { 
+            const t = playlist[currentTrackIndex]; if(!t) return; 
+            if(DOM.miniCover) DOM.miniCover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'; 
+        }
 
         DOM.preampSlider.addEventListener('input', e => { const v = parseFloat(e.target.value); if(preampNode) preampNode.gain.value = v; DOM.preampDisp.textContent = Math.round(v*100)+'%'; savedPreamp = v; savePreampToStorage(v); }); DOM.preampSlider.value = savedPreamp; DOM.preampDisp.textContent = Math.round(savedPreamp*100)+'%';
 
@@ -1275,15 +1276,7 @@
         document.getElementById('clear-db-btn').addEventListener('click', (e) => {
             clearDbClicks++; const btn = e.target.closest('button');
             if (clearDbClicks === 1) { const originalText = btn.innerHTML; btn.innerHTML = `CONFIRMAR RESET TOTAL`; btn.classList.add('bg-red-500', 'text-black'); btn.classList.remove('bg-transparent', 'text-red-500'); clearDbTimer = setTimeout(() => { clearDbClicks = 0; btn.innerHTML = originalText; btn.classList.remove('bg-red-500', 'text-black'); btn.classList.add('bg-transparent', 'text-red-500'); }, 3000); } 
-            else if (clearDbClicks === 2) { 
-                clearTimeout(clearDbTimer); 
-                if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear(); 
-                localStorage.clear();
-                audio.pause(); 
-                audio.src=""; 
-                showToast("A restaurar sistema..."); 
-                setTimeout(() => window.location.reload(), 1000);
-            }
+            else if (clearDbClicks === 2) { clearTimeout(clearDbTimer); if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear(); localStorage.clear(); audio.pause(); audio.src=""; showToast("A restaurar sistema..."); setTimeout(() => window.location.reload(), 1000); }
         });
 
         document.getElementById('export-backup-btn').addEventListener('click', () => {
@@ -1654,20 +1647,18 @@
                 }
             }, 800);
         });
-        
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ 
             audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); 
-            
-            const mobVolBar = document.getElementById('mobile-volume-bar');
-            if(mobVolBar) {
-                mobVolBar.value = initVol;
+            if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = Math.round(initVol*100)+'%'; 
+            if(mobileVolBar) {
+                mobileVolBar.value = initVol;
                 document.getElementById('mobile-vol-fill').style.width = initVol*100+'%';
                 const mobVolDisplay = document.getElementById('mobile-vol-value-display');
                 if (mobVolDisplay) mobVolDisplay.textContent = Math.round(initVol*100)+'%';
             }
         } 
-        else { audio.volume=1; }
+        else { audio.volume=1; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = '100%'; }
 
     </script>
 </body>
