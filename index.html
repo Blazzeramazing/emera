@@ -112,12 +112,14 @@
 
     <div id="main-app-container" class="relative flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
         
-        <!-- Sidebar Overlay -->
+        <!-- Sidebar Overlay para telemovel -->
         <div id="sidebar-overlay" class="absolute inset-0 bg-black/70 backdrop-blur-sm z-30 hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
 
-        <!-- SIDEBAR (Bibliotecas e Filtros) -->
+        <!-- SIDEBAR PRINCIPAL (Agora contém as Playlists nativamente) -->
         <aside id="sidebar" class="w-72 md:w-64 bg-spBase md:rounded-lg flex-col absolute md:relative top-0 bottom-0 left-0 z-40 md:z-auto transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex overflow-hidden">
-            <div class="p-4 sm:p-6 flex flex-col gap-4">
+            
+            <div class="p-4 sm:p-6 flex flex-col gap-6 flex-shrink-0 border-b border-white/5">
+                <!-- Logo & Close -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3 text-spTextSub hover:text-white transition cursor-pointer font-bold">
                         <svg class="w-6 h-6 text-accent" viewBox="0 0 512 512" fill="currentColor"><path d="M210 140v210c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V180h110v110c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V140H210z"/></svg>
@@ -127,25 +129,9 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
-            </div>
 
-            <div id="list-header" class="flex-1 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar relative md:cursor-default bg-spBase">
-                <div class="px-4 py-2 flex justify-between items-center text-spTextSub">
-                    <div class="flex items-center gap-2 font-bold hover:text-white transition cursor-pointer group" id="open-context-modal-btn">
-                        <svg class="w-6 h-6 group-hover:scale-105 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
-                        <span id="context-trigger-text" class="truncate max-w-[120px]">Sua Biblioteca</span>
-                    </div>
-                    <button id="create-playlist-btn" class="hover:text-white transition rounded-full p-1 hover:bg-spElevated" title="Criar Playlist"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
-                </div>
-
-                <div class="px-4 py-2 flex flex-wrap gap-2">
-                    <button id="open-sort-modal-btn" class="bg-spHighlight text-xs text-white rounded-full px-3 py-1 outline-none hover:bg-white/10 transition cursor-pointer flex items-center gap-1.5">
-                        <span id="current-sort-text">Personalizado</span>
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                </div>
-
-                <div class="px-4 mt-4 mb-4 flex flex-col gap-2">
+                <!-- Ações de Arquivo no Topo -->
+                <div class="flex flex-col gap-3">
                      <span class="text-xs text-spTextSub font-bold uppercase tracking-wider">Adicionar Arquivos</span>
                      <div id="local-actions" class="flex gap-2">
                         <input type="file" id="folder-upload" webkitdirectory directory multiple class="sr-only">
@@ -159,8 +145,56 @@
                         </label>
                     </div>
                 </div>
+            </div>
+
+            <!-- Corpo do Menu: Bibliotecas, Pesquisa e Playlists -->
+            <div class="flex-1 flex flex-col overflow-hidden relative bg-spBase">
                 
-                <div class="md:hidden border-t border-white/5 mt-auto pt-4 pb-6 px-4 flex flex-col gap-4 bg-spBase">
+                <!-- Sua Biblioteca Header -->
+                <div class="px-4 py-3 flex justify-between items-center text-white flex-shrink-0">
+                    <div class="flex items-center gap-2 font-bold group">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                        <span>Sua Biblioteca</span>
+                    </div>
+                    <button id="create-playlist-btn" class="text-spTextSub hover:text-white transition rounded-full p-1 hover:bg-spElevated" title="Criar Playlist"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
+                </div>
+
+                <!-- Filtro de Ordenação -->
+                <div class="px-4 pb-2 flex flex-wrap gap-2 flex-shrink-0">
+                    <button id="open-sort-modal-btn" class="bg-spHighlight text-xs text-white rounded-full px-3 py-1 outline-none hover:bg-white/10 transition cursor-pointer flex items-center gap-1.5">
+                        <span id="current-sort-text">Personalizado</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Busca de Contexto (Playlists/Artistas) -->
+                <div class="px-4 pb-2 flex-shrink-0">
+                    <div class="relative w-full group">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" id="context-search-input" placeholder="Procurar em Biblioteca..." class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
+                    </div>
+                </div>
+
+                <!-- A Própria Lista de Contextos embutida na lateral -->
+                <div id="sidebar-context-list" class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-2 pb-6 flex flex-col gap-1">
+                    <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3" data-value="all">
+                        <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> Tudo
+                    </button>
+                    <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3" data-value="favorites">
+                        <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><span class="text-red-500">❤️</span></div> Favoritas
+                    </button>
+                    
+                    <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4">Suas Playlists</div>
+                    <div id="context-modal-playlists" class="flex flex-col gap-1"></div>
+                    
+                    <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4">Artistas</div>
+                    <div id="context-modal-artists" class="flex flex-col gap-1"></div>
+                </div>
+
+                <!-- Painel Mobile com Definições no fundo da barra lateral -->
+                <div class="md:hidden border-t border-white/5 mt-auto pt-4 pb-6 px-4 flex flex-col gap-4 bg-spBase flex-shrink-0">
                     <div class="flex flex-col gap-2 mb-2">
                         <div class="flex items-center justify-between text-spTextSub text-sm font-bold">
                             <div class="flex items-center gap-2">
@@ -183,9 +217,10 @@
             </div>
         </aside>
 
-        <!-- MAIN VIEW (Visualizador + Lista no Desktop) -->
+        <!-- MAIN VIEW (Visualizador) -->
         <main class="flex-1 bg-spBase md:rounded-lg overflow-hidden flex flex-col md:flex-row relative w-full h-full">
             
+            <!-- Barra Superior do Visualizador -->
             <div class="h-16 flex justify-between items-center px-4 bg-gradient-to-b from-black/60 to-transparent absolute top-0 w-full z-20 pointer-events-none">
                 <div class="flex gap-2 pointer-events-auto ml-auto">
                     <button id="install-app-btn" class="hidden text-xs bg-white text-black font-bold py-1 px-3 rounded-full hover:scale-105 transition">Instalar</button>
@@ -193,8 +228,8 @@
                 </div>
             </div>
 
+            <!-- Fundo do Visualizador -->
             <div id="player-bg" class="flex-1 w-full bg-spBase relative flex flex-col items-center justify-center flex-shrink-0 overflow-hidden">
-                <!-- Fundo Desfocado -->
                 <div class="absolute inset-0 z-0 pointer-events-none">
                     <img id="bg-blur-cover" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-full h-full object-cover opacity-20 blur-[60px] scale-125 transition-all duration-1000">
                     <div class="absolute inset-0 bg-gradient-to-b from-transparent via-spBase/80 to-spBase"></div>
@@ -202,7 +237,7 @@
 
                 <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
                 
-                <!-- Main Content -->
+                <!-- Conteúdo Visual Principal -->
                 <div class="flex flex-col lg:flex-row items-center lg:items-end justify-center lg:justify-start gap-6 lg:gap-10 mt-auto mb-auto z-10 w-full max-w-5xl px-6 lg:px-12">
                     
                     <div id="cover-container" class="relative w-64 h-64 sm:w-80 sm:h-80 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded shadow-2xl flex-shrink-0 flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador">
@@ -231,10 +266,11 @@
                 </button>
             </div>
             
+            <!-- PAINEL DIREITO (Lista de Reprodução - Split View Desktop) -->
             <div id="right-panel" class="w-full md:w-80 lg:w-[400px] bg-spBase flex flex-col absolute md:relative top-10 md:top-0 bottom-0 left-0 right-0 z-30 transform translate-y-full md:translate-y-0 md:border-l border-white/5 transition-transform duration-300 md:flex">
                 <div class="drawer-puller cursor-pointer absolute top-0 left-0 right-0 z-30" id="drawer-handle"></div>
                 
-                <!-- Nova Barra de Pesquisa de Músicas no topo da Gaveta -->
+                <!-- Barra de Pesquisa de Músicas no topo da Gaveta de Reprodução -->
                 <div class="p-3 border-b border-white/5 mt-4 md:mt-0 flex-shrink-0">
                     <div class="relative w-full group">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -244,6 +280,7 @@
                     </div>
                 </div>
 
+                <!-- Header de Títulos da Lista -->
                 <div class="px-4 py-2 flex items-center text-xs font-bold text-spTextSub border-b border-white/5 uppercase tracking-wider bg-spBase z-10 flex-shrink-0">
                     <div class="w-10 text-center">#</div>
                     <div class="flex-1">Título</div>
@@ -338,10 +375,12 @@
         </main>
     </div>
 
+    <!-- BOTTOM BAR (Controlos do Player) -->
     <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-50 fixed bottom-0">
         
         <!-- Left Side (Menu Toggle + Info) -->
-        <div class="w-[30%] min-w-[100px] flex items-center gap-1 md:gap-3 order-1">
+        <div class="w-[35%] md:w-[30%] min-w-[100px] flex items-center gap-1 md:gap-3 order-1">
+            <!-- Botão Hambúrguer Simétrico na Esquerda -->
             <button id="toggle-sidebar-btn" class="text-spTextSub hover:text-white transition p-1 md:p-2 flex-shrink-0 mr-1" title="Abrir/Fechar Menu">
                 <svg class="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
@@ -407,8 +446,8 @@
                 </div>
             </div>
 
-            <!-- Botão Fila Reprodução Desktop -->
-            <button id="toggle-queue-btn" class="text-spTextSub hover:text-accent transition ml-2 p-1" title="Fila de Reprodução">
+            <!-- Botão Fila Reprodução Desktop na Direita -->
+            <button id="toggle-queue-btn" class="text-accent hover:text-white transition ml-2 p-1" title="Fila de Reprodução">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
             </button>
         </div>
@@ -537,7 +576,7 @@
     <!-- Modal de Letras -->
     <div id="lyrics-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-[#121212] border border-[#282828] text-white w-full max-w-lg h-[70vh] rounded-xl p-6 flex flex-col shadow-2xl relative overflow-hidden">
-            <button id="close-lyrics-btn" class="absolute top-4 right-4 text-spTextSub hover:text-white transition bg-black/20 hover:bg-black/40 rounded-full p-2 z-10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            <button id="close-lyrics-btn" class="absolute top-4 right-4 text-spTextSub hover:text-white transition bg-black/20 hover:bg-black/40 rounded-full p-2 z-10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></button>
             <div class="flex-1 overflow-y-auto custom-scrollbar flex">
                 <div id="lyrics-text" class="m-auto whitespace-pre-wrap text-center text-lg sm:text-xl font-bold leading-relaxed px-4 py-8"></div>
             </div>
@@ -561,45 +600,12 @@
         <div class="bg-spElevated md:border border-spHighlight w-full md:w-[90%] md:max-w-xs md:rounded-lg rounded-t-2xl shadow-2xl overflow-hidden translate-y-full md:translate-y-0 transition-transform duration-300" id="sort-modal-panel">
             <div class="p-4 border-b border-white/5 flex justify-between items-center md:hidden">
                 <h3 class="font-bold text-white">Ordenar Por</h3>
-                <button id="close-sort-btn" class="text-spTextSub hover:text-white p-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                <button id="close-sort-btn" class="text-spTextSub hover:text-white p-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></button>
             </div>
             <div class="p-2 md:p-4 flex flex-col gap-1">
                 <button class="sort-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm" data-value="manual">Personalizado</button>
                 <button class="sort-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm" data-value="recent">Adicionadas Recentemente</button>
                 <button class="sort-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm" data-value="most_played">Mais Tocadas</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Nativo de Contexto/Biblioteca -->
-    <div id="context-modal" class="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-spElevated md:border border-spHighlight w-full md:w-[90%] md:max-w-sm md:rounded-lg rounded-t-2xl shadow-2xl overflow-hidden translate-y-full md:translate-y-0 transition-transform duration-300 flex flex-col max-h-[80vh]" id="context-modal-panel">
-            <div class="p-4 border-b border-white/5 flex justify-between items-center sticky top-0 bg-spElevated z-20">
-                <h3 class="font-bold text-white text-lg">Sua Biblioteca</h3>
-                <button id="close-context-modal-btn" class="text-spTextSub hover:text-white p-1"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            <!-- Barra de Busca de Contexto (Artistas e Playlists) -->
-            <div class="px-4 py-3 border-b border-white/5 sticky top-[60px] bg-spElevated z-10 flex-shrink-0">
-                 <div class="relative w-full group">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                    <input type="text" id="context-search-input" placeholder="Procurar playlist ou artista..." class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition">
-                </div>
-            </div>
-            <div class="overflow-y-auto custom-scrollbar p-2 pb-6 flex flex-col gap-1 relative z-0">
-                <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3" data-value="all">
-                    <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> Tudo
-                </button>
-                <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3" data-value="favorites">
-                    <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><span class="text-red-500">❤️</span></div> Favoritas
-                </button>
-                
-                <div class="context-header px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4">Suas Playlists</div>
-                <div id="context-modal-playlists" class="flex flex-col gap-1"></div>
-                
-                <div class="context-header px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4">Artistas</div>
-                <div id="context-modal-artists" class="flex flex-col gap-1"></div>
             </div>
         </div>
     </div>
@@ -675,7 +681,7 @@
             volBar: document.getElementById('volume-bar'), volFill: document.getElementById('vol-fill'), mute: document.getElementById('mute-btn'), volValueDisplay: document.getElementById('vol-value-display'),
             fileUpload: document.getElementById('file-upload'), folderUpload: document.getElementById('folder-upload'),
             search: document.getElementById('search-input'), contextSearch: document.getElementById('context-search-input'),
-            contextTriggerText: document.getElementById('context-trigger-text'), trackCount: document.getElementById('track-count'), 
+            trackCount: document.getElementById('track-count'), 
             createPlaylistBtn: document.getElementById('create-playlist-btn'),
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
             bgBlurCover: document.getElementById('bg-blur-cover'), upNextContainer: document.getElementById('up-next-container'), upNextText: document.getElementById('up-next-text'), upNextImg: document.getElementById('up-next-img'),
@@ -765,7 +771,7 @@
         function closeAllOverlays() {
             if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
             if (typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded) { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); }
-            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); forceCloseModal(document.getElementById('sort-modal')); forceCloseModal(document.getElementById('context-modal')); forceCloseModal(DOM.fullInfoModal);
+            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); forceCloseModal(document.getElementById('sort-modal')); forceCloseModal(DOM.fullInfoModal);
         }
 
         window.addEventListener('popstate', (e) => {
@@ -773,7 +779,7 @@
             if (h === '' || h === '#entry') { 
                 exitClicks++; 
                 if (exitClicks >= 3) { 
-                    history.back(); // Encerra mesmo a app
+                    history.back();
                 } else { 
                     history.pushState(null, '', '#main'); 
                     showToast(`Pressione voltar mais ${3 - exitClicks} vezes para sair.`); 
@@ -784,7 +790,7 @@
             } else { exitClicks = 0; }
             if (h === '#main') { closeAllOverlays(); return; }
             if (h === '#playlist') { closeAllOverlays(); if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); } return; }
-            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#sort': document.getElementById('sort-modal'), '#context': document.getElementById('context-modal'), '#info': DOM.fullInfoModal };
+            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#sort': document.getElementById('sort-modal'), '#info': DOM.fullInfoModal };
             Object.keys(hashToModal).forEach(key => { if (h !== key) forceCloseModal(hashToModal[key]); }); if (h !== '#game' && typeof closeGameUI === 'function' && isGameActive) closeGameUI();
         });
 
@@ -930,6 +936,7 @@
                 const panel = m.querySelector('[id$="-panel"]');
                 if(panel && panel.classList.contains('translate-y-full')) setTimeout(() => panel.classList.replace('translate-y-full', 'translate-y-0'), 10);
                 if(panel && panel.classList.contains('scale-95')) setTimeout(() => panel.classList.replace('scale-95', 'scale-100'), 10);
+
                 if (hash && location.hash !== '#' + hash) history.pushState(null, '', '#' + hash); 
             } else { 
                 forceCloseModal(m);
@@ -946,9 +953,13 @@
             document.getElementById('full-info-artist').textContent = track.artist || 'Desconhecido';
             tModal(DOM.fullInfoModal, true, 'info');
         });
-
-        document.getElementById('close-full-info-btn').addEventListener('click', () => tModal(DOM.fullInfoModal, false, 'info'));
-        DOM.fullInfoModal.addEventListener('click', (e) => { if(e.target === DOM.fullInfoModal) tModal(DOM.fullInfoModal, false, 'info'); });
+        
+        document.getElementById('close-full-info-btn').addEventListener('click', () => {
+            tModal(DOM.fullInfoModal, false, 'info');
+        });
+        DOM.fullInfoModal.addEventListener('click', (e) => {
+            if(e.target === DOM.fullInfoModal) tModal(DOM.fullInfoModal, false, 'info');
+        });
 
         function updateSortUI() {
             const texts = {'manual':'Personalizado', 'recent':'Adicionadas Recentemente', 'most_played':'Mais Tocadas'};
@@ -989,7 +1000,7 @@
                 btn.dataset.value = 'artist:' + a; btn.textContent = a; artistsList.appendChild(btn); 
                 artistsRendered++;
             });
-            if (artistsRendered === 0) artistsList.innerHTML = `<div class="px-4 py-2 text-xs text-spTextSub italic">Sem artistas.</div>`;
+            if (artistsRendered === 0) artistsList.innerHTML = `<div class="px-4 py-2 text-xs text-spTextSub italic">Nenhum artista encontrado.</div>`;
             
             if(plList) {
                 plList.innerHTML = '';
@@ -1005,17 +1016,12 @@
                         plRendered++;
                     }); 
                 }
-                if (plRendered === 0) plList.innerHTML = `<div class="px-4 py-2 text-xs text-spTextSub italic">Sem playlists.</div>`;
+                if (plRendered === 0) plList.innerHTML = `<div class="px-4 py-2 text-xs text-spTextSub italic">Nenhuma playlist encontrada.</div>`;
             }
-            if (currentContext.startsWith('artist:') && !artists.includes(currentContext.split('artist:')[1])) { setContext('all', 'Sua Biblioteca'); } 
-            else if (currentContext.startsWith('playlist:') && !customPlaylists.find(p => p.id === currentContext.split('playlist:')[1])) { setContext('all', 'Sua Biblioteca'); } 
+
+            if (currentContext.startsWith('artist:') && !artists.includes(currentContext.split('artist:')[1])) { setContext('all'); } 
+            else if (currentContext.startsWith('playlist:') && !customPlaylists.find(p => p.id === currentContext.split('playlist:')[1])) { setContext('all'); } 
             else { 
-                let text = 'Sua Biblioteca'; 
-                if(currentContext === 'favorites') text = 'Favoritas'; 
-                else if(currentContext.startsWith('artist:')) text = currentContext.split('artist:')[1]; 
-                else if(currentContext.startsWith('playlist:')) { const found = customPlaylists.find(p => p.id === currentContext.split('playlist:')[1]); if(found) text = found.name; } 
-                DOM.contextTriggerText.textContent = text; 
-                
                 document.querySelectorAll('.context-option').forEach(btn => {
                     btn.classList.toggle('text-accent', btn.dataset.value === currentContext);
                 });
@@ -1023,26 +1029,26 @@
         }
 
         DOM.contextSearch.addEventListener('input', updatePlaylistContexts);
-
-        document.getElementById('open-context-modal-btn').addEventListener('click', () => {
-            DOM.contextSearch.value = ""; updatePlaylistContexts();
-            tModal(document.getElementById('context-modal'), true, 'context');
-        });
-        document.getElementById('close-context-modal-btn').addEventListener('click', () => tModal(document.getElementById('context-modal'), false, 'context'));
         
-        function setContext(val, text) { 
-            currentContext = val; DOM.contextTriggerText.textContent = text; 
+        function setContext(val) { 
+            currentContext = val;
             localStorage.setItem('webPlayerContext', currentContext); 
-            tModal(document.getElementById('context-modal'), false, 'context'); 
             triggerListUpdate(); 
-            document.querySelectorAll('.context-option').forEach(btn => btn.classList.toggle('text-accent', btn.dataset.value === currentContext));
+            
+            document.querySelectorAll('.context-option').forEach(btn => {
+                btn.classList.toggle('text-accent', btn.dataset.value === currentContext);
+            });
         }
         
-        document.getElementById('context-modal').addEventListener('click', (e) => { 
+        document.getElementById('sidebar-context-list').addEventListener('click', (e) => { 
             const btn = e.target.closest('.context-option'); 
             if(!btn) return; 
             e.stopPropagation(); 
-            setContext(btn.dataset.value, btn.textContent.trim().replace(/[0-9]+$/, '').trim());
+            setContext(btn.dataset.value);
+            
+            if (window.innerWidth < 768) {
+                closeSidebar();
+            }
         });
 
         function getVisualPlaylist() {
@@ -1234,9 +1240,7 @@
             else { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); if (location.hash === '#playlist') history.back(); }
         }
         DOM.drawerHandle.addEventListener('click', toggleDrawer);
-        if(DOM.miniPlayerInfo) DOM.miniPlayerInfo.addEventListener('click', (e) => {
-            if(window.innerWidth < 768) toggleDrawer();
-        });
+        if(DOM.miniPlayerInfo) DOM.miniPlayerInfo.addEventListener('click', toggleDrawer);
 
         const ITEM_HEIGHT = 56; 
         let visualPlaylist = [];
@@ -1289,11 +1293,6 @@
             if (e.target.closest('.del-btn')) { e.stopPropagation(); const t=playlist[originalIndex]; if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(originalIndex,1); savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); return; }
             if (e.target.closest('.edit-btn')) { e.stopPropagation(); trackToEditIndex = originalIndex; const t = playlist[trackToEditIndex]; document.getElementById('edit-title-input').value = t.title; document.getElementById('edit-artist-input').value = t.artist; document.getElementById('edit-lyrics-input').value = t.lyrics || ""; document.getElementById('edit-cover-preview').src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; editCoverBase64 = t.cover; tModal(document.getElementById('edit-modal'), true, 'edit'); return; }
             if (e.target.closest('.add-pl-btn')) { e.stopPropagation(); trackToAddIndex = originalIndex; renderAddToPlaylistModal(); tModal(document.getElementById('add-to-playlist-modal'), true, 'add-playlist'); return; }
-            
-            // Redirect from queue tap seamlessly on mobile
-            if (window.innerWidth < 768 && isDrawerExpanded) {
-                toggleDrawer();
-            }
             loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play();
         });
 
@@ -1707,6 +1706,7 @@
                 }
             }, 800);
         });
+        
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ 
             audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); 
