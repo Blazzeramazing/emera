@@ -14,7 +14,6 @@
     <link id="dynamic-favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%231db954'/><stop offset='100%' stop-color='%231ed760'/></linearGradient></defs><rect width='512' height='512' rx='120' fill='%23121212'/><circle cx='256' cy='256' r='180' fill='url(%23grad)' opacity='0.15'/><path d='M210 140v210c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V180h110v110c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V140H210z' fill='%23ffffff'/></svg>">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
     
@@ -73,6 +72,7 @@
         .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .toast-exit-active { transform: translateY(100%); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         
+        /* Layout Mobile / Desktop Responsive */
         @media (max-width: 767px) {
             #right-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: absolute; top: 10%; bottom: 0; left: 0; right: 0; height: auto; transform: translateY(100%); z-index: 40; border-radius: 16px 16px 0 0; background-color: #121212; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); }
             #right-panel.expanded { transform: translateY(0); }
@@ -84,7 +84,7 @@
         }
         @media (min-width: 768px) {
             .drawer-puller { display: none; }
-            #right-panel { position: relative; height: auto; transform: none !important; }
+            #right-panel { position: relative; height: 100%; transform: none !important; }
         }
 
         .game-hit-flash { animation: hitFlash 0.3s ease-out forwards; }
@@ -114,7 +114,6 @@
     <!-- Sidebar Overlay Mobile -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
 
-    <!-- App Container -->
     <div id="main-app-container" class="flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
         
         <!-- SIDEBAR (Bibliotecas e Filtros) -->
@@ -128,13 +127,6 @@
                     <button id="close-sidebar-btn" class="md:hidden text-spTextSub hover:text-white p-2 -mr-2">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
-                </div>
-                
-                <div id="local-search-container" class="relative w-full mt-2 group" onclick="event.stopPropagation()">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                    <input type="text" id="search-input" placeholder="Procurar música..." class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
                 </div>
             </div>
 
@@ -170,10 +162,6 @@
                     </div>
                 </div>
                 
-                <!-- START NEW SEARCH RESULTS PANEL -->
-                <div id="sidebar-search-results" class="px-2 pb-4 flex-col gap-1 hidden"></div>
-                <!-- END NEW SEARCH RESULTS PANEL -->
-                
                 <div class="md:hidden border-t border-white/5 mt-auto pt-4 pb-6 px-4 flex flex-col gap-4 bg-spBase">
                     <div class="flex flex-col gap-2 mb-2">
                         <div class="flex items-center justify-between text-spTextSub text-sm font-bold">
@@ -198,7 +186,7 @@
         </aside>
 
         <!-- MAIN VIEW (Visualizador + Lista) -->
-        <main class="flex-1 bg-spBase md:rounded-lg overflow-hidden flex flex-col relative w-full h-full">
+        <main class="flex-1 bg-spBase md:bg-black md:rounded-lg overflow-hidden flex flex-col md:flex-row relative w-full h-full transition-all duration-300">
             
             <div class="h-16 flex justify-between items-center px-4 bg-gradient-to-b from-black/60 to-transparent absolute top-0 w-full z-20 pointer-events-none">
                 <div class="flex items-center gap-2 pointer-events-auto md:hidden">
@@ -212,7 +200,7 @@
                 </div>
             </div>
 
-            <div id="player-bg" class="flex-1 w-full bg-spBase relative flex flex-col items-center justify-center flex-shrink-0 overflow-hidden">
+            <div id="player-bg" class="flex-1 w-full bg-spBase relative flex flex-col items-center justify-center flex-shrink-0 overflow-hidden md:rounded-lg">
                 <!-- Fundo Desfocado (Ambient Blur Imersivo) -->
                 <div class="absolute inset-0 z-0 pointer-events-none">
                     <img id="bg-blur-cover" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-full h-full object-cover opacity-20 blur-[60px] scale-125 transition-all duration-1000">
@@ -251,15 +239,28 @@
                 </button>
             </div>
             
-            <div class="px-4 py-2 flex items-center text-xs font-bold text-spTextSub border-b border-white/5 uppercase tracking-wider sticky top-0 bg-spBase z-10 mx-2 hidden md:flex">
-                <div class="w-10 text-center">#</div>
-                <div class="flex-1">Título</div>
-                <div class="w-12 text-center"><svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
-            </div>
-
-            <div id="right-panel" class="flex-1 w-full bg-spBase relative z-20">
+            <!-- PAINEL DA LISTA DE MÚSICAS (DIREITA NO DESKTOP) -->
+            <div id="right-panel" class="w-full md:w-[350px] lg:w-[400px] bg-spBase relative z-20 flex-shrink-0 flex flex-col md:border-l md:border-white/5 transition-all duration-300 md:rounded-r-lg">
+                <!-- Puller para Mobile -->
                 <div class="drawer-puller cursor-pointer absolute top-0 left-0 right-0 z-30" id="drawer-handle"></div>
-                <div class="h-full w-full overflow-y-auto custom-scrollbar p-2 pb-4 relative" id="list-container">
+                
+                <!-- Nova Barra de Pesquisa Fixada no Topo da Lista -->
+                <div class="px-4 py-3 border-b border-white/5 sticky top-0 bg-spBase z-10 flex flex-col gap-2 pt-6 md:pt-4 shadow-sm">
+                    <div class="relative w-full group" onclick="event.stopPropagation()">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" id="search-input" placeholder="Procurar nesta lista..." class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
+                    </div>
+                    <!-- Cabeçalho das Colunas -->
+                    <div class="flex items-center text-xs font-bold text-spTextSub uppercase tracking-wider hidden md:flex mt-1 px-1">
+                        <div class="w-8 text-center">#</div>
+                        <div class="flex-1 truncate">Fila de Reprodução</div>
+                    </div>
+                </div>
+
+                <!-- Lista Rolável -->
+                <div class="flex-1 w-full overflow-y-auto custom-scrollbar p-2 pb-4 relative min-h-0" id="list-container">
                     <div id="virtual-spacer" style="height: 0px; position: relative; width: 100%;">
                         <div id="virtual-content" style="position: absolute; top: 0; left: 0; width: 100%;"></div>
                     </div>
@@ -348,29 +349,26 @@
     </div>
 
     <!-- BOTTOM BAR (Controlos Estilo Spotify) -->
-    <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-50 fixed bottom-0">
+    <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-6 z-50 fixed bottom-0">
         
-        <div class="w-[40%] md:w-[30%] max-w-[140px] md:max-w-none min-w-[100px] flex items-center gap-2 md:gap-3 order-1 cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir/Ocultar Playlist">
+        <!-- Lado Esquerdo (Info da Música) -->
+        <div class="w-[40%] md:w-[30%] min-w-[120px] flex items-center gap-2 md:gap-3 order-1 cursor-pointer p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir/Ocultar Playlist Mobile">
             <div class="relative group flex-shrink-0">
                 <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-10 h-10 md:w-14 md:h-14 rounded object-cover shadow-md md:shadow-none bg-spHighlight">
-                <button id="restore-mode-btn" class="absolute top-1 right-1 text-white opacity-0 group-hover:opacity-100 bg-black/50 rounded-full p-0.5 hidden"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
             </div>
-            <div class="flex flex-col justify-center overflow-hidden min-w-0">
-                <h4 id="mini-title" class="text-[13px] md:text-sm font-semibold text-white truncate hover:underline">Emera Player</h4>
-                <p id="mini-artist" class="text-[11px] md:text-xs text-spTextSub truncate hover:underline hover:text-white">A aguardar áudio</p>
+            <div class="flex flex-col justify-center overflow-hidden min-w-0 pr-1">
+                <h4 id="mini-title" class="text-[13px] md:text-sm font-semibold text-white truncate hover:underline hover:text-accent transition">Emera Player</h4>
+                <p id="mini-artist" class="text-[11px] md:text-xs text-spTextSub truncate hover:underline hover:text-white transition">A aguardar áudio</p>
             </div>
             <button id="main-favorite-btn" class="text-spTextSub hover:text-white transition ml-1 md:ml-2 hidden flex-shrink-0" onclick="event.stopPropagation()">
                 <svg class="w-4 h-4 md:w-5 md:h-5" id="main-fav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
             </button>
         </div>
 
-        <div class="flex-1 md:max-w-2xl flex flex-row md:flex-col items-center justify-end md:justify-center px-0 md:px-4 order-2 gap-1 sm:gap-2 md:gap-0">
-            <div class="flex items-center gap-1 sm:gap-2 md:gap-6 md:mb-2 pr-1 md:pr-0 flex-shrink-0">
+        <!-- Centro (Controlos de Playback) -->
+        <div class="flex-1 md:w-[40%] max-w-2xl flex flex-row md:flex-col items-center justify-end md:justify-center px-0 order-2 gap-1 sm:gap-2 md:gap-0">
+            <div class="flex items-center justify-center gap-1 sm:gap-2 md:gap-6 md:mb-2 pr-1 md:pr-0 flex-shrink-0">
                 
-                <button id="lyrics-btn" class="text-spTextSub hover:text-white transition block w-8 h-8 flex items-center justify-center" title="Letras">
-                    <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-                </button>
-
                 <button id="mode-btn" class="text-spTextSub hover:text-white transition block w-8 h-8 flex items-center justify-center" title="Modo de Reprodução">
                     <svg id="icon-repeat" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <svg id="icon-shuffle" class="w-4 h-4 md:w-5 md:h-5 hidden text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
@@ -386,15 +384,15 @@
                 
                 <button id="next-btn" class="text-spTextSub hover:text-white transition w-8 h-8 flex items-center justify-center"><svg class="w-5 h-5 md:w-6 md:h-6 fill-current" viewBox="0 0 24 24"><path d="M5 4l10 8-10 8V4zm14 1h-2v14h2V5z"></path></svg></button>
 
-                <button id="compact-mode-btn" class="text-spTextSub hover:text-white transition hidden md:block ml-2" title="Ocultar Sidebar"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
-                
-                <button id="mini-play-pause-btn" class="hidden"><svg id="mini-play"></svg><svg id="mini-pause"></svg></button>
-                <button id="mini-prev-btn" class="hidden"></button><button id="mini-next-btn" class="hidden"></button>
+                <!-- Botão de Letras movido para perto dos controlos -->
+                <button id="lyrics-btn" class="text-spTextSub hover:text-white transition hidden md:flex w-8 h-8 items-center justify-center" title="Letras">
+                    <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                </button>
             </div>
             
-            <div id="progress-wrapper" class="w-full flex items-center gap-2 group absolute md:relative top-[-4px] md:top-0 left-0 px-0 md:px-0">
+            <div id="progress-wrapper" class="w-full flex items-center justify-center gap-2 group absolute md:relative top-[-4px] md:top-0 left-0 px-0 md:px-0">
                 <span id="current-time" class="hidden md:block text-[11px] text-spTextSub min-w-[35px] text-right">0:00</span>
-                <div class="progress-bar-container flex-1 h-1 md:h-3">
+                <div class="progress-bar-container w-full md:w-[85%] h-1 md:h-3">
                     <div class="progress-fill" id="progress-fill"></div>
                     <input type="range" id="progress-bar" min="0" max="100" value="0" class="standard-slider z-10 relative opacity-0 md:opacity-100 w-full h-full">
                 </div>
@@ -402,15 +400,20 @@
             </div>
         </div>
 
-        <div class="w-[30%] min-w-[150px] items-center justify-end gap-2 md:gap-4 pr-2 hidden md:flex order-3" id="volume-section">
+        <!-- Lado Direito (Volume e Extras) -->
+        <div class="w-[30%] min-w-[150px] items-center justify-end gap-3 lg:gap-4 hidden md:flex order-3" id="volume-section">
+            <button id="compact-mode-btn" class="text-spTextSub hover:text-white transition" title="Ocultar Sidebar (Menu)"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
             <button id="eq-btn" class="text-spTextSub hover:text-white transition" title="Equalizador"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
             <button id="settings-btn" class="text-spTextSub hover:text-white transition" title="Definições"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg></button>
+            <button id="toggle-queue-btn" class="text-accent hover:text-white transition" title="Fila de Reprodução"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h8"></path></svg></button>
             <button id="share-btn" class="hidden"></button>
             
-            <button id="mute-btn" class="text-spTextSub hover:text-white transition"><svg id="vol-icon" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
-            <div class="progress-bar-container w-24 h-3 group">
-                <div class="progress-fill" id="vol-fill" style="width: 100%;"></div>
-                <input type="range" id="volume-bar" min="0" max="1" step="0.01" value="1" class="standard-slider z-10 relative">
+            <div class="flex items-center gap-2">
+                <button id="mute-btn" class="text-spTextSub hover:text-white transition"><svg id="vol-icon" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
+                <div class="progress-bar-container w-20 lg:w-24 h-3 group">
+                    <div class="progress-fill" id="vol-fill" style="width: 100%;"></div>
+                    <input type="range" id="volume-bar" min="0" max="1" step="0.01" value="1" class="standard-slider z-10 relative">
+                </div>
             </div>
             <span id="vol-value-display" class="hidden">100%</span>
         </div>
@@ -439,6 +442,7 @@
         </div>
     </div>
 
+    <!-- Modals (Settings, Edit, Info, Context, etc) -->
     <div id="settings-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full sm:w-[90%] max-w-sm shadow-2xl">
             <div class="flex justify-between items-center mb-6">
@@ -508,7 +512,7 @@
                 </div>
                 <hr class="border-spHighlight my-1">
                 <button id="clear-db-btn" class="w-full text-sm bg-transparent hover:bg-red-500 text-red-500 hover:text-black py-2 rounded font-bold border border-red-500 transition flex justify-center items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Restaurar Aplicação (Apagar Tudo)
+                    RESET TOTAL DA APP
                 </button>
             </div>
         </div>
@@ -546,6 +550,7 @@
         </div>
     </div>
 
+    <!-- Modal para Ver Detalhes Completos (Nome comprido) -->
     <div id="full-info-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[150] hidden opacity-0 transition-opacity duration-300 p-4 backdrop-blur-sm">
         <div class="bg-spElevated p-6 md:p-8 rounded-2xl border border-white/10 w-full max-w-lg shadow-2xl flex flex-col items-center text-center relative overflow-hidden transform scale-95 transition-transform duration-300" id="full-info-panel">
             <button id="close-full-info-btn" class="absolute top-4 right-4 text-spTextSub hover:text-white transition bg-black/40 hover:bg-black/80 rounded-full p-2 z-10">
@@ -557,6 +562,7 @@
         </div>
     </div>
 
+    <!-- Modal Nativo de Ordenação -->
     <div id="sort-modal" class="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300">
         <div class="bg-spElevated md:border border-spHighlight w-full md:w-[90%] md:max-w-xs md:rounded-lg rounded-t-2xl shadow-2xl overflow-hidden translate-y-full md:translate-y-0 transition-transform duration-300" id="sort-modal-panel">
             <div class="p-4 border-b border-white/5 flex justify-between items-center md:hidden">
@@ -578,28 +584,27 @@
                 <h3 class="font-bold text-white text-lg">Sua Biblioteca</h3>
                 <button id="close-context-modal-btn" class="text-spTextSub hover:text-white p-1"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
-            
-            <div class="px-4 py-2 border-b border-white/5 bg-spElevated z-10 flex-shrink-0">
+            <!-- Barra de Pesquisa de Bibliotecas -->
+            <div class="px-4 py-3 bg-spElevated sticky top-[60px] z-10 flex-shrink-0 border-b border-white/5">
                 <div class="relative w-full group">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <svg class="w-4 h-4 text-spTextSub" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <input type="text" id="context-search-input" placeholder="Procurar playlist, artista..." class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
+                    <input type="text" id="context-search-input" placeholder="Pesquisar Playlists/Artistas..." class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
                 </div>
             </div>
-
-            <div class="overflow-y-auto custom-scrollbar p-2 pb-6 flex flex-col gap-1">
+            <div class="overflow-y-auto custom-scrollbar p-2 pb-6 flex flex-col gap-1" id="context-options-container">
                 <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3" data-value="all">
-                    <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> Tudo
+                    <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> <span class="searchable-text">Tudo</span>
                 </button>
                 <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3" data-value="favorites">
-                    <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><span class="text-red-500">❤️</span></div> Favoritas
+                    <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><span class="text-red-500">❤️</span></div> <span class="searchable-text">Favoritas</span>
                 </button>
                 
-                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4">Suas Playlists</div>
+                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4 context-section-header">Suas Playlists</div>
                 <div id="context-modal-playlists" class="flex flex-col gap-1"></div>
                 
-                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4">Artistas</div>
+                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4 context-section-header">Artistas</div>
                 <div id="context-modal-artists" class="flex flex-col gap-1"></div>
             </div>
         </div>
@@ -675,7 +680,8 @@
             progWrap: document.getElementById('progress-wrapper'), progBar: document.getElementById('progress-bar'), progFill: document.getElementById('progress-fill'), curTime: document.getElementById('current-time'), totTime: document.getElementById('total-time'),
             volBar: document.getElementById('volume-bar'), volFill: document.getElementById('vol-fill'), mute: document.getElementById('mute-btn'), volValueDisplay: document.getElementById('vol-value-display'),
             fileUpload: document.getElementById('file-upload'), folderUpload: document.getElementById('folder-upload'),
-            localSearchWrap: document.getElementById('local-search-container'), search: document.getElementById('search-input'), 
+            search: document.getElementById('search-input'), // A nova barra no Right Panel
+            contextSearch: document.getElementById('context-search-input'), // A nova barra no modal
             contextTriggerText: document.getElementById('context-trigger-text'), trackCount: document.getElementById('track-count'), 
             createPlaylistBtn: document.getElementById('create-playlist-btn'),
             playerBg: document.getElementById('player-bg'), canvas: document.getElementById('visualizer'), toggleVis: document.getElementById('toggle-vis-btn'),
@@ -695,112 +701,33 @@
         const sidebarOverlay = document.getElementById('sidebar-overlay');
         const closeSidebarBtn = document.getElementById('close-sidebar-btn');
 
-        function openSidebar(fromHistory = false) {
+        function openSidebar() {
             if(!sidebar) return;
             sidebar.classList.remove('-translate-x-full');
             sidebarOverlay.classList.remove('hidden');
             setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
-            if (!fromHistory && location.hash !== '#menu') history.pushState(null, '', '#menu');
         }
-        function closeSidebar(fromHistory = false) {
+        function closeSidebar() {
             if(!sidebar) return;
             sidebar.classList.add('-translate-x-full');
             sidebarOverlay.classList.add('opacity-0');
             setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
-            if (!fromHistory && location.hash === '#menu') history.back();
         }
 
-        if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', () => openSidebar());
-        if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', () => closeSidebar());
-        if (sidebarOverlay) sidebarOverlay.addEventListener('click', () => closeSidebar());
+        if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', openSidebar);
+        if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
 
         document.getElementById('mobile-eq-btn')?.addEventListener('click', () => { closeSidebar(); document.getElementById('eq-btn').click(); });
         document.getElementById('mobile-settings-btn')?.addEventListener('click', () => { closeSidebar(); document.getElementById('settings-btn').click(); });
 
         document.addEventListener('visibilitychange', () => { isPageVisible = !document.hidden; });
 
-        if (location.hash === '') {
-            history.replaceState(null, '', '#entry');
-            history.pushState(null, '', '#main');
-        }
+        // Logic History Safe Navigation
         let exitClicks = 0; let exitTimer = null;
+        if (location.hash === '') history.replaceState(null, '', '#entry');
+        if (location.hash === '#entry') history.pushState(null, '', '#main');
         
-        window.addEventListener('popstate', (e) => {
-            const h = location.hash;
-            
-            // Proteção de Encerramento Acidental (Janela Principal)
-            if (h === '#entry' || h === '') {
-                exitClicks++;
-                if (exitClicks >= 3) {
-                    history.back(); // Deixa fechar nativamente
-                } else {
-                    history.pushState(null, '', '#main'); // Empurra de volta para prender
-                    showToast(`Prima voltar mais ${3 - exitClicks} vezes para sair.`);
-                    clearTimeout(exitTimer);
-                    exitTimer = setTimeout(() => { exitClicks = 0; }, 2000);
-                }
-                return;
-            } else {
-                exitClicks = 0;
-            }
-
-            // Roteamento de Menus Baseado no Botão Voltar
-            if (h === '#main') {
-                closeAllOverlays(true);
-            } else if (h === '#menu') {
-                closeAllOverlays(true, ['sidebar']);
-                if (sidebar.classList.contains('-translate-x-full')) openSidebar(true);
-            } else if (h === '#playlist') {
-                closeAllOverlays(true, ['drawer']);
-                if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) {
-                    isDrawerExpanded = true;
-                    DOM.rightPanel.classList.add('expanded');
-                }
-            } else {
-                // Modais Pop-up
-                const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#sort': document.getElementById('sort-modal'), '#context': document.getElementById('context-modal'), '#info': DOM.fullInfoModal };
-                
-                closeAllOverlays(true, ['modal_' + h.replace('#', '')]); // Fecha tudo menos este
-                
-                if (hashToModal[h]) {
-                    const m = hashToModal[h];
-                    m.classList.remove('hidden'); m.classList.add('flex');
-                    setTimeout(()=>m.classList.remove('opacity-0'),10);
-                    const panel = m.querySelector('[id$="-panel"]');
-                    if(panel && panel.classList.contains('translate-y-full')) setTimeout(() => panel.classList.replace('translate-y-full', 'translate-y-0'), 10);
-                    if(panel && panel.classList.contains('scale-95')) setTimeout(() => panel.classList.replace('scale-95', 'scale-100'), 10);
-                    if(m === DOM.eqModal) eqModalVisible = true; 
-                } else if (h === '#game') {
-                    if(typeof isGameActive !== 'undefined' && !isGameActive) {
-                        currentMultiplier = 1; gamePanel.classList.remove('hidden'); gamePanel.classList.add('flex'); setTimeout(() => gamePanel.classList.remove('opacity-0'), 10); isGameActive = true; resetGameForNewTrack();
-                    }
-                }
-            }
-        });
-
-        function closeAllOverlays(fromHistory = false, exceptions = []) {
-            if (!exceptions.includes('sidebar') && !sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.add('-translate-x-full');
-                sidebarOverlay.classList.add('opacity-0');
-                setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
-            }
-            if (!exceptions.includes('drawer') && typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded && window.innerWidth < 768) {
-                isDrawerExpanded = false;
-                DOM.rightPanel.classList.remove('expanded');
-            }
-            if (!exceptions.includes('modal_game') && typeof closeGameUI === 'function' && isGameActive) {
-                gamePanel.classList.add('opacity-0'); setTimeout(() => { gamePanel.classList.add('hidden'); gamePanel.classList.remove('flex'); }, 300); isGameActive = false; isGamePlaying = false; isGameOver = false; cancelAnimationFrame(gameAnimFrame);
-            }
-            
-            const modals = { 'eq': DOM.eqModal, 'settings': document.getElementById('settings-modal'), 'edit': document.getElementById('edit-modal'), 'lyrics': document.getElementById('lyrics-modal'), 'new-playlist': document.getElementById('new-playlist-modal'), 'add-playlist': document.getElementById('add-to-playlist-modal'), 'sort': document.getElementById('sort-modal'), 'context': document.getElementById('context-modal'), 'info': DOM.fullInfoModal };
-            
-            for (const [key, m] of Object.entries(modals)) {
-                if (!exceptions.includes('modal_' + key)) {
-                    forceCloseModal(m);
-                }
-            }
-        }
-
         function forceCloseModal(m) {
             if (!m) return;
             if (!m.classList.contains('hidden')) { 
@@ -818,6 +745,32 @@
                 if (m === DOM.eqModal) eqModalVisible = false; 
             }
         }
+
+        function closeAllOverlays() {
+            if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
+            if (typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded) { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); }
+            forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); forceCloseModal(document.getElementById('sort-modal')); forceCloseModal(document.getElementById('context-modal')); forceCloseModal(DOM.fullInfoModal);
+        }
+
+        window.addEventListener('popstate', (e) => {
+            const h = location.hash;
+            if (h === '#entry' || h === '') { 
+                exitClicks++; 
+                if (exitClicks >= 3) { 
+                    // Let it close entirely natively
+                } else { 
+                    history.pushState(null, '', '#main'); 
+                    showToast(`Prima voltar mais ${3 - exitClicks} vezes para fechar o app.`); 
+                    clearTimeout(exitTimer); exitTimer = setTimeout(() => { exitClicks = 0; }, 2000); 
+                } 
+                return; 
+            } else { exitClicks = 0; }
+            
+            if (h === '#main') { closeAllOverlays(); return; }
+            if (h === '#playlist') { closeAllOverlays(); if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); } return; }
+            const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#sort': document.getElementById('sort-modal'), '#context': document.getElementById('context-modal'), '#info': DOM.fullInfoModal };
+            Object.keys(hashToModal).forEach(key => { if (h !== key) forceCloseModal(hashToModal[key]); }); if (h !== '#game' && typeof closeGameUI === 'function' && isGameActive) closeGameUI();
+        });
 
         const saveVolToStorage = debounce((v) => localStorage.setItem('webPlayerVol', v), 500); const saveEqToStorage = debounce((eq) => localStorage.setItem('webPlayerEq', JSON.stringify(eq)), 500); const savePreampToStorage = debounce((v) => localStorage.setItem('webPlayerPreamp', v), 500); const savePlaylistOrder = debounce(() => { if(currentSortMode === 'manual') localStorage.setItem('webPlayerOrder', JSON.stringify(playlist.map(t => t.id))); }, 500);
 
@@ -854,26 +807,13 @@
 
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
         function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 2); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
-        
         function saveTrackToDB(track) { if(db){ runIdle(() => { const t={...track}; delete t.src; db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); }); } }
-        
         function deleteTrackFromDB(id) { if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).delete(id); }
-        
         function loadTracksFromDB() {
             if(!db) return Promise.resolve();
             return new Promise(r => { const req = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll(); 
-                req.onsuccess = () => { playlist = []; req.result.forEach(t => { 
-                    if (t.file && t.file.data instanceof ArrayBuffer) { 
-                        const blob = new Blob([t.file.data], { type: t.file.type }); 
-                        t.src = URL.createObjectURL(blob); 
-                        t.fileRef = new File([blob], t.file.name, { type: t.file.type }); 
-                    } else if (t.file instanceof File || t.file instanceof Blob) { 
-                        t.src = URL.createObjectURL(t.file); 
-                        t.fileRef = t.file; 
-                    } 
-                    t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); 
-                }); 
-                try { const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder')); if (savedOrder && Array.isArray(savedOrder)) { playlist.sort((a, b) => { let indexA = savedOrder.indexOf(a.id); let indexB = savedOrder.indexOf(b.id); if (indexA === -1) indexA = 999999; if (indexB === -1) indexB = 999999; return indexA - indexB; }); } } catch(e) {} r(); 
+                req.onsuccess = () => { playlist = []; req.result.forEach(t => { if (t.file && t.file.data instanceof ArrayBuffer) { const blob = new Blob([t.file.data], { type: t.file.type }); t.src = URL.createObjectURL(blob); t.fileRef = new File([blob], t.file.name, { type: t.file.type }); } else if (t.file instanceof File) { t.src = URL.createObjectURL(t.file); t.fileRef = t.file; } t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); }); 
+                    try { const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder')); if (savedOrder && Array.isArray(savedOrder)) { playlist.sort((a, b) => { let indexA = savedOrder.indexOf(a.id); let indexB = savedOrder.indexOf(b.id); if (indexA === -1) indexA = 999999; if (indexB === -1) indexB = 999999; return indexA - indexB; }); } } catch(e) {} r(); 
                 }; req.onerror = () => r(); 
             });
         }
@@ -991,7 +931,7 @@
             document.getElementById('full-info-artist').textContent = track.artist || 'Desconhecido';
             tModal(DOM.fullInfoModal, true, 'info');
         });
-
+        
         document.getElementById('close-full-info-btn').addEventListener('click', () => {
             tModal(DOM.fullInfoModal, false, 'info');
         });
@@ -1030,8 +970,10 @@
             artistsList.innerHTML = '';
             artists.forEach(a => { 
                 const btn = document.createElement('button'); 
-                btn.className = 'context-option text-left px-4 py-3 rounded-lg text-sm text-white hover:bg-white/10 transition truncate'; 
-                btn.dataset.value = 'artist:' + a; btn.textContent = a; artistsList.appendChild(btn); 
+                btn.className = 'context-option text-left px-4 py-3 rounded-lg text-sm text-white hover:bg-white/10 transition truncate flex items-center justify-between group'; 
+                btn.dataset.value = 'artist:' + a; 
+                btn.innerHTML = `<span class="searchable-text truncate">${a}</span>`;
+                artistsList.appendChild(btn); 
             });
             
             if(plList) {
@@ -1042,7 +984,7 @@
                         const btn = document.createElement('button'); 
                         btn.className = 'context-option w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition flex justify-between items-center group'; 
                         btn.dataset.value = 'playlist:' + pl.id; 
-                        btn.innerHTML = `<span class="truncate pr-2 pointer-events-none">${pl.name}</span> <span class="text-[10px] bg-spHighlight px-2 py-0.5 rounded-full pointer-events-none flex-shrink-0">${pl.tracks.length}</span>`; 
+                        btn.innerHTML = `<span class="searchable-text truncate pr-2 pointer-events-none">${pl.name}</span> <span class="text-[10px] bg-spHighlight px-2 py-0.5 rounded-full pointer-events-none flex-shrink-0">${pl.tracks.length}</span>`; 
                         plList.appendChild(btn); 
                     }); 
                 }
@@ -1062,38 +1004,44 @@
             }
         }
 
-        document.getElementById('open-context-modal-btn').addEventListener('click', () => {
-            const sInput = document.getElementById('context-search-input');
-            if (sInput) { sInput.value = ''; sInput.dispatchEvent(new Event('input')); }
-            tModal(document.getElementById('context-modal'), true, 'context');
+        // Lógica da Busca de Contexto no Modal
+        if(DOM.contextSearch) {
+            DOM.contextSearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll('.context-option').forEach(opt => {
+                    const txtSpan = opt.querySelector('.searchable-text');
+                    if(txtSpan) {
+                        const txt = txtSpan.textContent.toLowerCase();
+                        if(txt.includes(term)) opt.classList.remove('hidden');
+                        else opt.classList.add('hidden');
+                    }
+                });
+                
+                // Esconder cabeçalhos das seções se não houver filhos visíveis
+                document.querySelectorAll('.context-section-header').forEach(header => {
+                    const nextDiv = header.nextElementSibling;
+                    if(nextDiv && nextDiv.children.length > 0) {
+                        let hasVisible = false;
+                        Array.from(nextDiv.children).forEach(c => {
+                            if(!c.classList.contains('hidden')) hasVisible = true;
+                        });
+                        header.style.display = hasVisible ? 'block' : 'none';
+                    }
+                });
+            });
+        }
+
+        document.getElementById('open-context-modal-btn').addEventListener('click', () => { 
+            if(DOM.contextSearch) { DOM.contextSearch.value = ''; DOM.contextSearch.dispatchEvent(new Event('input')); }
+            tModal(document.getElementById('context-modal'), true, 'context'); 
         });
         document.getElementById('close-context-modal-btn').addEventListener('click', () => tModal(document.getElementById('context-modal'), false, 'context'));
         
-        document.getElementById('context-search-input').addEventListener('input', e => {
-            const term = e.target.value.toLowerCase();
-            document.querySelectorAll('#context-modal .context-option').forEach(btn => {
-                btn.style.display = btn.textContent.toLowerCase().includes(term) ? '' : 'none';
-            });
-            
-            const plContainer = document.getElementById('context-modal-playlists');
-            const artContainer = document.getElementById('context-modal-artists');
-            
-            if(plContainer && plContainer.previousElementSibling) {
-                const hasVisiblePl = Array.from(plContainer.children).some(c => c.style.display !== 'none');
-                plContainer.previousElementSibling.style.display = (hasVisiblePl || term === '') ? '' : 'none';
-            }
-            if(artContainer && artContainer.previousElementSibling) {
-                const hasVisibleArt = Array.from(artContainer.children).some(c => c.style.display !== 'none');
-                artContainer.previousElementSibling.style.display = (hasVisibleArt || term === '') ? '' : 'none';
-            }
-        });
-
         function setContext(val, text) { 
             currentContext = val; DOM.contextTriggerText.textContent = text; 
             localStorage.setItem('webPlayerContext', currentContext); 
             tModal(document.getElementById('context-modal'), false, 'context'); 
-            
-            DOM.search.value = '';
+            DOM.search.value = ''; // Limpa a barra de pesquisa da gaveta de musicas
             triggerListUpdate(); 
             
             document.querySelectorAll('.context-option').forEach(btn => btn.classList.toggle('text-accent', btn.dataset.value === currentContext));
@@ -1103,16 +1051,16 @@
             const btn = e.target.closest('.context-option'); 
             if(!btn) return; 
             e.stopPropagation(); 
-            setContext(btn.dataset.value, btn.textContent.trim().replace(/[0-9]+$/, '').trim());
+            setContext(btn.dataset.value, btn.querySelector('.searchable-text').textContent.trim().replace(/[0-9]+$/, '').trim());
         });
 
         function getVisualPlaylist() {
-            const term = DOM.search.value.toLowerCase().trim(); let pToRender = [...playlist];
+            const term = DOM.search.value.toLowerCase(); let pToRender = [...playlist];
             if (currentContext === 'favorites') { pToRender = pToRender.filter(t => t.favorite); } 
             else if (currentContext.startsWith('artist:')) { const targetArtist = currentContext.split('artist:')[1]; pToRender = pToRender.filter(t => t.artist === targetArtist); } 
             else if (currentContext.startsWith('playlist:')) { const plId = currentContext.split('playlist:')[1]; const pl = customPlaylists.find(p => p.id === plId); if (pl) { pToRender = pToRender.filter(t => pl.tracks.includes(t.id)); pToRender.sort((a, b) => pl.tracks.indexOf(a.id) - pl.tracks.indexOf(b.id)); } }
             if (!currentContext.startsWith('playlist:')) { if(currentSortMode === 'most_played') pToRender.sort((a,b)=>(b.playCount||0)-(a.playCount||0)); else if(currentSortMode === 'recent') pToRender.sort((a,b)=>(b.addedAt||0)-(a.addedAt||0)); }
-            if(term.length > 0) pToRender = pToRender.filter(track => track.title.toLowerCase().includes(term) || track.artist.toLowerCase().includes(term));
+            if(term.length > 0) pToRender = pToRender.filter(track => track.title.toLowerCase().includes(term) || (track.artist && track.artist.toLowerCase().includes(term)));
             return pToRender; 
         }
 
@@ -1291,19 +1239,21 @@
         function toggleDrawer(e) { 
             if (window.innerWidth >= 768) return; 
             if(e && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'SELECT')) return; 
-            if (!isDrawerExpanded) { 
-                isDrawerExpanded = true; 
-                DOM.rightPanel.classList.add('expanded'); 
-                if (location.hash !== '#playlist') history.pushState(null, '', '#playlist'); 
-            } 
-            else { 
-                isDrawerExpanded = false; 
-                DOM.rightPanel.classList.remove('expanded'); 
-                if (location.hash === '#playlist') history.back(); 
-            }
+            if (!isDrawerExpanded) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); if (location.hash !== '#playlist') history.pushState(null, '', '#playlist'); } 
+            else { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); if (location.hash === '#playlist') history.back(); }
         }
         DOM.drawerHandle.addEventListener('click', toggleDrawer);
         if(DOM.miniPlayerInfo) DOM.miniPlayerInfo.addEventListener('click', toggleDrawer);
+
+        const toggleQueueBtn = document.getElementById('toggle-queue-btn');
+        if (toggleQueueBtn) {
+            toggleQueueBtn.addEventListener('click', () => {
+                const rightPanel = document.getElementById('right-panel');
+                rightPanel.classList.toggle('md:hidden');
+                toggleQueueBtn.classList.toggle('text-accent');
+                toggleQueueBtn.classList.toggle('text-spTextSub');
+            });
+        }
 
         const ITEM_HEIGHT = 56; 
         let visualPlaylist = [];
@@ -1356,14 +1306,10 @@
             if (e.target.closest('.del-btn')) { e.stopPropagation(); const t=playlist[originalIndex]; if(t.isLocal && t.id) deleteTrackFromDB(t.id); playlist.splice(originalIndex,1); savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); return; }
             if (e.target.closest('.edit-btn')) { e.stopPropagation(); trackToEditIndex = originalIndex; const t = playlist[trackToEditIndex]; document.getElementById('edit-title-input').value = t.title; document.getElementById('edit-artist-input').value = t.artist; document.getElementById('edit-lyrics-input').value = t.lyrics || ""; document.getElementById('edit-cover-preview').src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop'; editCoverBase64 = t.cover; tModal(document.getElementById('edit-modal'), true, 'edit'); return; }
             if (e.target.closest('.add-pl-btn')) { e.stopPropagation(); trackToAddIndex = originalIndex; renderAddToPlaylistModal(); tModal(document.getElementById('add-to-playlist-modal'), true, 'add-playlist'); return; }
-            
             loadTrack(originalIndex); if(!isPlaying) togglePlay(); else audio.play();
             
-            if (window.innerWidth < 768 && isDrawerExpanded) {
-                isDrawerExpanded = false;
-                DOM.rightPanel.classList.remove('expanded');
-                if (location.hash === '#playlist') history.back();
-            }
+            // Fechar drawer no mobile após clicar
+            if (window.innerWidth < 768 && isDrawerExpanded) toggleDrawer();
         });
 
         DOM.virtualContent.addEventListener('dragstart', (e) => { const item = e.target.closest('.playlist-item'); if(!item) return; dragSourceIndex = parseInt(item.dataset.index); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragSourceIndex); setTimeout(() => item.classList.add('opacity-50'), 0); });
@@ -1384,66 +1330,7 @@
             }
         });
 
-        DOM.search.addEventListener('input', (e) => {
-            triggerListUpdate();
-            
-            const term = e.target.value.toLowerCase().trim();
-            const resultsContainer = document.getElementById('sidebar-search-results');
-            
-            if (term === '') {
-                resultsContainer.classList.add('hidden');
-                resultsContainer.classList.remove('flex');
-                resultsContainer.innerHTML = '';
-            } else {
-                resultsContainer.classList.remove('hidden');
-                resultsContainer.classList.add('flex');
-                
-                const maxResults = 20;
-                const resultsToRender = visualPlaylist.slice(0, maxResults);
-                
-                let htmlStr = '';
-                if (resultsToRender.length === 0) {
-                    htmlStr = `<div class="px-2 py-4 text-center text-sm text-spTextSub">Nenhuma música encontrada.</div>`;
-                } else {
-                    htmlStr = `<div class="px-2 py-1 text-xs font-bold text-spTextSub uppercase tracking-wider border-t border-white/5 pt-3 mb-1">Resultados da Busca</div>`;
-                    resultsToRender.forEach(track => {
-                        const originalIndex = playlist.findIndex(t => t.id === track.id);
-                        const isActive = originalIndex === currentTrackIndex;
-                        htmlStr += `
-                            <div class="sidebar-search-item flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer transition ${isActive ? 'bg-white/5' : 'hover:bg-white/10'}" data-index="${originalIndex}">
-                                <img src="${track.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'}" class="w-10 h-10 rounded object-cover flex-shrink-0 bg-spHighlight pointer-events-none">
-                                <div class="flex-1 overflow-hidden pointer-events-none flex flex-col justify-center">
-                                    <h4 class="text-sm truncate ${isActive?'text-accent':'text-white'}">${track.title}</h4>
-                                    <p class="text-[11px] text-spTextSub truncate">${track.artist}</p>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    if (visualPlaylist.length > maxResults) {
-                        htmlStr += `<div class="px-2 py-2 text-center text-[10px] text-spTextSub cursor-pointer hover:text-white transition" id="view-more-results-btn">Ver todos os ${visualPlaylist.length} resultados</div>`;
-                    }
-                }
-                resultsContainer.innerHTML = htmlStr;
-            }
-        });
-
-        document.getElementById('sidebar-search-results').addEventListener('click', (e) => {
-            const item = e.target.closest('.sidebar-search-item');
-            if (item) {
-                const originalIndex = parseInt(item.dataset.index);
-                if (!isNaN(originalIndex)) {
-                    loadTrack(originalIndex);
-                    if (!isPlaying) togglePlay(); else audio.play();
-                    closeSidebar();
-                }
-            } else if (e.target.id === 'view-more-results-btn') {
-                closeSidebar();
-                if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) {
-                    isDrawerExpanded = true;
-                    DOM.rightPanel.classList.add('expanded');
-                }
-            }
-        });
+        DOM.search.addEventListener('input', triggerListUpdate);
 
         function updateMiniPlayer() { const t = playlist[currentTrackIndex]; if(!t) return; DOM.miniTitle.textContent = t.title; DOM.miniArtist.textContent = t.artist; DOM.miniCover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'; }
 
@@ -1457,34 +1344,21 @@
             clearDbClicks++; const btn = e.target.closest('button');
             if (clearDbClicks === 1) { 
                 const originalText = btn.innerHTML; 
-                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> CONFIRMAR RESET TOTAL`; 
+                btn.innerHTML = `CONFIRMAR RESET TOTAL`; 
                 btn.classList.add('bg-red-500', 'text-black'); 
                 btn.classList.remove('bg-transparent', 'text-red-500'); 
                 clearDbTimer = setTimeout(() => { 
                     clearDbClicks = 0; 
-                    btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Restaurar Aplicação (Apagar Tudo)`; 
+                    btn.innerHTML = originalText; 
                     btn.classList.remove('bg-red-500', 'text-black'); 
                     btn.classList.add('bg-transparent', 'text-red-500'); 
-                }, 4000); 
+                }, 3000); 
             } 
             else if (clearDbClicks === 2) { 
-                clearTimeout(clearDbTimer);
-                btn.innerHTML = `A APAGAR...`;
-                
-                const performHardReset = () => {
-                    localStorage.clear();
-                    audio.pause();
-                    audio.src = "";
-                    window.location.reload();
-                };
-
-                if(db) {
-                    const req = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear();
-                    req.onsuccess = performHardReset;
-                    req.onerror = performHardReset;
-                } else {
-                    performHardReset();
-                }
+                clearTimeout(clearDbTimer); 
+                if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear(); 
+                localStorage.clear();
+                window.location.reload(); 
             }
         });
 
@@ -1543,61 +1417,64 @@
             setTimeout(() => importStatus.classList.remove('opacity-0'), 10);
             
             let loadedCount = 0; const wasEmpty = playlist.length === 0;
+            const batchSize = 20;
 
-            for (let i = 0; i < validFiles.length; i++) {
-                const file = validFiles[i];
-                importText.textContent = `A processar ${i+1}/${validFiles.length}...`;
+            for (let i = 0; i < validFiles.length; i += batchSize) {
+                const batch = validFiles.slice(i, i + batchSize);
                 
-                await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
-                        const safeFile = { name: file.name, type: file.type, size: file.size, data: e.target.result };
-                        let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: safeFile, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
-                        
-                        // Atualiza o índíce da música que está a tocar para que a interface nunca se confunda
-                        if (playlist.length > 0) currentTrackIndex++; 
-                        playlist.unshift(nT); 
-                        
-                        const finish = () => {
-                            saveTrackToDB(nT);
-                            loadedCount++;
-                            if (i % 5 === 0) triggerListUpdate();
-                            resolve();
-                        };
+                for (const file of batch) {
+                    importText.textContent = `A processar ${loadedCount+1}/${validFiles.length}...`;
+                    
+                    await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
+                            let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: file, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
+                            
+                            if (playlist.length > 0) currentTrackIndex++; 
+                            playlist.unshift(nT); 
+                            
+                            const finish = () => {
+                                saveTrackToDB(nT);
+                                loadedCount++;
+                                if (loadedCount % 10 === 0) triggerListUpdate();
+                                resolve();
+                            };
 
-                        if (window.jsmediatags) {
-                            const timeoutId = setTimeout(() => finish(), 2500); // 2.5s limite para evitar encravamentos
-                            window.jsmediatags.read(file, {
-                                onSuccess: tag => {
-                                    clearTimeout(timeoutId);
-                                    if(tag.tags.title) nT.title = tag.tags.title; 
-                                    if(tag.tags.artist) nT.artist = tag.tags.artist; 
-                                    if(tag.tags.genre) nT.genre = tag.tags.genre; 
-                                    if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics; 
-                                    else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics; 
-                                    
-                                    if(tag.tags.picture) { 
-                                        try {
-                                            // Processamento de imagem incrivelmente otimizado com Blob (resolve falhas de memória)
-                                            const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
-                                            const imgReader = new FileReader();
-                                            imgReader.onloadend = () => { nT.cover = imgReader.result; finish(); };
-                                            imgReader.readAsDataURL(blob);
-                                        } catch(err) { finish(); }
-                                    } else {
-                                        finish();
-                                    }
-                                },
-                                onError: () => { clearTimeout(timeoutId); finish(); }
-                            }); 
-                        } else {
-                            finish();
-                        }
-                    };
-                    reader.onerror = () => resolve();
-                    reader.readAsArrayBuffer(file);
-                });
+                            if (window.jsmediatags) {
+                                const timeoutId = setTimeout(() => finish(), 2500); 
+                                window.jsmediatags.read(file, {
+                                    onSuccess: tag => {
+                                        clearTimeout(timeoutId);
+                                        if(tag.tags.title) nT.title = tag.tags.title; 
+                                        if(tag.tags.artist) nT.artist = tag.tags.artist; 
+                                        if(tag.tags.genre) nT.genre = tag.tags.genre; 
+                                        if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics; 
+                                        else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics; 
+                                        
+                                        if(tag.tags.picture) { 
+                                            try {
+                                                const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
+                                                const imgReader = new FileReader();
+                                                imgReader.onloadend = () => { nT.cover = imgReader.result; finish(); };
+                                                imgReader.readAsDataURL(blob);
+                                            } catch(err) { finish(); }
+                                        } else {
+                                            finish();
+                                        }
+                                    },
+                                    onError: () => { clearTimeout(timeoutId); finish(); }
+                                }); 
+                            } else {
+                                finish();
+                            }
+                        };
+                        reader.onerror = () => resolve();
+                        reader.readAsArrayBuffer(file);
+                    });
+                }
+                
+                await new Promise(r => setTimeout(r, 100)); // Pequena pausa para a UI não travar
             }
             
             importStatus.classList.add('opacity-0');
@@ -1852,7 +1729,7 @@
 
         initDB().then(async () => {
             await loadTracksFromDB(); updateSortUI(); updatePlaylistContexts(); triggerListUpdate();
-            if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; }
+            if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas'; }
             
             setTimeout(() => {
                 const loader = document.getElementById('initial-loader');
@@ -1875,7 +1752,6 @@
             }
         } 
         else { audio.volume=1; if(DOM.volValueDisplay) DOM.volValueDisplay.textContent = '100%'; }
-
     </script>
 </body>
 </html>
