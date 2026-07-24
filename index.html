@@ -339,11 +339,11 @@
     <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-50 fixed bottom-0">
         
         <!-- Esquerda (Mobile): Menu e Capa Miniatura -->
-        <div class="w-[30%] min-w-[60px] flex items-center gap-2 md:gap-3 order-1 overflow-hidden md:hidden">
+        <div class="w-[30%] min-w-[60px] flex items-center gap-2 md:gap-3 order-1 md:hidden overflow-hidden pl-1">
             <button id="mobile-menu-toggle" class="text-spTextSub hover:text-white transition p-1.5 rounded-full flex-shrink-0" title="Menu Principal">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
-            <div class="flex items-center cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir/Ocultar Playlist">
+            <div class="flex items-center cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir Playlist">
                 <div class="relative group flex-shrink-0">
                     <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-10 h-10 rounded object-cover shadow-md bg-spHighlight pointer-events-none">
                 </div>
@@ -663,12 +663,14 @@
             sidebar.classList.remove('-translate-x-full');
             sidebarOverlay.classList.remove('hidden');
             setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
+            if (location.hash !== '#menu') history.pushState(null, '', '#menu');
         }
         function closeSidebar() {
             if(!sidebar) return;
             sidebar.classList.add('-translate-x-full');
             sidebarOverlay.classList.add('opacity-0');
             setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
+            if (location.hash === '#menu') history.back();
         }
 
         if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', openSidebar);
@@ -716,7 +718,12 @@
             if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
             if (typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded) { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); }
             forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); forceCloseModal(document.getElementById('sort-modal')); forceCloseModal(DOM.fullInfoModal);
-            closeSidebar();
+            
+            if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('opacity-0');
+                setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
+            }
         }
 
         window.addEventListener('popstate', (e) => {
@@ -727,7 +734,7 @@
                     history.back();
                 } else { 
                     history.pushState(null, '', '#main'); 
-                    showToast(`Pressione voltar mais ${5 - exitClicks} vezes para sair.`); 
+                    showToast(`Pressione voltar mais ${5 - exitClicks} vezes para fechar o app.`); 
                     clearTimeout(exitTimer); 
                     exitTimer = setTimeout(() => { exitClicks = 0; }, 2000); 
                 } 
@@ -899,7 +906,7 @@
             document.getElementById('full-info-artist').textContent = track.artist || 'Desconhecido';
             tModal(DOM.fullInfoModal, true, 'info');
         });
-        
+
         document.getElementById('close-full-info-btn').addEventListener('click', () => {
             tModal(DOM.fullInfoModal, false, 'info');
         });
@@ -909,9 +916,8 @@
 
         function updateSortUI() {
             const texts = {'manual':'Personalizado', 'recent':'Adicionadas Recentemente', 'most_played':'Mais Tocadas'};
-            const sortTextEl = document.getElementById('current-sort-text');
-            if(sortTextEl) sortTextEl.textContent = texts[currentSortMode] || 'Personalizado';
-            
+            const textElement = document.getElementById('current-sort-text');
+            if(textElement) textElement.textContent = texts[currentSortMode] || 'Personalizado';
             document.querySelectorAll('.sort-option').forEach(btn => {
                 btn.classList.toggle('text-accent', btn.dataset.value === currentSortMode);
                 btn.classList.toggle('text-white', btn.dataset.value !== currentSortMode);
