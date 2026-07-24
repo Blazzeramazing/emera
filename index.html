@@ -73,7 +73,7 @@
         .toast-exit-active { transform: translateY(100%); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         
         @media (max-width: 767px) {
-            #right-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: absolute; top: 10%; bottom: 0; left: 0; right: 0; height: auto; transform: translateY(100%); z-index: 40; border-radius: 16px 16px 0 0; background-color: #121212; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); }
+            #right-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: absolute; top: 10%; bottom: 0; left: 0; right: 0; height: auto; transform: translateY(100%); z-index: 50; border-radius: 16px 16px 0 0; background-color: #121212; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); }
             #right-panel.expanded { transform: translateY(0); }
             .drawer-puller { width: 40px; height: 4px; background-color: #535353; border-radius: 2px; margin: 8px auto; display: block; }
             #progress-wrapper { position: absolute; top: -4px; left: 0; width: 100%; padding: 0 !important; margin: 0; gap: 0 !important; z-index: 10; }
@@ -83,7 +83,6 @@
         }
         @media (min-width: 768px) {
             .drawer-puller { display: none; }
-            #right-panel { position: relative; height: auto; transform: none !important; }
         }
 
         .game-hit-flash { animation: hitFlash 0.3s ease-out forwards; }
@@ -110,14 +109,15 @@
         <p class="text-spTextSub text-xs mt-2 animate-pulse">A carregar a sua biblioteca...</p>
     </div>
 
-    <!-- App Container - ADDED 'relative' TO CONTAIN THE OVERLAYS -->
-    <div id="main-app-container" class="relative flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
+    <!-- App Container -->
+    <div id="main-app-container" class="relative flex-1 flex w-full p-0 md:p-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
         
-        <!-- Sidebar Overlay Mobile - MOVED INSIDE MAIN CONTAINER SO IT DOES NOT COVER FOOTER -->
-        <div id="sidebar-overlay" class="absolute inset-0 bg-black/70 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
-
-        <!-- SIDEBAR (Bibliotecas e Filtros) - CHANGED 'fixed' to 'absolute md:relative' -->
-        <aside id="sidebar" class="w-72 md:w-64 bg-spBase md:rounded-lg flex-col absolute md:relative inset-y-0 left-0 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex overflow-hidden shadow-2xl md:shadow-none">
+        <!-- Sidebar Overlay Mobile (Agora absoluto, confinado ao container principal) -->
+        <div id="sidebar-overlay" class="absolute inset-0 bg-black/70 backdrop-blur-sm z-[40] hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
+        
+        <!-- SIDEBAR (Bibliotecas e Filtros) -->
+        <!-- Usando absolute para flutuar acima do fundo sem empurrar o player -->
+        <aside id="sidebar" class="absolute inset-y-0 left-0 z-[50] w-72 md:w-64 bg-spBase md:rounded-lg flex-col transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex overflow-hidden shadow-2xl">
             <div class="p-4 sm:p-6 flex flex-col gap-4 flex-shrink-0">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3 text-spTextSub hover:text-white transition cursor-pointer font-bold">
@@ -182,9 +182,10 @@
             </div>
         </aside>
 
-        <!-- MAIN VIEW (Visualizador + Lista) -->
-        <main class="flex-1 bg-spBase md:rounded-lg overflow-hidden flex flex-col md:flex-row relative w-full h-full">
-            <div id="player-bg" class="flex-1 w-full bg-spBase md:rounded-l-lg relative flex flex-col items-center justify-center flex-shrink-0 overflow-hidden">
+        <!-- MAIN VIEW (Visualizador) -->
+        <main class="w-full h-full bg-spBase md:rounded-lg overflow-hidden relative">
+            
+            <div id="player-bg" class="w-full h-full bg-spBase relative flex flex-col items-center justify-center flex-shrink-0 overflow-hidden">
                 <div class="h-16 flex justify-between items-center px-4 bg-gradient-to-b from-black/60 to-transparent absolute top-0 w-full z-20 pointer-events-none">
                     <div class="flex items-center gap-2 pointer-events-auto md:hidden">
                     </div>
@@ -201,13 +202,13 @@
 
                 <canvas id="atmosphere-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
                 
-                <div class="flex flex-col xl:flex-row items-center xl:items-end justify-center xl:justify-start gap-6 xl:gap-10 mt-auto mb-auto z-10 w-full max-w-5xl px-6 xl:px-12">
+                <div class="flex flex-col xl:flex-row items-center justify-center gap-6 xl:gap-10 mt-auto mb-auto z-10 w-full max-w-5xl px-6 xl:px-12">
                     <div id="cover-container" class="relative w-64 h-64 sm:w-80 sm:h-80 md:w-64 md:h-64 lg:w-72 lg:h-72 rounded shadow-2xl flex-shrink-0 flex items-center justify-center group cursor-pointer" title="Clique para mudar o Visualizador">
                         <img id="cover-art" crossorigin="anonymous" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop" class="w-full h-full object-cover rounded relative z-10 bg-spElevated pointer-events-none">
                         <canvas id="visualizer" class="absolute inset-0 w-full h-full z-20 opacity-80 pointer-events-none rounded"></canvas>
                     </div>
                     
-                    <div class="flex flex-col justify-end flex-1 min-w-0 items-center xl:items-start text-center xl:text-left w-full mt-2 xl:mt-0">
+                    <div class="flex flex-col justify-center flex-1 min-w-0 items-center xl:items-start text-center xl:text-left w-full mt-2 xl:mt-0">
                         <span class="text-xs font-bold uppercase tracking-widest hidden xl:block text-spTextMain/80 mb-2 drop-shadow-md">A Tocar Agora</span>
                         <h2 id="track-title" class="text-3xl sm:text-4xl lg:text-5xl font-black text-white w-full tracking-tighter cursor-pointer hover:text-accent transition-colors drop-shadow-lg overflow-hidden line-clamp-2 md:line-clamp-none md:truncate leading-tight">Playlist Vazia</h2>
                         <div class="flex items-center justify-center xl:justify-start gap-2 mt-3 w-full min-w-0">
@@ -227,36 +228,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                 </button>
             </div>
-
-            <div id="right-panel" class="w-full md:w-80 lg:w-[400px] bg-spBase flex flex-col absolute md:relative top-10 md:top-0 bottom-0 left-0 right-0 z-30 transform translate-y-full md:translate-y-0 md:border-l border-white/5 transition-transform duration-300 md:flex md:rounded-r-lg shadow-2xl md:shadow-none">
-                <div class="drawer-puller cursor-pointer absolute top-0 left-0 right-0 z-30" id="drawer-handle"></div>
-                
-                <div class="p-3 border-b border-white/5 mt-4 md:mt-0 flex-shrink-0 flex items-center justify-between gap-2">
-                    <div class="relative flex-1 group">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </div>
-                        <input type="text" id="search-input" placeholder="Procurar nesta lista..." class="w-full bg-spHighlight text-[13px] text-white rounded-full pl-10 pr-3 py-1.5 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
-                    </div>
-                    <button id="open-sort-modal-btn" class="bg-spHighlight text-xs text-white hover:text-accent rounded-full px-3 py-1.5 outline-none transition cursor-pointer flex-shrink-0 flex items-center gap-1">
-                        <span id="current-sort-text" class="hidden sm:inline">Personalizado</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
-                    </button>
-                </div>
-
-                <div class="px-4 py-2 flex items-center text-xs font-bold text-spTextSub border-b border-white/5 uppercase tracking-wider bg-spBase z-10 flex-shrink-0">
-                    <div class="w-10 text-center">#</div>
-                    <div class="flex-1">Título</div>
-                    <div class="w-12 text-center"><svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
-                </div>
-
-                <div class="flex-1 w-full overflow-y-auto custom-scrollbar p-2 pb-4 relative" id="list-container">
-                    <div id="virtual-spacer" style="height: 0px; position: relative; width: 100%;">
-                        <div id="virtual-content" style="position: absolute; top: 0; left: 0; width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-
+            
             <div id="game-panel" class="absolute inset-0 bg-black z-[200] hidden flex-col overflow-hidden transition-opacity duration-300 opacity-0">
                 <div class="w-full p-4 md:p-6 flex justify-between items-center bg-[#121212] border-b border-[#282828] z-10 shadow-lg flex-shrink-0">
                     <button id="close-game-btn" class="text-spTextSub hover:text-white transition p-2 hover:bg-white/10 rounded-full flex-shrink-0">
@@ -336,14 +308,45 @@
                 </div>
             </div>
         </main>
+
+        <!-- RIGHT PANEL (Fila) - Absolute para flutuar no lado direito no Desktop -->
+        <div id="right-panel" class="absolute top-10 md:top-0 bottom-0 left-0 md:left-auto right-0 z-[50] transform translate-y-full md:translate-y-0 md:translate-x-0 transition-transform duration-300 flex flex-col w-full md:w-80 lg:w-[400px] bg-spBase md:rounded-l-lg shadow-2xl">
+            <div class="drawer-puller cursor-pointer absolute top-0 left-0 right-0 z-[60]" id="drawer-handle"></div>
+            
+            <div class="p-3 border-b border-white/5 mt-4 md:mt-0 flex-shrink-0 flex items-center justify-between gap-2">
+                <div class="relative flex-1 group">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="search-input" placeholder="Procurar nesta lista..." class="w-full bg-spHighlight text-[13px] text-white rounded-full pl-10 pr-3 py-1.5 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
+                </div>
+                <button id="open-sort-modal-btn" class="bg-spHighlight text-xs text-white hover:text-accent rounded-full px-3 py-1.5 outline-none transition cursor-pointer flex-shrink-0 flex items-center gap-1">
+                    <span id="current-sort-text" class="hidden sm:inline">Personalizado</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
+                </button>
+            </div>
+
+            <div class="px-4 py-2 flex items-center text-xs font-bold text-spTextSub border-b border-white/5 uppercase tracking-wider bg-spBase z-10 flex-shrink-0">
+                <div class="w-10 text-center">#</div>
+                <div class="flex-1">Título</div>
+                <div class="w-12 text-center"><svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+            </div>
+
+            <div class="flex-1 w-full overflow-y-auto custom-scrollbar p-2 pb-4 relative" id="list-container">
+                <div id="virtual-spacer" style="height: 0px; position: relative; width: 100%;">
+                    <div id="virtual-content" style="position: absolute; top: 0; left: 0; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- BOTTOM BAR (Controlos Estilo Spotify) -->
-    <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-50 fixed bottom-0">
+    <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-[100] fixed bottom-0">
         
         <!-- Esquerda: Toggle Menu e Mini Capa -->
         <div class="w-[30%] min-w-[80px] flex items-center gap-2 md:gap-3 order-1 overflow-hidden pl-1 md:pl-2">
-            <!-- UPDATED ICON TO MATCH THE RIGHT SIDEBAR HAMBURGER -->
+            <!-- Botão Menu Esquerdo IGUAL ao Botão Direito (Hamburguer 3 linhas) -->
             <button id="toggle-sidebar-btn" class="text-spTextSub md:text-accent hover:text-white transition p-1.5 rounded-full flex-shrink-0" title="Menu Principal">
                 <svg class="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
@@ -414,7 +417,7 @@
     </footer>
 
     <!-- Modal Equalizador / Áudio & Volume Mobile -->
-    <div id="eq-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
+    <div id="eq-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[150] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full sm:w-[90%] max-w-md shadow-2xl relative overflow-hidden" id="eq-modal-panel">
             <div class="flex justify-between items-center mb-6 relative z-20">
                 <h3 class="text-lg font-bold text-white">Equalizador <span class="md:hidden">& Volume</span></h3>
@@ -452,7 +455,7 @@
         </div>
     </div>
 
-    <div id="settings-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[150] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full sm:w-[90%] max-w-sm shadow-2xl relative overflow-hidden" id="settings-modal-panel">
             <div class="flex justify-between items-center mb-6 relative z-10">
                 <h3 class="text-lg font-bold text-white">Definições</h3>
@@ -509,7 +512,7 @@
         </div>
     </div>
 
-    <div id="edit-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
+    <div id="edit-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[150] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar" id="edit-modal-panel">
             <h3 class="text-lg font-bold text-white mb-4">Editar Detalhes</h3>
             <div class="flex items-center gap-4 mb-4 bg-spHighlight p-3 rounded">
@@ -532,7 +535,7 @@
     </div>
 
     <!-- Modal de Letras -->
-    <div id="lyrics-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
+    <div id="lyrics-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[150] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-[#121212] border border-[#282828] text-white w-full max-w-lg h-[70vh] rounded-xl p-6 flex flex-col shadow-2xl relative overflow-hidden" id="lyrics-modal-panel">
             <button id="close-lyrics-btn" class="absolute top-4 right-4 text-spTextSub hover:text-white transition bg-black/20 hover:bg-black/40 rounded-full p-2 z-10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             <div class="flex-1 overflow-y-auto custom-scrollbar flex">
@@ -552,7 +555,7 @@
     </div>
 
     <!-- Modal Nativo de Ordenação -->
-    <div id="sort-modal" class="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300">
+    <div id="sort-modal" class="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[150] hidden opacity-0 transition-opacity duration-300">
         <div class="bg-spElevated md:border border-spHighlight w-full md:w-[90%] md:max-w-xs md:rounded-lg rounded-t-2xl shadow-2xl overflow-hidden translate-y-full md:translate-y-0 transition-transform duration-300" id="sort-modal-panel">
             <div class="p-4 border-b border-white/5 flex justify-between items-center md:hidden">
                 <h3 class="font-bold text-white">Ordenar Por</h3>
@@ -567,7 +570,7 @@
     </div>
 
     <!-- Playlists Extras -->
-    <div id="new-playlist-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
+    <div id="new-playlist-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[150] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-sm shadow-2xl" id="new-playlist-modal-panel">
             <h3 class="text-xl font-bold text-white mb-4">Nova Playlist</h3>
             <input type="text" id="new-playlist-name" placeholder="Nome..." class="w-full bg-spHighlight text-sm text-white rounded px-3 py-3 outline-none focus:border-white border border-transparent mb-6">
@@ -578,7 +581,7 @@
         </div>
     </div>
 
-    <div id="add-to-playlist-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
+    <div id="add-to-playlist-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[150] hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-sm shadow-2xl flex flex-col max-h-[80vh]" id="add-to-playlist-modal-panel">
             <h3 class="text-xl font-bold text-white mb-4 flex-shrink-0">Adicionar a Playlist</h3>
             <div id="add-to-playlist-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1 mb-4"></div>
@@ -659,15 +662,22 @@
 
         function openSidebar() {
             if(!sidebar) return;
-            if (location.hash !== '#menu') history.pushState(null, '', '#menu');
+            if (location.hash !== '#menu' && window.innerWidth < 768) history.pushState(null, '', '#menu');
+            
             sidebar.classList.remove('-translate-x-full');
-            sidebarOverlay.classList.remove('hidden');
-            setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
+            sidebar.classList.add('translate-x-0');
+            
+            if (window.innerWidth < 768) {
+                sidebarOverlay.classList.remove('hidden');
+                setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
+            }
         }
         
         function closeSidebarVisual() {
             if(!sidebar) return;
             sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+            
             sidebarOverlay.classList.add('opacity-0');
             setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
         }
@@ -681,10 +691,18 @@
             toggleSidebarBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (window.innerWidth >= 768) {
-                    sidebar.classList.toggle('md:hidden');
-                    sidebar.classList.toggle('md:flex');
-                    toggleSidebarBtn.classList.toggle('text-accent');
-                    toggleSidebarBtn.classList.toggle('text-spTextSub');
+                    // Adiciona a lógica de deslizar (transform) em vez de hide/flex
+                    if (sidebar.classList.contains('md:translate-x-0')) {
+                        sidebar.classList.remove('md:translate-x-0');
+                        sidebar.classList.add('md:-translate-x-full');
+                        toggleSidebarBtn.classList.remove('text-accent');
+                        toggleSidebarBtn.classList.add('text-spTextSub');
+                    } else {
+                        sidebar.classList.remove('md:-translate-x-full');
+                        sidebar.classList.add('md:translate-x-0');
+                        toggleSidebarBtn.classList.add('text-accent');
+                        toggleSidebarBtn.classList.remove('text-spTextSub');
+                    }
                 } else {
                     if (sidebar.classList.contains('-translate-x-full')) openSidebar();
                     else closeSidebar();
@@ -698,10 +716,17 @@
             toggleQueueBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (window.innerWidth >= 768) {
-                    DOM.rightPanel.classList.toggle('md:hidden');
-                    DOM.rightPanel.classList.toggle('md:flex');
-                    toggleQueueBtn.classList.toggle('text-accent');
-                    toggleQueueBtn.classList.toggle('text-spTextSub');
+                    if (DOM.rightPanel.classList.contains('md:translate-x-0')) {
+                        DOM.rightPanel.classList.remove('md:translate-x-0');
+                        DOM.rightPanel.classList.add('md:translate-x-full');
+                        toggleQueueBtn.classList.remove('text-accent');
+                        toggleQueueBtn.classList.add('text-spTextSub');
+                    } else {
+                        DOM.rightPanel.classList.remove('md:translate-x-full');
+                        DOM.rightPanel.classList.add('md:translate-x-0');
+                        toggleQueueBtn.classList.add('text-accent');
+                        toggleQueueBtn.classList.remove('text-spTextSub');
+                    }
                 }
             });
         }
@@ -721,7 +746,7 @@
             }
         });
         
-        document.getElementById('mobile-eq-btn')?.addEventListener('click', () => { tModal(DOM.eqModal, true, 'eq'); });
+        document.getElementById('mobile-audio-btn')?.addEventListener('click', () => { tModal(DOM.eqModal, true, 'eq'); });
 
         document.addEventListener('visibilitychange', () => { isPageVisible = !document.hidden; });
 
