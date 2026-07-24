@@ -110,14 +110,14 @@
         <p class="text-spTextSub text-xs mt-2 animate-pulse">A carregar a sua biblioteca...</p>
     </div>
 
-    <!-- Sidebar Overlay Mobile -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
-
-    <!-- App Container -->
-    <div id="main-app-container" class="flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
+    <!-- App Container - ADDED 'relative' TO CONTAIN THE OVERLAYS -->
+    <div id="main-app-container" class="relative flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
         
-        <!-- SIDEBAR (Bibliotecas e Filtros) -->
-        <aside id="sidebar" class="w-72 md:w-64 bg-spBase md:rounded-lg flex-col fixed inset-y-0 left-0 z-[100] transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 flex overflow-hidden">
+        <!-- Sidebar Overlay Mobile - MOVED INSIDE MAIN CONTAINER SO IT DOES NOT COVER FOOTER -->
+        <div id="sidebar-overlay" class="absolute inset-0 bg-black/70 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
+
+        <!-- SIDEBAR (Bibliotecas e Filtros) - CHANGED 'fixed' to 'absolute md:relative' -->
+        <aside id="sidebar" class="w-72 md:w-64 bg-spBase md:rounded-lg flex-col absolute md:relative inset-y-0 left-0 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex overflow-hidden shadow-2xl md:shadow-none">
             <div class="p-4 sm:p-6 flex flex-col gap-4 flex-shrink-0">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3 text-spTextSub hover:text-white transition cursor-pointer font-bold">
@@ -184,7 +184,6 @@
 
         <!-- MAIN VIEW (Visualizador + Lista) -->
         <main class="flex-1 bg-spBase md:rounded-lg overflow-hidden flex flex-col md:flex-row relative w-full h-full">
-            
             <div id="player-bg" class="flex-1 w-full bg-spBase md:rounded-l-lg relative flex flex-col items-center justify-center flex-shrink-0 overflow-hidden">
                 <div class="h-16 flex justify-between items-center px-4 bg-gradient-to-b from-black/60 to-transparent absolute top-0 w-full z-20 pointer-events-none">
                     <div class="flex items-center gap-2 pointer-events-auto md:hidden">
@@ -344,8 +343,9 @@
         
         <!-- Esquerda: Toggle Menu e Mini Capa -->
         <div class="w-[30%] min-w-[80px] flex items-center gap-2 md:gap-3 order-1 overflow-hidden pl-1 md:pl-2">
+            <!-- UPDATED ICON TO MATCH THE RIGHT SIDEBAR HAMBURGER -->
             <button id="toggle-sidebar-btn" class="text-spTextSub md:text-accent hover:text-white transition p-1.5 rounded-full flex-shrink-0" title="Menu Principal">
-                <svg class="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                <svg class="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
             <div class="md:hidden flex items-center cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir Playlist">
                 <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-10 h-10 rounded object-cover shadow-md bg-spHighlight pointer-events-none">
@@ -360,7 +360,6 @@
                     <svg class="w-4 h-4 md:w-5 md:h-5" id="main-fav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                 </button>
 
-                <!-- NOVO BOTÃO DE ÁUDIO PARA MOBILE (Volume/EQ) -->
                 <button id="mobile-audio-btn" class="text-spTextSub hover:text-white transition flex md:hidden w-8 h-8 items-center justify-center" title="Áudio e Volume">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                 </button>
