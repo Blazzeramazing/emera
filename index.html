@@ -113,10 +113,11 @@
     <!-- Sidebar Overlay Mobile -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
 
+    <!-- App Container -->
     <div id="main-app-container" class="flex-1 flex w-full p-0 md:p-2 gap-2 overflow-hidden bg-black h-[calc(100dvh-70px)] md:h-[calc(100dvh-90px)]">
         
         <!-- SIDEBAR (Bibliotecas e Filtros) -->
-        <aside id="sidebar" class="w-72 md:w-64 bg-spBase md:rounded-lg flex-col fixed inset-y-0 left-0 z-[100] md:z-auto transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 flex overflow-hidden">
+        <aside id="sidebar" class="w-72 md:w-64 bg-spBase md:rounded-lg flex-col fixed inset-y-0 left-0 z-[100] transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 flex overflow-hidden">
             <div class="p-4 sm:p-6 flex flex-col gap-4 flex-shrink-0">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3 text-spTextSub hover:text-white transition cursor-pointer font-bold">
@@ -129,32 +130,31 @@
                 </div>
                 
                 <div class="mt-2 flex items-center justify-between">
-                     <span class="text-xs text-spTextSub font-bold uppercase tracking-wider">Ações Locais</span>
+                     <span class="text-[10px] text-spTextSub font-bold uppercase tracking-widest">Ações Locais</span>
                      <div id="local-actions" class="flex gap-1 flex-wrap justify-end">
                         <input type="file" id="folder-upload" webkitdirectory directory multiple class="sr-only">
-                        <label for="folder-upload" class="cursor-pointer text-spTextSub hover:text-accent hover:bg-white/5 p-1.5 rounded-full transition flex items-center justify-center" title="Importar Pasta">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                        <label for="folder-upload" class="cursor-pointer text-spTextSub hover:text-accent hover:bg-white/5 p-2 rounded-full transition flex items-center justify-center" title="Importar Pasta">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
                         </label>
 
                         <input type="file" id="file-upload" accept="audio/*,audio/mp3,audio/wav,audio/mpeg,audio/ogg,.mp3,.wav,.ogg" multiple class="sr-only">
-                        <label for="file-upload" class="cursor-pointer text-spTextSub hover:text-accent hover:bg-white/5 p-1.5 rounded-full transition flex items-center justify-center" title="Importar Ficheiros">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                        <label for="file-upload" class="cursor-pointer text-spTextSub hover:text-accent hover:bg-white/5 p-2 rounded-full transition flex items-center justify-center" title="Importar Ficheiros">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
                         </label>
 
-                        <button id="sidebar-settings-btn" class="cursor-pointer text-spTextSub hover:text-accent hover:bg-white/5 p-1.5 rounded-full transition flex items-center justify-center" title="Definições">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+                        <button id="sidebar-settings-btn" class="cursor-pointer text-spTextSub hover:text-accent hover:bg-white/5 p-2 rounded-full transition flex items-center justify-center" title="Definições">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
                         </button>
                      </div>
                 </div>
             </div>
 
-            <!-- Library Header e Filtros Inteligentes -->
             <div class="px-4 py-2 flex justify-between items-center text-spTextSub border-t border-white/5 pt-4 flex-shrink-0">
                 <div class="flex items-center gap-2 font-bold hover:text-white transition cursor-pointer">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
                     <span>Sua Biblioteca</span>
                 </div>
-                <button id="create-playlist-btn" class="hover:text-white transition rounded-full p-1 hover:bg-spElevated" title="Criar Playlist"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
+                <button id="create-playlist-btn" class="hover:text-white transition rounded-full p-1 hover:bg-spElevated" title="Criar Playlist"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
             </div>
 
             <div class="px-4 py-2 flex-shrink-0">
@@ -162,30 +162,33 @@
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <input type="text" id="context-search-input" placeholder="Procurar em Biblioteca..." class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
+                    <input type="text" id="context-search-input" placeholder="Procurar em Biblioteca..." class="w-full bg-spHighlight text-[13px] text-white rounded-full pl-10 pr-3 py-1.5 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
                 </div>
             </div>
 
             <div id="sidebar-context-list" class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-2 pb-6 flex flex-col gap-1 mt-2">
-                <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3 text-white" data-value="all">
+                <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3 text-accent" data-value="all">
                     <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg></div> Tudo
                 </button>
                 <button class="context-option text-left px-4 py-3 rounded-lg hover:bg-white/10 transition font-bold text-sm flex items-center gap-3 text-white" data-value="favorites">
                     <div class="w-8 h-8 rounded-full bg-spHighlight flex items-center justify-center"><span class="text-red-500">❤️</span></div> Favoritas
                 </button>
                 
-                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4">Suas Playlists</div>
+                <div class="px-4 py-2 text-[10px] font-bold text-spTextSub uppercase tracking-widest mt-2 border-t border-white/5 pt-4 context-section-title">Suas Playlists</div>
                 <div id="context-modal-playlists" class="flex flex-col gap-1"></div>
                 
-                <div class="px-4 py-2 text-xs font-bold text-spTextSub uppercase tracking-wider mt-2 border-t border-white/5 pt-4">Artistas</div>
+                <div class="px-4 py-2 text-[10px] font-bold text-spTextSub uppercase tracking-widest mt-2 border-t border-white/5 pt-4 context-section-title">Artistas</div>
                 <div id="context-modal-artists" class="flex flex-col gap-1"></div>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col md:flex-row relative w-full h-full overflow-hidden bg-black md:rounded-lg">
+        <!-- MAIN VIEW (Visualizador + Lista) -->
+        <main class="flex-1 bg-spBase md:rounded-lg overflow-hidden flex flex-col md:flex-row relative w-full h-full">
             
             <div id="player-bg" class="flex-1 w-full bg-spBase md:rounded-l-lg relative flex flex-col items-center justify-center flex-shrink-0 overflow-hidden">
                 <div class="h-16 flex justify-between items-center px-4 bg-gradient-to-b from-black/60 to-transparent absolute top-0 w-full z-20 pointer-events-none">
+                    <div class="flex items-center gap-2 pointer-events-auto md:hidden">
+                    </div>
                     <div class="flex gap-2 pointer-events-auto ml-auto">
                         <button id="install-app-btn" class="hidden text-xs bg-white text-black font-bold py-1 px-3 rounded-full hover:scale-105 transition shadow-lg">Instalar</button>
                         <button id="open-game-btn" class="bg-black/40 hover:bg-black text-white p-2 rounded-full transition backdrop-blur-md shadow-lg" title="Jogar Piano Tiles"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4M15 13h.01M18 11h.01"/></svg></button>
@@ -234,10 +237,11 @@
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <svg class="w-4 h-4 text-spTextSub group-focus-within:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
-                        <input type="text" id="search-input" placeholder="Procurar nesta lista..." class="w-full bg-spHighlight text-sm text-white rounded-full pl-10 pr-3 py-2 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
+                        <input type="text" id="search-input" placeholder="Procurar nesta lista..." class="w-full bg-spHighlight text-[13px] text-white rounded-full pl-10 pr-3 py-1.5 outline-none border border-transparent focus:border-white transition placeholder-spTextSub hover:bg-white/10">
                     </div>
-                    <button id="open-sort-modal-btn" class="bg-spHighlight text-spTextSub hover:text-white rounded-full p-2 outline-none transition cursor-pointer flex-shrink-0" title="Ordenar">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
+                    <button id="open-sort-modal-btn" class="bg-spHighlight text-xs text-white hover:text-accent rounded-full px-3 py-1.5 outline-none transition cursor-pointer flex-shrink-0 flex items-center gap-1">
+                        <span id="current-sort-text" class="hidden sm:inline">Personalizado</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
                     </button>
                 </div>
 
@@ -338,26 +342,21 @@
     <!-- BOTTOM BAR (Controlos Estilo Spotify) -->
     <footer class="h-[70px] md:h-[90px] w-full bg-spBase md:bg-black border-t border-white/5 md:border-[#282828] flex items-center justify-between px-2 md:px-4 z-50 fixed bottom-0">
         
-        <!-- Esquerda (Mobile): Menu e Capa Miniatura -->
-        <div class="w-[30%] min-w-[60px] flex items-center gap-2 md:gap-3 order-1 md:hidden overflow-hidden pl-1">
-            <button id="mobile-menu-toggle" class="text-spTextSub hover:text-white transition p-1.5 rounded-full flex-shrink-0" title="Menu Principal">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        <!-- Esquerda: Toggle Menu e Mini Capa -->
+        <div class="w-[30%] min-w-[80px] flex items-center gap-2 md:gap-3 order-1 overflow-hidden pl-1 md:pl-2">
+            <button id="toggle-sidebar-btn" class="text-spTextSub md:text-accent hover:text-white transition p-1.5 rounded-full flex-shrink-0" title="Menu Principal">
+                <svg class="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
             </button>
-            <div class="flex items-center cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir Playlist">
-                <div class="relative group flex-shrink-0">
-                    <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-10 h-10 rounded object-cover shadow-md bg-spHighlight pointer-events-none">
-                </div>
+            <div class="md:hidden flex items-center cursor-pointer hover:bg-white/5 p-1 rounded-md transition overflow-hidden" id="mini-player-info" title="Expandir Playlist">
+                <img id="mini-cover" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop" class="w-10 h-10 rounded object-cover shadow-md bg-spHighlight pointer-events-none">
             </div>
         </div>
-        
-        <!-- Esquerda (Desktop): Espaçador Vazio -->
-        <div class="hidden md:block w-[30%] order-1"></div>
 
         <!-- Centro: Controlos de Reprodução -->
         <div class="flex-1 md:w-[40%] max-w-2xl flex flex-row md:flex-col items-center justify-end md:justify-center px-0 md:px-4 order-2 gap-1 sm:gap-2 md:gap-0">
             <div class="flex items-center gap-1 sm:gap-2 md:gap-6 md:mb-2 pr-1 md:pr-0 flex-shrink-0">
                 
-                <button id="main-favorite-btn" class="text-spTextSub hover:text-white transition hidden flex w-8 h-8 items-center justify-center" title="Favoritar">
+                <button id="main-favorite-btn" class="text-spTextSub hover:text-white transition flex w-8 h-8 items-center justify-center" title="Favoritar">
                     <svg class="w-4 h-4 md:w-5 md:h-5" id="main-fav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                 </button>
 
@@ -396,10 +395,10 @@
             </div>
         </div>
 
-        <!-- Direita: Controlos Estáticos -->
+        <!-- Direita: Controlos Estáticos e Toggle Fila -->
         <div class="w-[30%] min-w-[150px] items-center justify-end gap-2 md:gap-4 pr-2 hidden md:flex order-3" id="volume-section">
             <button id="eq-btn" class="text-spTextSub hover:text-white transition" title="Equalizador"><svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></button>
-            <button id="settings-btn" class="text-spTextSub hover:text-white transition hidden" title="Definições"></button>
+            <button id="settings-btn" class="hidden"></button>
             <button id="share-btn" class="hidden"></button>
             
             <button id="mute-btn" class="text-spTextSub hover:text-white transition ml-2 border-l border-white/10 pl-4"><svg id="vol-icon" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
@@ -410,14 +409,14 @@
 
             <!-- Botão Exclusivo Desktop para Lista de Fila -->
             <button id="toggle-queue-btn" class="text-accent hover:text-white transition ml-2 p-1" title="Fila de Reprodução">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
         </div>
     </footer>
 
     <!-- Modal Equalizador / Áudio & Volume Mobile -->
     <div id="eq-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
-        <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full sm:w-[90%] max-w-md shadow-2xl relative overflow-hidden">
+        <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full sm:w-[90%] max-w-md shadow-2xl relative overflow-hidden" id="eq-modal-panel">
             <div class="flex justify-between items-center mb-6 relative z-20">
                 <h3 class="text-lg font-bold text-white">Equalizador <span class="md:hidden">& Volume</span></h3>
                 <button id="close-eq-btn" class="text-spTextSub hover:text-white transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -455,7 +454,7 @@
     </div>
 
     <div id="settings-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
-        <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full sm:w-[90%] max-w-sm shadow-2xl relative overflow-hidden">
+        <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full sm:w-[90%] max-w-sm shadow-2xl relative overflow-hidden" id="settings-modal-panel">
             <div class="flex justify-between items-center mb-6 relative z-10">
                 <h3 class="text-lg font-bold text-white">Definições</h3>
                 <button id="close-settings-btn" class="text-spTextSub hover:text-white transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -512,7 +511,7 @@
     </div>
 
     <div id="edit-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
-        <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+        <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar" id="edit-modal-panel">
             <h3 class="text-lg font-bold text-white mb-4">Editar Detalhes</h3>
             <div class="flex items-center gap-4 mb-4 bg-spHighlight p-3 rounded">
                 <img id="edit-cover-preview" src="" class="w-16 h-16 rounded object-cover shadow bg-black">
@@ -535,7 +534,7 @@
 
     <!-- Modal de Letras -->
     <div id="lyrics-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
-        <div class="bg-[#121212] border border-[#282828] text-white w-full max-w-lg h-[70vh] rounded-xl p-6 flex flex-col shadow-2xl relative overflow-hidden">
+        <div class="bg-[#121212] border border-[#282828] text-white w-full max-w-lg h-[70vh] rounded-xl p-6 flex flex-col shadow-2xl relative overflow-hidden" id="lyrics-modal-panel">
             <button id="close-lyrics-btn" class="absolute top-4 right-4 text-spTextSub hover:text-white transition bg-black/20 hover:bg-black/40 rounded-full p-2 z-10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             <div class="flex-1 overflow-y-auto custom-scrollbar flex">
                 <div id="lyrics-text" class="m-auto whitespace-pre-wrap text-center text-lg sm:text-xl font-bold leading-relaxed px-4 py-8"></div>
@@ -568,8 +567,9 @@
         </div>
     </div>
 
+    <!-- Playlists Extras -->
     <div id="new-playlist-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
-        <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-sm shadow-2xl">
+        <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-sm shadow-2xl" id="new-playlist-modal-panel">
             <h3 class="text-xl font-bold text-white mb-4">Nova Playlist</h3>
             <input type="text" id="new-playlist-name" placeholder="Nome..." class="w-full bg-spHighlight text-sm text-white rounded px-3 py-3 outline-none focus:border-white border border-transparent mb-6">
             <div class="flex gap-3 justify-end">
@@ -580,7 +580,7 @@
     </div>
 
     <div id="add-to-playlist-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
-        <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-sm shadow-2xl flex flex-col max-h-[80vh]">
+        <div class="bg-spElevated p-6 rounded-lg border border-spHighlight w-full max-w-sm shadow-2xl flex flex-col max-h-[80vh]" id="add-to-playlist-modal-panel">
             <h3 class="text-xl font-bold text-white mb-4 flex-shrink-0">Adicionar a Playlist</h3>
             <div id="add-to-playlist-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1 mb-4"></div>
             <button id="cancel-add-to-playlist-btn" class="w-full bg-transparent text-white font-bold py-3 rounded-full hover:scale-105 transition text-sm flex-shrink-0">Fechar</button>
@@ -652,49 +652,89 @@
         };
         const canvasCtx = DOM.canvas.getContext('2d'); const eqBgCtx = DOM.eqCanvasBg.getContext('2d');
 
-        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebar-overlay');
         const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
         const toggleQueueBtn = document.getElementById('toggle-queue-btn');
 
         function openSidebar() {
             if(!sidebar) return;
+            if (location.hash !== '#menu') history.pushState(null, '', '#menu');
             sidebar.classList.remove('-translate-x-full');
             sidebarOverlay.classList.remove('hidden');
             setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
-            if (location.hash !== '#menu') history.pushState(null, '', '#menu');
         }
-        function closeSidebar() {
+        
+        function closeSidebarVisual() {
             if(!sidebar) return;
             sidebar.classList.add('-translate-x-full');
             sidebarOverlay.classList.add('opacity-0');
             setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
+        }
+
+        function closeSidebar() {
+            closeSidebarVisual();
             if (location.hash === '#menu') history.back();
         }
 
-        if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', openSidebar);
+        if (toggleSidebarBtn) {
+            toggleSidebarBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.toggle('md:hidden');
+                    sidebar.classList.toggle('md:flex');
+                    toggleSidebarBtn.classList.toggle('text-accent');
+                    toggleSidebarBtn.classList.toggle('text-spTextSub');
+                } else {
+                    if (sidebar.classList.contains('-translate-x-full')) openSidebar();
+                    else closeSidebar();
+                }
+            });
+        }
         if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
         if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
 
-        if(toggleQueueBtn) toggleQueueBtn.addEventListener('click', (e) => {
+        if(toggleQueueBtn) {
+            toggleQueueBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (window.innerWidth >= 768) {
+                    DOM.rightPanel.classList.toggle('md:hidden');
+                    DOM.rightPanel.classList.toggle('md:flex');
+                    toggleQueueBtn.classList.toggle('text-accent');
+                    toggleQueueBtn.classList.toggle('text-spTextSub');
+                }
+            });
+        }
+
+        document.getElementById('sidebar-settings-btn')?.addEventListener('click', (e) => { 
             e.stopPropagation();
-            if (window.innerWidth >= 768) {
-                DOM.rightPanel.classList.toggle('md:hidden');
-                DOM.rightPanel.classList.toggle('md:flex');
-                toggleQueueBtn.classList.toggle('text-accent');
-                toggleQueueBtn.classList.toggle('text-spTextSub');
+            if(window.innerWidth < 768) {
+                closeSidebarVisual();
+                if (location.hash === '#menu') {
+                    history.replaceState(null, '', '#settings');
+                    tModal(document.getElementById('settings-modal'), true, null);
+                } else {
+                    tModal(document.getElementById('settings-modal'), true, 'settings');
+                }
+            } else {
+                tModal(document.getElementById('settings-modal'), true, 'settings');
             }
         });
-
-        document.getElementById('sidebar-settings-btn')?.addEventListener('click', () => { closeSidebar(); tModal(document.getElementById('settings-modal'), true, 'settings'); });
-        document.getElementById('mobile-audio-btn')?.addEventListener('click', () => { tModal(DOM.eqModal, true, 'eq'); });
+        
+        document.getElementById('mobile-eq-btn')?.addEventListener('click', () => { tModal(DOM.eqModal, true, 'eq'); });
 
         document.addEventListener('visibilitychange', () => { isPageVisible = !document.hidden; });
 
-        if (location.hash === '') history.replaceState(null, '', '#entry');
-        if (location.hash === '#entry') history.pushState(null, '', '#main');
-        let exitClicks = 0; let exitTimer = null;
+        window.addEventListener('load', () => {
+            initOfflineMode();
+            if (location.hash === '') {
+                history.pushState(null, '', '#main');
+            }
+        });
+
+        let exitClicks = 0; 
+        let exitTimer = null;
         
         function forceCloseModal(m) {
             if (!m) return;
@@ -718,33 +758,58 @@
             if (typeof closeGameUI === 'function' && isGameActive) closeGameUI();
             if (typeof isDrawerExpanded !== 'undefined' && isDrawerExpanded) { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); }
             forceCloseModal(DOM.eqModal); forceCloseModal(document.getElementById('settings-modal')); forceCloseModal(document.getElementById('edit-modal')); forceCloseModal(document.getElementById('lyrics-modal')); forceCloseModal(document.getElementById('new-playlist-modal')); forceCloseModal(document.getElementById('add-to-playlist-modal')); forceCloseModal(document.getElementById('sort-modal')); forceCloseModal(DOM.fullInfoModal);
-            
-            if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.add('-translate-x-full');
-                sidebarOverlay.classList.add('opacity-0');
-                setTimeout(() => { sidebarOverlay.classList.add('hidden'); }, 300);
-            }
         }
 
         window.addEventListener('popstate', (e) => {
             const h = location.hash;
-            if (h === '' || h === '#entry') { 
-                exitClicks++; 
-                if (exitClicks >= 5) { 
+            
+            if (h === '') {
+                exitClicks++;
+                if (exitClicks >= 5) {
                     history.back();
-                } else { 
+                } else {
                     history.pushState(null, '', '#main'); 
-                    showToast(`Pressione voltar mais ${5 - exitClicks} vezes para fechar o app.`); 
-                    clearTimeout(exitTimer); 
-                    exitTimer = setTimeout(() => { exitClicks = 0; }, 2000); 
+                    showToast(`Pressione voltar mais ${5 - exitClicks} vezes para sair.`);
+                    clearTimeout(exitTimer);
+                    exitTimer = setTimeout(() => { exitClicks = 0; }, 2000);
+                }
+                return;
+            } else {
+                exitClicks = 0;
+            }
+            
+            if (h === '#main') { 
+                closeAllOverlays(); 
+                closeSidebarVisual();
+                return; 
+            }
+            
+            if (h === '#playlist') { 
+                closeAllOverlays(); 
+                closeSidebarVisual();
+                if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) { 
+                    isDrawerExpanded = true; 
+                    DOM.rightPanel.classList.add('expanded'); 
                 } 
                 return; 
-            } else { exitClicks = 0; }
-            
-            if (h === '#main') { closeAllOverlays(); return; }
-            if (h === '#playlist') { closeAllOverlays(); if (typeof isDrawerExpanded !== 'undefined' && !isDrawerExpanded && window.innerWidth < 768) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); } return; }
+            }
+
+            if (h === '#menu') {
+                closeAllOverlays();
+                if (window.innerWidth < 768) {
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebarOverlay.classList.remove('hidden');
+                    setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
+                }
+                return;
+            }
+
             const hashToModal = { '#eq': DOM.eqModal, '#settings': document.getElementById('settings-modal'), '#edit': document.getElementById('edit-modal'), '#lyrics': document.getElementById('lyrics-modal'), '#new-playlist': document.getElementById('new-playlist-modal'), '#add-playlist': document.getElementById('add-to-playlist-modal'), '#sort': document.getElementById('sort-modal'), '#info': DOM.fullInfoModal };
-            Object.keys(hashToModal).forEach(key => { if (h !== key) forceCloseModal(hashToModal[key]); }); if (h !== '#game' && typeof closeGameUI === 'function' && isGameActive) closeGameUI();
+            Object.keys(hashToModal).forEach(key => { 
+                if (h !== key) forceCloseModal(hashToModal[key]); 
+                else tModal(hashToModal[key], true, null); 
+            }); 
+            if (h !== '#game' && typeof closeGameUI === 'function' && isGameActive) closeGameUI();
         });
 
         const saveVolToStorage = debounce((v) => localStorage.setItem('webPlayerVol', v), 500); const saveEqToStorage = debounce((eq) => localStorage.setItem('webPlayerEq', JSON.stringify(eq)), 500); const savePreampToStorage = debounce((v) => localStorage.setItem('webPlayerPreamp', v), 500); const savePlaylistOrder = debounce(() => { if(currentSortMode === 'manual') localStorage.setItem('webPlayerOrder', JSON.stringify(playlist.map(t => t.id))); }, 500);
@@ -907,17 +972,14 @@
             tModal(DOM.fullInfoModal, true, 'info');
         });
 
-        document.getElementById('close-full-info-btn').addEventListener('click', () => {
-            tModal(DOM.fullInfoModal, false, 'info');
-        });
-        DOM.fullInfoModal.addEventListener('click', (e) => {
-            if(e.target === DOM.fullInfoModal) tModal(DOM.fullInfoModal, false, 'info');
-        });
+        document.getElementById('close-full-info-btn').addEventListener('click', () => { tModal(DOM.fullInfoModal, false, 'info'); });
+        DOM.fullInfoModal.addEventListener('click', (e) => { if(e.target === DOM.fullInfoModal) tModal(DOM.fullInfoModal, false, 'info'); });
 
         function updateSortUI() {
             const texts = {'manual':'Personalizado', 'recent':'Adicionadas Recentemente', 'most_played':'Mais Tocadas'};
-            const textElement = document.getElementById('current-sort-text');
-            if(textElement) textElement.textContent = texts[currentSortMode] || 'Personalizado';
+            const sortTextEl = document.getElementById('current-sort-text');
+            if (sortTextEl) sortTextEl.textContent = texts[currentSortMode] || 'Personalizado';
+            
             document.querySelectorAll('.sort-option').forEach(btn => {
                 btn.classList.toggle('text-accent', btn.dataset.value === currentSortMode);
                 btn.classList.toggle('text-white', btn.dataset.value !== currentSortMode);
@@ -978,6 +1040,7 @@
             else { 
                 document.querySelectorAll('.context-option').forEach(btn => {
                     btn.classList.toggle('text-accent', btn.dataset.value === currentContext);
+                    btn.classList.toggle('text-white', btn.dataset.value !== currentContext);
                 });
             }
         }
@@ -991,7 +1054,12 @@
             
             document.querySelectorAll('.context-option').forEach(btn => {
                 btn.classList.toggle('text-accent', btn.dataset.value === currentContext);
+                btn.classList.toggle('text-white', btn.dataset.value !== currentContext);
             });
+            
+            if (window.innerWidth < 768) {
+                closeSidebar();
+            }
         }
         
         document.getElementById('sidebar-context-list').addEventListener('click', (e) => { 
@@ -999,9 +1067,6 @@
             if(!btn) return; 
             e.stopPropagation(); 
             setContext(btn.dataset.value);
-            if (window.innerWidth < 768) {
-                closeSidebar();
-            }
         });
 
         function getVisualPlaylist() {
@@ -1020,8 +1085,8 @@
         if ('mediaSession' in navigator) { navigator.mediaSession.setActionHandler('play', () => togglePlay()); navigator.mediaSession.setActionHandler('pause', () => togglePlay()); navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack()); navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack()); }
 
         function updateMainFavoriteIcon() {
-            if(playlist.length===0){ DOM.mainFav.classList.add('hidden'); DOM.mainFav.classList.remove('flex'); return; }
-            DOM.mainFav.classList.remove('hidden'); DOM.mainFav.classList.add('flex'); const isFav = playlist[currentTrackIndex]?.favorite || false;
+            if(playlist.length===0){ DOM.mainFav.classList.add('hidden'); return; }
+            DOM.mainFav.classList.remove('hidden'); const isFav = playlist[currentTrackIndex]?.favorite || false;
             DOM.mainFavIcon.setAttribute('fill', isFav ? 'currentColor' : 'none'); DOM.mainFavIcon.classList.toggle('text-accent', isFav); DOM.mainFavIcon.classList.toggle('text-spTextSub', !isFav);
         }
 
@@ -1188,8 +1253,13 @@
         function toggleDrawer(e) { 
             if (window.innerWidth >= 768) return; 
             if(e && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'SELECT')) return; 
-            if (!isDrawerExpanded) { isDrawerExpanded = true; DOM.rightPanel.classList.add('expanded'); if (location.hash !== '#playlist') history.pushState(null, '', '#playlist'); } 
-            else { isDrawerExpanded = false; DOM.rightPanel.classList.remove('expanded'); if (location.hash === '#playlist') history.back(); }
+            if (!isDrawerExpanded) { 
+                if (location.hash !== '#playlist') history.pushState(null, '', '#playlist');
+                isDrawerExpanded = true; 
+                DOM.rightPanel.classList.add('expanded'); 
+            } else { 
+                if (location.hash === '#playlist') history.back(); 
+            }
         }
         DOM.drawerHandle.addEventListener('click', toggleDrawer);
         if(DOM.miniPlayerInfo) DOM.miniPlayerInfo.addEventListener('click', toggleDrawer);
@@ -1268,10 +1338,7 @@
 
         DOM.search.addEventListener('input', triggerListUpdate);
 
-        function updateMiniPlayer() { 
-            const t = playlist[currentTrackIndex]; if(!t) return; 
-            if(DOM.miniCover) DOM.miniCover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'; 
-        }
+        function updateMiniPlayer() { const t = playlist[currentTrackIndex]; if(!t) return; if(DOM.miniCover) DOM.miniCover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop'; }
 
         DOM.preampSlider.addEventListener('input', e => { const v = parseFloat(e.target.value); if(preampNode) preampNode.gain.value = v; DOM.preampDisp.textContent = Math.round(v*100)+'%'; savedPreamp = v; savePreampToStorage(v); }); DOM.preampSlider.value = savedPreamp; DOM.preampDisp.textContent = Math.round(savedPreamp*100)+'%';
 
@@ -1281,8 +1348,8 @@
         let clearDbClicks = 0; let clearDbTimer = null;
         document.getElementById('clear-db-btn').addEventListener('click', (e) => {
             clearDbClicks++; const btn = e.target.closest('button');
-            if (clearDbClicks === 1) { const originalText = btn.innerHTML; btn.innerHTML = `CONFIRMAR RESET TOTAL`; btn.classList.add('bg-red-500', 'text-black'); btn.classList.remove('bg-transparent', 'text-red-500'); clearDbTimer = setTimeout(() => { clearDbClicks = 0; btn.innerHTML = originalText; btn.classList.remove('bg-red-500', 'text-black'); btn.classList.add('bg-transparent', 'text-red-500'); }, 3000); } 
-            else if (clearDbClicks === 2) { clearTimeout(clearDbTimer); if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear(); localStorage.clear(); audio.pause(); audio.src=""; showToast("A restaurar sistema..."); setTimeout(() => window.location.reload(), 1000); }
+            if (clearDbClicks === 1) { const originalText = btn.innerHTML; btn.innerHTML = `CLIQUE NOVAMENTE PARA ELIMINAR`; btn.classList.add('bg-red-500', 'text-black'); btn.classList.remove('bg-transparent', 'text-red-500'); clearDbTimer = setTimeout(() => { clearDbClicks = 0; btn.innerHTML = originalText; btn.classList.remove('bg-red-500', 'text-black'); btn.classList.add('bg-transparent', 'text-red-500'); }, 3000); } 
+            else if (clearDbClicks === 2) { clearTimeout(clearDbTimer); if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear(); playlist=[]; audio.pause(); audio.src=""; localStorage.removeItem('webPlayerOrder'); localStorage.clear(); updatePlaylistContexts(); triggerListUpdate(); DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; showToast("Biblioteca eliminada com sucesso."); setTimeout(() => window.location.reload(), 1000); }
         });
 
         document.getElementById('export-backup-btn').addEventListener('click', () => {
@@ -1340,6 +1407,7 @@
             setTimeout(() => importStatus.classList.remove('opacity-0'), 10);
             
             let loadedCount = 0; const wasEmpty = playlist.length === 0;
+
             const CHUNK_SIZE = 20;
 
             for (let i = 0; i < validFiles.length; i += CHUNK_SIZE) {
@@ -1350,47 +1418,52 @@
                     importText.textContent = `A processar ${i + j + 1}/${validFiles.length}...`;
                     
                     await new Promise((resolve) => {
-                        const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
-                        const safeFile = { name: file.name, type: file.type, size: file.size };
-                        let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: safeFile, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
-                        
-                        if (playlist.length > 0) currentTrackIndex++; 
-                        playlist.unshift(nT); 
-                        
-                        const finish = () => {
-                            saveTrackToDB(nT);
-                            loadedCount++;
-                            if (loadedCount % 5 === 0) triggerListUpdate();
-                            resolve();
-                        };
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
+                            const safeFile = { name: file.name, type: file.type, size: file.size, data: e.target.result };
+                            let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: safeFile, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
+                            
+                            if (playlist.length > 0) currentTrackIndex++; 
+                            playlist.unshift(nT); 
+                            
+                            const finish = () => {
+                                saveTrackToDB(nT);
+                                loadedCount++;
+                                if (loadedCount % 5 === 0) triggerListUpdate();
+                                resolve();
+                            };
 
-                        if (window.jsmediatags) {
-                            const timeoutId = setTimeout(() => finish(), 2500); 
-                            window.jsmediatags.read(file, {
-                                onSuccess: tag => {
-                                    clearTimeout(timeoutId);
-                                    if(tag.tags.title) nT.title = tag.tags.title; 
-                                    if(tag.tags.artist) nT.artist = tag.tags.artist; 
-                                    if(tag.tags.genre) nT.genre = tag.tags.genre; 
-                                    if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics; 
-                                    else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics; 
-                                    
-                                    if(tag.tags.picture) { 
-                                        try {
-                                            const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
-                                            const imgReader = new FileReader();
-                                            imgReader.onloadend = () => { nT.cover = imgReader.result; finish(); };
-                                            imgReader.readAsDataURL(blob);
-                                        } catch(err) { finish(); }
-                                    } else {
-                                        finish();
-                                    }
-                                },
-                                onError: () => { clearTimeout(timeoutId); finish(); }
-                            }); 
-                        } else {
-                            finish();
-                        }
+                            if (window.jsmediatags) {
+                                const timeoutId = setTimeout(() => finish(), 2500); 
+                                window.jsmediatags.read(file, {
+                                    onSuccess: tag => {
+                                        clearTimeout(timeoutId);
+                                        if(tag.tags.title) nT.title = tag.tags.title; 
+                                        if(tag.tags.artist) nT.artist = tag.tags.artist; 
+                                        if(tag.tags.genre) nT.genre = tag.tags.genre; 
+                                        if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics; 
+                                        else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics; 
+                                        
+                                        if(tag.tags.picture) { 
+                                            try {
+                                                const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
+                                                const imgReader = new FileReader();
+                                                imgReader.onloadend = () => { nT.cover = imgReader.result; finish(); };
+                                                imgReader.readAsDataURL(blob);
+                                            } catch(err) { finish(); }
+                                        } else {
+                                            finish();
+                                        }
+                                    },
+                                    onError: () => { clearTimeout(timeoutId); finish(); }
+                                }); 
+                            } else {
+                                finish();
+                            }
+                        };
+                        reader.onerror = () => resolve();
+                        reader.readAsArrayBuffer(file);
                     });
                 }
                 await new Promise(r => setTimeout(r, 100));
@@ -1406,6 +1479,7 @@
 
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files))); DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
 
+        // Minigame Logic
         const gamePanel = document.getElementById('game-panel'); const gameOverlay = document.getElementById('game-overlay'); const gameOverOverlay = document.getElementById('game-over-overlay'); const victoryOverlay = document.getElementById('victory-overlay'); const countdownOverlay = document.getElementById('countdown-overlay'); 
         const gameCanvas = document.getElementById('game-canvas'); const gCtx = gameCanvas.getContext('2d'); const gameScoreEl = document.getElementById('game-score'); const gameComboEl = document.getElementById('game-combo'); const gameSpeedDisplay = document.getElementById('game-speed-display'); const gameBonusCount = document.getElementById('game-bonus-count'); 
         
@@ -1415,7 +1489,7 @@
         function getCurrentSpeed(t) { return (baseSpeed + (t * 2)) * currentMultiplier; }
 
         function closeGameUI() { if (!isGameActive) return; gamePanel.classList.add('opacity-0'); setTimeout(() => { gamePanel.classList.add('hidden'); gamePanel.classList.remove('flex'); }, 300); isGameActive = false; isGamePlaying = false; isGameOver = false; cancelAnimationFrame(gameAnimFrame); }
-        document.getElementById('open-game-btn').addEventListener('click', () => { if (location.hash !== '#game') history.pushState({ modal: 'game' }, '', '#game'); currentMultiplier = 1; gamePanel.classList.remove('hidden'); gamePanel.classList.add('flex'); setTimeout(() => gamePanel.classList.remove('opacity-0'), 10); isGameActive = true; resetGameForNewTrack(); });
+        document.getElementById('open-game-btn').addEventListener('click', () => { if (location.hash !== '#game') history.pushState(null, '', '#game'); currentMultiplier = 1; gamePanel.classList.remove('hidden'); gamePanel.classList.add('flex'); setTimeout(() => gamePanel.classList.remove('opacity-0'), 10); isGameActive = true; resetGameForNewTrack(); });
         document.getElementById('close-game-btn').addEventListener('click', () => { if (location.hash === '#game') { history.back(); } else { closeGameUI(); } });
 
         async function startMiniGame(keepMult = false, keepScore = false) {
@@ -1433,7 +1507,6 @@
         document.getElementById('exit-game-btn').addEventListener('click', () => document.getElementById('close-game-btn').click()); document.getElementById('victory-exit-btn').addEventListener('click', () => document.getElementById('close-game-btn').click());
         document.getElementById('victory-continue-btn').addEventListener('click', () => { currentMultiplier++; audio.currentTime = 0; visualTime = 0; startMiniGame(true, true); });
         document.getElementById('victory-next-btn').addEventListener('click', () => { victoryOverlay.classList.add('hidden', 'opacity-0'); victoryOverlay.classList.remove('flex'); nextTrack(); setTimeout(() => { if(isGameActive) startMiniGame(false, false); }, 500); });
-        
         document.getElementById('revive-game-btn').addEventListener('click', () => {
             if (secondChances <= 0) return; secondChances--; localStorage.setItem('emeraSecondChances', secondChances); updateBonusUI(); let rewindAmount = 3.0; let newTime = Math.max(0, audio.currentTime - rewindAmount);
             for(let n of gameNotes) { if (n.time < newTime + 1.2 && n.time + n.duration > newTime + 1.2) { newTime = Math.max(0, n.time - 2.0); } } audio.currentTime = newTime; visualTime = newTime;
