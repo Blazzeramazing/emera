@@ -873,9 +873,6 @@
                     const cursor = e.target.result;
                     if (cursor) {
                         let t = cursor.value;
-                        if (t.file instanceof File || t.file instanceof Blob) {
-                            t.src = URL.createObjectURL(t.file);
-                        } 
                         t.playCount = t.playCount||0; 
                         t.addedAt = t.addedAt||Date.now(); 
                         if(t.needsMetadata === undefined) t.needsMetadata = false;
@@ -885,11 +882,10 @@
                         try { 
                             const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder')); 
                             if (savedOrder && Array.isArray(savedOrder)) { 
+                                const orderMap = new Map(savedOrder.map((id, index) => [id, index]));
                                 playlist.sort((a, b) => { 
-                                    let indexA = savedOrder.indexOf(a.id); 
-                                    let indexB = savedOrder.indexOf(b.id); 
-                                    if (indexA === -1) indexA = 999999; 
-                                    if (indexB === -1) indexB = 999999; 
+                                    let indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999999; 
+                                    let indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999999; 
                                     return indexA - indexB; 
                                 }); 
                             } 
@@ -1137,6 +1133,7 @@
             if(playlist.length===0) return;
             if(index < 0) index = playlist.length-1; if(index >= playlist.length) index = 0;
             currentTrackIndex = index; const t = playlist[currentTrackIndex];
+            if(t.isLocal && !t.src && (t.file instanceof File || t.file instanceof Blob)) t.src = URL.createObjectURL(t.file);
             if(t.isLocal) audio.removeAttribute('crossorigin'); else audio.setAttribute('crossorigin', 'anonymous'); audio.src = t.src; 
             DOM.title.textContent = t.title; DOM.artist.textContent = t.artist || t.genre; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
             DOM.bgBlurCover.src = DOM.cover.src;
@@ -1853,7 +1850,7 @@
                     loader.classList.add('opacity-0');
                     setTimeout(() => loader.remove(), 500);
                 }
-            }, 800);
+            }, 150);
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ 
