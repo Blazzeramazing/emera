@@ -1465,14 +1465,18 @@
             
             for(let i = 0; i < playlist.length; i++) {
                 const track = playlist[i];
-                // NOVA REGRA DE AUTO-CURA: Verifica tracks que não carregaram antes!
-                if((track.needsMetadata || track.artist === "Desconhecido") && track.file && track.isLocal) {
+                if((track.needsMetadata || track.artist === "Desconhecido") && track.isLocal) {
                     
-                    if(isPlaying) await new Promise(r => setTimeout(r, 500));
-                    else await new Promise(r => setTimeout(r, 50));
+                    if(isPlaying) await new Promise(r => setTimeout(r, 800));
+                    else await new Promise(r => setTimeout(r, 100));
                     
                     await new Promise(resolve => {
                         if(!window.jsmediatags) { resolve(); return; }
+                        
+                        let fileToRead = track.fileRef || track.file;
+                        if (!fileToRead || !(fileToRead instanceof File || fileToRead instanceof Blob)) {
+                            resolve(); return;
+                        }
                         
                         let isResolved = false;
                         const timeoutId = setTimeout(() => {
@@ -1484,7 +1488,7 @@
                             }
                         }, 4000);
                         
-                        window.jsmediatags.read(track.file, {
+                        window.jsmediatags.read(fileToRead, {
                             onSuccess: tag => {
                                 if(isResolved) return;
                                 isResolved = true;
@@ -1503,14 +1507,13 @@
                                     try {
                                         let base64String = "";
                                         const data = tag.tags.picture.data;
-                                        // Coversão super-rápida sem usar Filereader (Evita tela branca)
                                         for (let j = 0; j < data.length; j += 8192) {
                                             base64String += String.fromCharCode.apply(null, data.slice(j, j + 8192));
                                         }
                                         track.cover = "data:" + tag.tags.picture.format + ";base64," + window.btoa(base64String);
                                         updated = true;
                                     } catch(err) {
-                                        console.warn("Erro ao converter capa matematicamente");
+                                        console.warn("Erro ao ler capa");
                                     }
                                 }
                                 
@@ -1535,7 +1538,7 @@
 
         async function handleFiles(files) {
             if(files.length === 0) return;
-            const existingIds = new Set(playlist.map(t => t.file ? t.file.name + '_' + t.file.size : t.title));
+            const existingIds = new Set(playlist.map(t => t.fileRef ? t.fileRef.name + '_' + t.fileRef.size : t.title));
             const validFiles = files.filter(f => { 
                 const isAudio = f.type.startsWith('audio/') || f.name.endsWith('.mp3') || f.name.endsWith('.wav') || f.name.endsWith('.ogg'); 
                 return isAudio && !existingIds.has(f.name + '_' + f.size); 
@@ -1549,7 +1552,6 @@
             setTimeout(() => importStatus.classList.remove('opacity-0'), 10);
             
             let loadedCount = 0; const wasEmpty = playlist.length === 0;
-
             const CHUNK_SIZE = 100;
 
             for (let i = 0; i < validFiles.length; i += CHUNK_SIZE) {
@@ -1568,6 +1570,7 @@
                             artist: "Desconhecido", 
                             genre: "Desconhecido", 
                             file: file, 
+                            fileRef: file,
                             src: URL.createObjectURL(file), 
                             cover: null, 
                             lyrics: "", 
@@ -1597,7 +1600,7 @@
             
             savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); 
             if(wasEmpty) loadTrack(0);
-            showToast(`${loadedCount} músicas importadas instantaneamente.`);
+            showToast(`${loadedCount} músicas prontas! Lendo capas...`);
 
             startBackgroundMetadataProcessor();
         }
@@ -1842,9 +1845,8 @@
             await loadTracksFromDB(); updateSortUI(); updatePlaylistContexts(); triggerListUpdate();
             if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas'; }
             
-            // Inicia o scan das que faltam quando abre o app (caso tenha fechado antes de acabar)
             startBackgroundMetadataProcessor();
-
+            
             setTimeout(() => {
                 const loader = document.getElementById('initial-loader');
                 if (loader) {
@@ -1853,7 +1855,6 @@
                 }
             }, 800);
         });
-        
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
         if(!isNaN(initVol)){ 
             audio.volume=initVol; DOM.volBar.value=initVol; DOM.volFill.style.width=initVol*100+'%'; audio.muted=(initVol===0); 
