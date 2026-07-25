@@ -1,0 +1,18 @@
+{
+"name": "Emera Player",
+"short_name": "Emera",
+"start_url": "/",
+"display": "standalone",
+"orientation": "portrait",
+"background_color": "#000000",
+"theme_color": "#1db954",
+"description": "O seu reprodutor de música local definitivo. Rápido, moderno e com equalizador integrado.",
+"icons": [
+{
+"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxZGI5NTQiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMxZWQ3NjAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEyMCIgZmlsbD0iIzEyMTIxMiIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMTgwIiBmaWxsPSJ1cmwoI2dyYWQpIiBvcGFjaXR5PSIwLjE1Ii8+PHBhdGggZD0iTTIxMCAxNDB2MjEwYzAgMjQtMjAgNDQtNDQgNDRzLTQ0LTIwLTQ0LTQ0IDIwLTQ0IDQ0LTQ0YzExIDAgMjEgNCAyOSAxMVYxODBoMTEwdjExMGMwIDI0LTIwIDQ0LTQ0IDQ0cy00NC0yMC00NC00NCAyMC00NCA0NC00NGMxMSAwIDIxIDQgMjkgMTFWMTQwSDIxMHoiIGZpbGw9IiNmZmZmZmYiLz48L3N2Zz4=",
+"sizes": "512x512",
+"type": "image/svg+xml",
+"purpose": "any maskable"
+}
+]
+}
