@@ -871,7 +871,7 @@
 
         const DB_NAME = "MusicPlayerDB"; const STORE_NAME = "local_tracks"; let db;
         function initDB() { return new Promise(r => { const req = indexedDB.open(DB_NAME, 2); req.onerror=()=>r(null); req.onsuccess=e=>{db=e.target.result; r(db);}; req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:"id"});}; }); }
-        function saveTrackToDB(track) { if(db){ runIdle(() => { const t={...track}; delete t.src; db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); }); } }
+        function saveTrackToDB(track) { if(db){ runIdle(() => { const t={...track}; delete t.src; delete t.fileRef; db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(t); }); } }
         function deleteTrackFromDB(id) { if(db) db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).delete(id); }
         function loadTracksFromDB() {
             if(!db) return Promise.resolve();
@@ -1432,65 +1432,59 @@
             
             let loadedCount = 0; const wasEmpty = playlist.length === 0;
 
-            const CHUNK_SIZE = 20;
-
-            for (let i = 0; i < validFiles.length; i += CHUNK_SIZE) {
-                const chunk = validFiles.slice(i, i + CHUNK_SIZE);
+            // Processamento sequencial e armazenamento de objetos File nativos 
+            // Evita estouro de RAM (crash/tela branca) em pastas enormes (+1000 músicas)
+            for (let i = 0; i < validFiles.length; i++) {
+                const file = validFiles[i];
                 
-                for (let j = 0; j < chunk.length; j++) {
-                    const file = chunk[j];
-                    importText.textContent = `A processar ${i + j + 1}/${validFiles.length}...`;
-                    
-                    await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
-                            const safeFile = { name: file.name, type: file.type, size: file.size, data: e.target.result };
-                            let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: safeFile, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
-                            
-                            if (playlist.length > 0) currentTrackIndex++; 
-                            playlist.unshift(nT); 
-                            
-                            const finish = () => {
-                                saveTrackToDB(nT);
-                                loadedCount++;
-                                if (loadedCount % 5 === 0) triggerListUpdate();
-                                resolve();
-                            };
-
-                            if (window.jsmediatags) {
-                                const timeoutId = setTimeout(() => finish(), 2500); 
-                                window.jsmediatags.read(file, {
-                                    onSuccess: tag => {
-                                        clearTimeout(timeoutId);
-                                        if(tag.tags.title) nT.title = tag.tags.title; 
-                                        if(tag.tags.artist) nT.artist = tag.tags.artist; 
-                                        if(tag.tags.genre) nT.genre = tag.tags.genre; 
-                                        if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics; 
-                                        else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics; 
-                                        
-                                        if(tag.tags.picture) { 
-                                            try {
-                                                const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
-                                                const imgReader = new FileReader();
-                                                imgReader.onloadend = () => { nT.cover = imgReader.result; finish(); };
-                                                imgReader.readAsDataURL(blob);
-                                            } catch(err) { finish(); }
-                                        } else {
-                                            finish();
-                                        }
-                                    },
-                                    onError: () => { clearTimeout(timeoutId); finish(); }
-                                }); 
-                            } else {
-                                finish();
-                            }
-                        };
-                        reader.onerror = () => resolve();
-                        reader.readAsArrayBuffer(file);
-                    });
+                if (i % 2 === 0) {
+                    importText.textContent = `A processar ${i + 1}/${validFiles.length}...`;
+                    await new Promise(r => setTimeout(r, 5)); // Pausa breve para a UI respirar e não travar a aba
                 }
-                await new Promise(r => setTimeout(r, 100));
+                
+                await new Promise((resolve) => {
+                    const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
+                    // IMPORTANTE: Armazena o 'file' diretamente no banco sem ler como ArrayBuffer
+                    let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: file, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
+                    
+                    if (playlist.length > 0) currentTrackIndex++; 
+                    playlist.unshift(nT); 
+                    
+                    const finish = () => {
+                        saveTrackToDB(nT);
+                        loadedCount++;
+                        if (loadedCount % 50 === 0) triggerListUpdate(); // Atualiza a lista apenas a cada 50 itens
+                        resolve();
+                    };
+
+                    if (window.jsmediatags) {
+                        const timeoutId = setTimeout(() => finish(), 1500); 
+                        window.jsmediatags.read(file, {
+                            onSuccess: tag => {
+                                clearTimeout(timeoutId);
+                                if(tag.tags.title) nT.title = tag.tags.title; 
+                                if(tag.tags.artist) nT.artist = tag.tags.artist; 
+                                if(tag.tags.genre) nT.genre = tag.tags.genre; 
+                                if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics; 
+                                else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics; 
+                                
+                                if(tag.tags.picture) { 
+                                    try {
+                                        const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
+                                        const imgReader = new FileReader();
+                                        imgReader.onloadend = () => { nT.cover = imgReader.result; finish(); };
+                                        imgReader.readAsDataURL(blob);
+                                    } catch(err) { finish(); }
+                                } else {
+                                    finish();
+                                }
+                            },
+                            onError: () => { clearTimeout(timeoutId); finish(); }
+                        }); 
+                    } else {
+                        finish();
+                    }
+                });
             }
             
             importStatus.classList.add('opacity-0');
