@@ -1,18 +1,32 @@
 {
-"name": "Emera Player",
-"short_name": "Emera",
-"start_url": "/",
-"display": "standalone",
-"orientation": "portrait",
-"background_color": "#000000",
-"theme_color": "#1db954",
-"description": "O seu reprodutor de música local definitivo. Rápido, moderno e com equalizador integrado.",
-"icons": [
-{
-"src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxZGI5NTQiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMxZWQ3NjAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEyMCIgZmlsbD0iIzEyMTIxMiIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMTgwIiBmaWxsPSJ1cmwoI2dyYWQpIiBvcGFjaXR5PSIwLjE1Ii8+PHBhdGggZD0iTTIxMCAxNDB2MjEwYzAgMjQtMjAgNDQtNDQgNDRzLTQ0LTIwLTQ0LTQ0IDIwLTQ0IDQ0LTQ0YzExIDAgMjEgNCAyOSAxMVYxODBoMTEwdjExMGMwIDI0LTIwIDQ0LTQ0IDQ0cy00NC0yMC00NC00NCAyMC00NCA0NC00NGMxMSAwIDIxIDQgMjkgMTFWMTQwSDIxMHoiIGZpbGw9IiNmZmZmZmYiLz48L3N2Zz4=",
-"sizes": "512x512",
-"type": "image/svg+xml",
-"purpose": "any maskable"
-}
-]
+  "background_color": "#1db954",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Emera Player",
+  "orientation": "portrait",
+  "scope": "/",
+  "short_name": "Emera",
+  "start_url": "/",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'&gt;&lt;defs&gt;&lt;linearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'&gt;&lt;stop offset='0%25' stop-color='%231db954'/&gt;&lt;stop offset='100%25' stop-color='%231ed760'/&gt;&lt;/linearGradient&gt;&lt;/defs&gt;&lt;rect width='512' height='512' rx='120' fill='%23121212'/&gt;&lt;circle cx='256' cy='256' r='180' fill='url(%23grad)' opacity='0.15'/&gt;&lt;path d='M210 140v210c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V180h110v110c0 24-20 44-44 44s-44-20-44-44 20-44 44-44c11 0 21 4 29 11V140H210z' fill='%23ffffff'/&gt;&lt;/svg&gt;",
+      "type": "image/svg+xml",
+      "isSquare": false,
+      "isPng": false,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 0,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
+    }
+  ],
+  "id": "com.emera.player",
+  "description": "O seu reprodutor de música local definitivo. Rápido, moderno e com equalizador integrado.",
+  "lang": "pt",
+  "categories": [
+    "entertainment",
+    "music"
+  ]
 }
