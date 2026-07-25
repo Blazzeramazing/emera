@@ -864,38 +864,38 @@
         function loadTracksFromDB() {
             if(!db) return Promise.resolve();
             return new Promise(r => { 
-                const req = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll(); 
-                req.onsuccess = () => { 
-                    playlist = []; 
-                    req.result.forEach(t => { 
-                        // Suporte Nativo: Criar URL diretamente do File object
+                playlist = [];
+                const tx = db.transaction(STORE_NAME, "readonly");
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.openCursor();
+                
+                req.onsuccess = (e) => { 
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        let t = cursor.value;
                         if (t.file instanceof File || t.file instanceof Blob) {
                             t.src = URL.createObjectURL(t.file);
-                        } 
-                        // Tratamento de segurança para backups ou formatos antigos
-                        else if (t.file && t.file.data instanceof ArrayBuffer) { 
-                            const blob = new Blob([t.file.data], { type: t.file.type }); 
-                            t.src = URL.createObjectURL(blob); 
-                            t.file = new File([blob], t.file.name, { type: t.file.type }); 
                         } 
                         t.playCount = t.playCount||0; 
                         t.addedAt = t.addedAt||Date.now(); 
                         if(t.needsMetadata === undefined) t.needsMetadata = false;
                         playlist.push(t); 
-                    }); 
-                    try { 
-                        const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder')); 
-                        if (savedOrder && Array.isArray(savedOrder)) { 
-                            playlist.sort((a, b) => { 
-                                let indexA = savedOrder.indexOf(a.id); 
-                                let indexB = savedOrder.indexOf(b.id); 
-                                if (indexA === -1) indexA = 999999; 
-                                if (indexB === -1) indexB = 999999; 
-                                return indexA - indexB; 
-                            }); 
-                        } 
-                    } catch(e) {} 
-                    r(); 
+                        cursor.continue();
+                    } else {
+                        try { 
+                            const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder')); 
+                            if (savedOrder && Array.isArray(savedOrder)) { 
+                                playlist.sort((a, b) => { 
+                                    let indexA = savedOrder.indexOf(a.id); 
+                                    let indexB = savedOrder.indexOf(b.id); 
+                                    if (indexA === -1) indexA = 999999; 
+                                    if (indexB === -1) indexB = 999999; 
+                                    return indexA - indexB; 
+                                }); 
+                            } 
+                        } catch(err) {} 
+                        r(); 
+                    }
                 }; 
                 req.onerror = () => r(); 
             });
@@ -1465,17 +1465,31 @@
             
             for(let i = 0; i < playlist.length; i++) {
                 const track = playlist[i];
-                if(track.needsMetadata && track.file && track.isLocal) {
+                // NOVA REGRA DE AUTO-CURA: Verifica tracks que não carregaram antes!
+                if((track.needsMetadata || track.artist === "Desconhecido") && track.file && track.isLocal) {
                     
-                    if(isPlaying) await new Promise(r => setTimeout(r, 250));
+                    if(isPlaying) await new Promise(r => setTimeout(r, 500));
+                    else await new Promise(r => setTimeout(r, 50));
                     
                     await new Promise(resolve => {
                         if(!window.jsmediatags) { resolve(); return; }
-                        const timeoutId = setTimeout(() => resolve(), 3000);
+                        
+                        let isResolved = false;
+                        const timeoutId = setTimeout(() => {
+                            if(!isResolved) { 
+                                isResolved = true; 
+                                track.needsMetadata = false; 
+                                saveTrackToDB(track);
+                                resolve(); 
+                            }
+                        }, 4000);
                         
                         window.jsmediatags.read(track.file, {
                             onSuccess: tag => {
+                                if(isResolved) return;
+                                isResolved = true;
                                 clearTimeout(timeoutId);
+                                
                                 let updated = false;
                                 if(tag.tags.title) { track.title = tag.tags.title; updated = true; }
                                 if(tag.tags.artist) { track.artist = tag.tags.artist; updated = true; }
@@ -1483,27 +1497,30 @@
                                 if(tag.tags.lyrics && tag.tags.lyrics.lyrics) { track.lyrics = tag.tags.lyrics.lyrics; updated = true; }
                                 else if(tag.tags.USLT && tag.tags.USLT.lyrics) { track.lyrics = tag.tags.USLT.lyrics; updated = true; }
                                 
+                                track.needsMetadata = false;
+                                
                                 if(tag.tags.picture) { 
                                     try {
-                                        const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
-                                        const imgReader = new FileReader();
-                                        imgReader.onloadend = () => { 
-                                            track.cover = imgReader.result; 
-                                            track.needsMetadata = false;
-                                            saveTrackToDB(track);
-                                            triggerListUpdateDebounced();
-                                            resolve(); 
-                                        };
-                                        imgReader.readAsDataURL(blob);
-                                        return; 
-                                    } catch(err) {}
+                                        let base64String = "";
+                                        const data = tag.tags.picture.data;
+                                        // Coversão super-rápida sem usar Filereader (Evita tela branca)
+                                        for (let j = 0; j < data.length; j += 8192) {
+                                            base64String += String.fromCharCode.apply(null, data.slice(j, j + 8192));
+                                        }
+                                        track.cover = "data:" + tag.tags.picture.format + ";base64," + window.btoa(base64String);
+                                        updated = true;
+                                    } catch(err) {
+                                        console.warn("Erro ao converter capa matematicamente");
+                                    }
                                 }
-                                track.needsMetadata = false;
+                                
                                 saveTrackToDB(track);
                                 if(updated) triggerListUpdateDebounced();
                                 resolve();
                             },
                             onError: () => {
+                                if(isResolved) return;
+                                isResolved = true;
                                 clearTimeout(timeoutId);
                                 track.needsMetadata = false;
                                 saveTrackToDB(track);
@@ -1511,8 +1528,6 @@
                             }
                         });
                     });
-                    
-                    await new Promise(r => setTimeout(r, 10));
                 }
             }
             isProcessingMetadata = false;
