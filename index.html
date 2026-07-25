@@ -876,7 +876,11 @@
         function loadTracksFromDB() {
             if(!db) return Promise.resolve();
             return new Promise(r => { const req = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll(); 
-                req.onsuccess = () => { playlist = []; req.result.forEach(t => { if (t.file && t.file.data instanceof ArrayBuffer) { const blob = new Blob([t.file.data], { type: t.file.type }); t.src = URL.createObjectURL(blob); t.fileRef = new File([blob], t.file.name, { type: t.file.type }); } else if (t.file instanceof File) { t.src = URL.createObjectURL(t.file); t.fileRef = t.file; } t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); }); 
+                req.onsuccess = () => { playlist = []; req.result.forEach(t => { 
+                    t.src = null; // Liberamos memória! O link só é gerado no momento do Play
+                    if (t.file && t.file.data instanceof ArrayBuffer) { const blob = new Blob([t.file.data], { type: t.file.type }); t.file = new File([blob], t.file.name, { type: t.file.type }); } else if (t.fileRef instanceof File && !(t.file instanceof File)) { t.file = t.fileRef; } 
+                    t.playCount = t.playCount||0; t.addedAt = t.addedAt||Date.now(); playlist.push(t); 
+                }); 
                     try { const savedOrder = JSON.parse(localStorage.getItem('webPlayerOrder')); if (savedOrder && Array.isArray(savedOrder)) { playlist.sort((a, b) => { let indexA = savedOrder.indexOf(a.id); let indexB = savedOrder.indexOf(b.id); if (indexA === -1) indexA = 999999; if (indexB === -1) indexB = 999999; return indexA - indexB; }); } } catch(e) {} r(); 
                 }; req.onerror = () => r(); 
             });
@@ -1118,12 +1122,47 @@
             if(playlist.length===0) return;
             if(index < 0) index = playlist.length-1; if(index >= playlist.length) index = 0;
             currentTrackIndex = index; const t = playlist[currentTrackIndex];
+            
+            // Lazy Load: Cria a ponte com o arquivo local apenas na hora de tocar, poupando 99% da memória RAM
+            if (t.isLocal && t.file && !t.src) { t.src = URL.createObjectURL(t.file); }
+
             if(t.isLocal) audio.removeAttribute('crossorigin'); else audio.setAttribute('crossorigin', 'anonymous'); audio.src = t.src; 
-            DOM.title.textContent = t.title; DOM.artist.textContent = t.artist || t.genre; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
-            DOM.bgBlurCover.src = DOM.cover.src;
+            
+            const updateUI = () => {
+                DOM.title.textContent = t.title; DOM.artist.textContent = t.artist || t.genre; DOM.cover.src = t.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&h=500&fit=crop';
+                DOM.bgBlurCover.src = DOM.cover.src; updateMiniPlayer(); updateMediaSession(); updateUpNextUI(); triggerListUpdate();
+            };
+            updateUI();
+
             DOM.lyricsBtn.classList.remove('hidden'); DOM.shareBtn.classList.remove('hidden');
-            updateMainFavoriteIcon(); updateMiniPlayer(); triggerListUpdate(); updateMediaSession(); updateUpNextUI(); if(isGameActive) resetGameForNewTrack();
+            updateMainFavoriteIcon(); if(isGameActive) resetGameForNewTrack();
             if (isPlaying) { const p = audio.play(); if(p!==undefined) p.then(()=>{ t.playCount=(t.playCount||0)+1; if(t.isLocal) saveTrackToDB(t); }).catch((err)=>{ console.warn(err); }); }
+
+            // Leitura Tardia (Lazy) de Capas e ID3: Feito em segundo plano apenas para a música atual
+            if (t.isLocal && t.file && !t.tagsLoaded && window.jsmediatags) {
+                window.jsmediatags.read(t.file, {
+                    onSuccess: tag => {
+                        let changed = false;
+                        if(tag.tags.title) { t.title = tag.tags.title; changed = true; }
+                        if(tag.tags.artist) { t.artist = tag.tags.artist; changed = true; }
+                        if(tag.tags.genre) t.genre = tag.tags.genre;
+                        if(tag.tags.lyrics && tag.tags.lyrics.lyrics) t.lyrics = tag.tags.lyrics.lyrics; 
+                        else if(tag.tags.USLT && tag.tags.USLT.lyrics) t.lyrics = tag.tags.USLT.lyrics; 
+                        
+                        if(tag.tags.picture) { 
+                            try {
+                                const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
+                                const imgReader = new FileReader();
+                                imgReader.onloadend = () => { t.cover = imgReader.result; t.tagsLoaded = true; saveTrackToDB(t); if(currentTrackIndex === index) updateUI(); };
+                                imgReader.readAsDataURL(blob);
+                                return;
+                            } catch(err) {}
+                        }
+                        t.tagsLoaded = true; if(changed) saveTrackToDB(t); if(currentTrackIndex === index) updateUI();
+                    },
+                    onError: () => { t.tagsLoaded = true; }
+                }); 
+            }
         }
 
         function togglePlay() {
@@ -1423,7 +1462,7 @@
             const existingIds = new Set(playlist.map(t => t.file ? t.file.name + '_' + t.file.size : t.title));
             const validFiles = files.filter(f => { const isAudio = f.type.startsWith('audio/') || f.name.endsWith('.mp3') || f.name.endsWith('.wav') || f.name.endsWith('.ogg'); return isAudio && !existingIds.has(f.name + '_' + f.size); });
             
-            if(validFiles.length === 0) { showToast("Nenhum ficheiro suportado ou novo."); return; }
+            if(validFiles.length === 0) { showToast("Nenhum ficheiro novo ou suportado."); return; }
             
             const importStatus = document.getElementById('import-status');
             const importText = document.getElementById('import-status-text');
@@ -1432,59 +1471,25 @@
             
             let loadedCount = 0; const wasEmpty = playlist.length === 0;
 
-            // Processamento sequencial e armazenamento de objetos File nativos 
-            // Evita estouro de RAM (crash/tela branca) em pastas enormes (+1000 músicas)
-            for (let i = 0; i < validFiles.length; i++) {
-                const file = validFiles[i];
+            const CHUNK_SIZE = 100; // Carrega 100 atalhos de arquivo a cada piscada de tela
+
+            for (let i = 0; i < validFiles.length; i += CHUNK_SIZE) {
+                const chunk = validFiles.slice(i, i + CHUNK_SIZE);
+                importText.textContent = `Listando ${Math.min(i + CHUNK_SIZE, validFiles.length)}/${validFiles.length}...`;
                 
-                if (i % 2 === 0) {
-                    importText.textContent = `A processar ${i + 1}/${validFiles.length}...`;
-                    await new Promise(r => setTimeout(r, 5)); // Pausa breve para a UI respirar e não travar a aba
-                }
-                
-                await new Promise((resolve) => {
+                for (let j = 0; j < chunk.length; j++) {
+                    const file = chunk[j];
                     const trackId = 'local_'+Date.now()+'_'+Math.floor(Math.random()*10000);
-                    // IMPORTANTE: Armazena o 'file' diretamente no banco sem ler como ArrayBuffer
-                    let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: file, fileRef: file, src: URL.createObjectURL(file), cover: null, lyrics: "", isLocal: true, addedAt: Date.now() + loadedCount };
+                    // Criamos o objeto fantasma, direto do arquivo, rápido e sem peso.
+                    let nT = { id: trackId, title: file.name.replace(/\.[^/.]+$/, ""), artist: "Desconhecido", genre: "Desconhecido", file: file, src: null, cover: null, lyrics: "", isLocal: true, tagsLoaded: false, addedAt: Date.now() + loadedCount };
                     
                     if (playlist.length > 0) currentTrackIndex++; 
                     playlist.unshift(nT); 
-                    
-                    const finish = () => {
-                        saveTrackToDB(nT);
-                        loadedCount++;
-                        if (loadedCount % 50 === 0) triggerListUpdate(); // Atualiza a lista apenas a cada 50 itens
-                        resolve();
-                    };
-
-                    if (window.jsmediatags) {
-                        const timeoutId = setTimeout(() => finish(), 1500); 
-                        window.jsmediatags.read(file, {
-                            onSuccess: tag => {
-                                clearTimeout(timeoutId);
-                                if(tag.tags.title) nT.title = tag.tags.title; 
-                                if(tag.tags.artist) nT.artist = tag.tags.artist; 
-                                if(tag.tags.genre) nT.genre = tag.tags.genre; 
-                                if(tag.tags.lyrics && tag.tags.lyrics.lyrics) nT.lyrics = tag.tags.lyrics.lyrics; 
-                                else if(tag.tags.USLT && tag.tags.USLT.lyrics) nT.lyrics = tag.tags.USLT.lyrics; 
-                                
-                                if(tag.tags.picture) { 
-                                    try {
-                                        const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
-                                        const imgReader = new FileReader();
-                                        imgReader.onloadend = () => { nT.cover = imgReader.result; finish(); };
-                                        imgReader.readAsDataURL(blob);
-                                    } catch(err) { finish(); }
-                                } else {
-                                    finish();
-                                }
-                            },
-                            onError: () => { clearTimeout(timeoutId); finish(); }
-                        }); 
-                    } else {
-                        finish();
-                    }
-                });
+                    saveTrackToDB(nT);
+                    loadedCount++;
+                }
+                triggerListUpdate();
+                await new Promise(r => setTimeout(r, 10)); // Pausa invisível para não travar a aba
             }
             
             importStatus.classList.add('opacity-0');
@@ -1492,10 +1497,77 @@
             
             savePlaylistOrder(); updatePlaylistContexts(); triggerListUpdate(); 
             if(wasEmpty) loadTrack(0);
-            showToast(`${loadedCount} músicas importadas com sucesso.`);
+            showToast(`${loadedCount} músicas listadas!`);
+            
+            startBackgroundMetadataProcessor();
         }
 
         DOM.fileUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files))); DOM.folderUpload.addEventListener('change', e => handleFiles(Array.from(e.target.files)));
+
+        let isProcessingTags = false;
+        const triggerListUpdateDebounced = debounce(() => triggerListUpdate(), 1500);
+
+        function startBackgroundMetadataProcessor() {
+            if(isProcessingTags) return;
+            isProcessingTags = true;
+            
+            function processNext() {
+                let delay = isPlaying ? 300 : 50; 
+                if (!isPageVisible || isGameActive) { setTimeout(processNext, 2000); return; }
+                
+                const track = playlist.find(t => t.isLocal && t.file && !t.tagsLoaded);
+                if (!track) { isProcessingTags = false; return; }
+
+                if (window.jsmediatags) {
+                    window.jsmediatags.read(track.file, {
+                        onSuccess: tag => {
+                            let changed = false;
+                            if(tag.tags.title && track.title !== tag.tags.title) { track.title = tag.tags.title; changed = true; }
+                            if(tag.tags.artist && track.artist !== tag.tags.artist) { track.artist = tag.tags.artist; changed = true; }
+                            if(tag.tags.genre) track.genre = tag.tags.genre;
+                            if(tag.tags.lyrics && tag.tags.lyrics.lyrics) track.lyrics = tag.tags.lyrics.lyrics; 
+                            
+                            const updateCurrentIfPlaying = () => {
+                                if (playlist[currentTrackIndex] && playlist[currentTrackIndex].id === track.id) {
+                                    DOM.title.textContent = track.title; 
+                                    DOM.artist.textContent = track.artist || track.genre || "Desconhecido"; 
+                                    if(track.cover) { DOM.cover.src = track.cover; DOM.bgBlurCover.src = track.cover; updateMiniPlayer(); }
+                                    updateMediaSession(); updateUpNextUI();
+                                }
+                            };
+
+                            if(tag.tags.picture && !track.cover) { 
+                                try {
+                                    const blob = new Blob([new Uint8Array(tag.tags.picture.data)], { type: tag.tags.picture.format });
+                                    const imgReader = new FileReader();
+                                    imgReader.onloadend = () => { 
+                                        track.cover = imgReader.result; 
+                                        track.tagsLoaded = true; 
+                                        saveTrackToDB(track); 
+                                        updateCurrentIfPlaying();
+                                        triggerListUpdateDebounced();
+                                        setTimeout(processNext, delay); 
+                                    };
+                                    imgReader.readAsDataURL(blob);
+                                    return; 
+                                } catch(err) {}
+                            }
+                            track.tagsLoaded = true; 
+                            if(changed) { 
+                                saveTrackToDB(track); 
+                                updateCurrentIfPlaying();
+                                triggerListUpdateDebounced(); 
+                            }
+                            setTimeout(processNext, delay);
+                        },
+                        onError: () => { 
+                            track.tagsLoaded = true; saveTrackToDB(track); setTimeout(processNext, delay); 
+                        }
+                    }); 
+                } else { setTimeout(processNext, 1000); }
+            }
+            processNext();
+        }
 
         // Minigame Logic
         const gamePanel = document.getElementById('game-panel'); const gameOverlay = document.getElementById('game-overlay'); const gameOverOverlay = document.getElementById('game-over-overlay'); const victoryOverlay = document.getElementById('victory-overlay'); const countdownOverlay = document.getElementById('countdown-overlay'); 
@@ -1734,7 +1806,7 @@
 
         initDB().then(async () => {
             await loadTracksFromDB(); updateSortUI(); updatePlaylistContexts(); triggerListUpdate();
-            if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas'; }
+            if(playlist.length>0) loadTrack(0); else { DOM.title.textContent='Playlist Vazia'; DOM.artist.textContent='Adicione músicas para começar'; }
             
             setTimeout(() => {
                 const loader = document.getElementById('initial-loader');
@@ -1742,6 +1814,7 @@
                     loader.classList.add('opacity-0');
                     setTimeout(() => loader.remove(), 500);
                 }
+                startBackgroundMetadataProcessor();
             }, 800);
         });
         const initVol = parseFloat(localStorage.getItem('webPlayerVol'));
